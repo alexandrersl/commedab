@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# build outputs
+dist/
+build/
+.expo/
+.expo-shared/
+web-build/
+*.tsbuildinfo
+
+# native (générés par expo prebuild, phase B)
+ios/
+android/
+
+# tests & coverage
+coverage/
+
+# tooling
+.turbo/
+.cache/
+*.log
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# supabase
+supabase/.branches/
+supabase/.temp/
