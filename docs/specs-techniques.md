@@ -1,7 +1,5 @@
 # Commedab — Spécifications techniques
 
-> Export Markdown du document de référence (Claude Docs). La version éditable fait foi ; ce fichier est régénéré à chaque mise à jour des spécifications.
-
 ## Objet et statut
 
 Ce document fixe les choix techniques de l'application décrite dans les spécifications fonctionnelles v1 (MVP mono-utilisateur, stock estimé sans inventaire) et éclairée par l'étude de marché. Il est rédigé décision par décision, dans l'ordre où elles se contraignent ; chaque section porte un statut.
@@ -106,7 +104,7 @@ Ce modèle « réplique locale, autorité serveur » répond aux trois exigences
 | Composant | Choix | Rôle |
 | --- | --- | --- |
 | Base serveur | PostgreSQL via Supabase | Source de vérité, schéma relationnel, Row Level Security par foyer |
-| Authentification | Supabase Auth | Compte par e-mail (lien magique ou mot de passe), Apple et Google plus tard ; le JWT porte l'identifiant du foyer |
+| Authentification | Supabase Auth | Compte par e-mail et mot de passe ou Google, Apple en phase B (5.2) ; le foyer n'est pas dans le JWT, les règles de synchro le résolvent par `household_member` |
 | Synchronisation | PowerSync | Réplique Postgres vers SQLite sur l'appareil, file d'écritures hors ligne rejouée à la reconnexion, règles de synchro limitant chaque appareil aux données de son foyer |
 | Base locale | SQLite : pilote natif du SDK PowerSync React Native (op-sqlite) sur iOS et Android, wa-sqlite sur OPFS pour le web | Lecture et écriture de l'app, requêtes SQL, réactivité |
 | Logique serveur | Fonctions Postgres et Supabase Edge Functions, uniquement si nécessaire | Validation d'écritures, tâches planifiées, futur import de commandes |
@@ -155,7 +153,7 @@ L'architecture est la même à 1 et à 100 000 foyers ; seuls les plans tarifair
 - **Unité de scale = le foyer.** Chaque appareil ne synchronise que les lignes de son `household_id` ; la charge par client est constante quelle que soit la taille de la base. Le catalogue, seul contenu commun, est livré avec l'application et non synchronisé.
 - **Volume par foyer faible** : quelques achats et événements par jour, de l'ordre de 1 à 3 Mo synchronisés par mois et par foyer. Le plan Pro de PowerSync inclut 30 Go/mois et 1 000 clients simultanés, puis 1 $/Go et 30 $ par tranche de 1 000 clients ; 10 000 foyers actifs tiennent dans l'enveloppe de base.
 - **Supabase** monte par paliers de calcul Postgres ; l'authentification couvre 50 000 utilisateurs actifs mensuels dès le plan gratuit.
-- **Journal d'événements** : il grossit sans borne. Le modèle prévoit une date sur chaque événement pour archiver ou agréger l'ancien, et la synchro vers l'appareil se limite à une fenêtre glissante (12 mois par défaut) : règle à inscrire en section 3.
+- **Journal d'événements** : il grossit sans borne. Le modèle prévoit une date sur chaque événement pour archiver ou agréger l'ancien. Au MVP, tout l'historique est synchronisé et pris en compte par le moteur ; une fenêtre glissante pourra être introduite par une colonne `period_key` quand le volume le justifiera (5.3).
 - **Moteur sur l'appareil** : coût serveur nul par utilisateur. Des statistiques globales ou un apprentissage inter-foyers deviendraient une fonction serveur distincte.
 - **Partage de foyer** : multiplie les clients simultanés par le nombre de membres, pas le volume de données.
 - **Sortie du managé** : Postgres standard, Supabase et PowerSync open source et auto-hébergeables ; la migration vers un serveur propre ne touche pas l'application.
@@ -325,14 +323,14 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 ### 3.6 Sécurité et synchronisation
 
 - **RLS** : une seule politique par table, `household_id in (select household_id from household_member where user_id = auth.uid())`, en lecture et en écriture.
-- **Règles de synchro** : un bucket par foyer, contenant toutes les tables métier filtrées par `household_id`. Au MVP, tout l'historique du foyer est synchronisé ; une fenêtre glissante (12 mois d'événements, 3 mois de listes) est prévue pour plus tard, par une colonne `period_key`, quand le volume le justifiera (5.3).
+- **Règles de synchro** : un bucket par foyer, contenant toutes les tables métier filtrées par `household_id`. Au MVP, tout l'historique du foyer est synchronisé ; une fenêtre glissante pourra être introduite plus tard, par une colonne `period_key`, quand le volume le justifiera (5.3).
 - **Écritures** : toutes idempotentes (UUID client), rejouées par le moteur à la reconnexion ; conflit = dernière écriture gagnante par ligne (ENF-2).
 
 ### 3.7 Points tranchés le 19/10/2026
 
 1. `occurred_at` est modifiable sur un événement ; l'apprentissage recalcule depuis le journal à chaque fois, aucun état intermédiaire à invalider.
 2. La justification d'une suggestion (EF-4.8) est recalculée à l'affichage par le moteur, à partir de `product_state` ; aucune colonne en base. Sur une liste clôturée, la justification n'est plus affichée.
-3. Fenêtre de synchro de 12 mois confirmée : un produit acheté moins d'une fois par an n'est pas un produit à rythme, et l'historique complet reste consultable en ligne.
+3. Pas de fenêtre de synchro au MVP (décidé le 26/10/2026, remplace la fenêtre de 12 mois) : tout l'historique est synchronisé et le moteur le prend en compte en entier (5.7).
 
 ## 4. Moteur d'estimation
 
@@ -342,6 +340,7 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 
 - Module **TypeScript pur**, sans accès à la base ni au réseau : il reçoit des objets (produit, événements, foyer, date courante) et rend des objets. Il tourne sur l'appareil, appelé par la couche d'accès aux données.
 - **Déterministe** : la date courante est un paramètre, jamais lue par le moteur. Même entrée, même sortie, ce qui rend les tests exacts.
+- **Dates locales** : le moteur reçoit les dates en heure locale de l'appareil, sans fuseau (`2026-10-26T18:30:00`) ; la couche `data` convertit `occurred_at` (UTC) dans le fuseau de l'appareil avant l'appel. Une durée en jours est une différence de jours civils : un achat samedi soir et un « fini » dimanche matin sont séparés d'un jour. L'heure ne sert qu'à ordonner deux événements du même jour. Le moteur ne manipule jamais de fuseau horaire.
 - **Sans état** : rien n'est mémorisé entre deux appels ; `product_state` et `learned_rate` (3.5) sont les sorties du moteur, recalculées à la demande.
 - **Arithmétique simple** : pas de statistique au-delà d'une médiane, pas d'apprentissage automatique (risque « sur-ingénierie » des spécifications fonctionnelles).
 
@@ -353,6 +352,7 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 | `estimateStock` | produit, événements du produit, rythme, date courante | stock estimé, date d'ancrage, date d'épuisement prévue, marqueur « à racheter » |
 | `suggestForPeriod` | états de tous les produits, période en jours, date courante | lignes suggérées : produit, quantité, justification textuelle |
 | `applyRecipes` | recettes choisies avec portions, états des produits, lignes existantes | lignes ajoutées ou cumulées |
+| `resolveFinishedAt` | produit, événements du produit, rythme, date du signalement | date à enregistrer pour le « fini », et si elle a été avancée (4.4) |
 
 Un type `ProductState` regroupe les sorties des deux premières fonctions ; c'est lui que les écrans affichent (fiche produit, accueil, justification EF-4.8).
 
@@ -365,18 +365,18 @@ Le rythme `r` s'exprime en unités d'achat par jour. Sources par priorité (5.2 
 3. **Catalogue** : depuis les valeurs copiées sur le produit à sa création : `r = catalog_rate_qty × size` si `catalog_scaling = per_person`, sinon la valeur telle quelle ; réserve : `r = 1 / catalog_lifetime_days`. La taille du foyer est lue à l'exécution, donc une modification s'applique immédiatement aux produits sur rythme catalogue (5.4 FS) ; une mise à jour du catalogue ne change rien (RG-8).
 4. **Aucun** : produit sans rythme (ponctuel ou inconnu) ; jamais suggéré.
 
-**Rythme appris.** Soient les achats éligibles du produit, triés par date : `P1 … Pn` avec leurs quantités `q1 … qn`. Un achat est éligible s'il ne provient pas d'une ligne d'origine recette (RG-4) et s'il est dans la fenêtre de 12 mois.
+**Rythme appris.** Soient les achats éligibles du produit, triés par date : `P1 … Pn` avec leurs quantités `q1 … qn`. Un achat est éligible s'il ne provient pas d'une ligne d'origine recette (RG-4).
 
 - Pour chaque achat `Pk` (sauf le dernier), l'intervalle de consommation `dk` est le nombre de jours entre `Pk` et le premier des deux événements suivants : l'achat `Pk+1`, ou un « fini » postérieur à `Pk`. Les deux sont des bornes supérieures : l'utilisateur peut signaler « fini » quelques jours après l'épuisement réel, mais ce signal reste plus proche de la vérité que l'achat suivant, et la médiane absorbe les retards ponctuels. Un « fini » se signale en un seul geste et prend la date du jour ; la date reste corrigeable depuis la fiche produit mais n'est jamais demandée (ENF-8).
 - Taux observé sur l'intervalle : `rk = qk / dk`.
 - Le rythme appris est la **médiane des cinq derniers `rk`** (ou de tous s'il y en a moins de cinq, minimum deux, soit trois achats). La médiane ignore un achat exceptionnel (promotion, réception) sans qu'il faille le détecter.
-- Les intervalles inférieurs à un jour sont ignorés (deux achats le même jour comptent comme un seul, quantités cumulées).
+- Deux achats du même jour civil comptent comme un seul, quantités cumulées : un intervalle dure toujours au moins un jour.
 
 **Borne de sécurité.** Tant que moins de cinq intervalles sont disponibles, le rythme appris est borné entre 0,5 × et 2 × la valeur de référence (déclarée, sinon catalogue, sinon pas de borne). Au-delà de cinq intervalles, la médiane seule fait foi.
 
 ### 4.4 Stock estimé
 
-Le stock est reconstruit depuis le dernier **événement d'ancrage** : le plus récent parmi `counted` (valeur = quantité relevée), `finished` (valeur = 0) et `opened_last` (valeur = 1 unité d'achat). Sans ancrage, l'ancre est le premier achat de la fenêtre avec une valeur de 0.
+Le stock est reconstruit depuis le dernier **événement d'ancrage** : le plus récent parmi `counted` (valeur = quantité relevée), `finished` (valeur = 0) et `opened_last` (valeur = 1 unité d'achat). Sans ancrage, l'ancre est le premier achat connu, avec une valeur de 0 ; cet achat est compté dans la somme des achats.
 
 ```
 stock(t) = max(0, A + Σ achats après l'ancre − r × jours(ancre → t))
@@ -389,7 +389,7 @@ stock(t) = max(0, A + Σ achats après l'ancre − r × jours(ancre → t))
 
 Un « il m'en reste » (EF-3.3, EF-4.4) est enregistré comme un `counted` d'une unité d'achat à la date du jour : il recale l'estimation sans règle spéciale.
 
-**« Fini » signalé peu après un achat.** Un « fini » daté d'aujourd'hui alors que le produit vient d'être racheté désigne presque toujours l'ancienne unité, pas la nouvelle. Règle silencieuse, sans question : si, à la date du « fini », le stock estimé comprend un achat de moins de `L / 2` jours (`L` = durée de vie attendue d'une unité, soit `1 / r`), l'événement est daté de la veille de cet achat. L'app affiche un message annulable (« marqué fini avant tes courses du 12 ») ; l'utilisateur peut corriger la date depuis la fiche. Au-delà de `L / 2`, le « fini » s'applique tel quel. Test T18 : achat à J0, « fini » à J1 avec `L` = 14 → événement daté J−1, stock = quantité achetée, intervalle précédent clos à J−1. Test T19 : achat à J0, « fini » à J10 avec `L` = 14 → stock 0, intervalle de 10 jours.
+**« Fini » signalé peu après un achat.** Un « fini » daté d'aujourd'hui alors que le produit vient d'être racheté désigne presque toujours l'ancienne unité, pas la nouvelle. Règle silencieuse, sans question : si, à la date du « fini », le stock estimé comprend un achat de moins de `L / 2` jours (`L` = durée de vie attendue d'une unité, soit `1 / r`), l'événement est daté de la veille de cet achat. L'app affiche un message annulable (« marqué fini avant tes courses du 12 ») ; l'utilisateur peut corriger la date depuis la fiche. Au-delà de `L / 2`, le « fini » s'applique tel quel. Test T18 : achat à J0, « fini » à J1 avec `L` = 14 → événement daté J−1, stock = quantité achetée, intervalle précédent clos à J−1. Test T19 : achat à J0, « fini » à J10 avec `L` = 14 → stock 0, intervalle de 10 jours. Cette règle est la fonction `resolveFinishedAt` du moteur : la commande `markFinished` de `data` l'appelle, enregistre l'événement à la date rendue et affiche le message si la date a été avancée.
 
 ### 4.5 Quantité suggérée
 
@@ -419,23 +419,25 @@ Les tests sont écrits avant le moteur, sous forme de fixtures JSON (produit, fo
 
 | Id | Scénario | Résultat attendu |
 | --- | --- | --- |
-| T1 | Rythme déclaré 1 yaourt/jour, pack de 12 acheté il y a 8 jours, liste de 7 jours | stock 4, besoin 3 → suggestion 1 pack (arrondi pièce) |
-| T2 | 2 achats seulement, pas de rythme déclaré, catalogue 0,5/pers/jour, foyer de 2 | source `catalog`, r = 1 |
-| T3 | 3 achats de 1 L à J0, J7, J14 | r appris = 1/7 L/jour, source `learned`, 2 intervalles |
-| T4 | 6 achats hebdomadaires dont un achat de 6 unités en promotion | la médiane ignore l'intervalle aberrant ; r = 1/7 |
-| T5 | Achat puis « fini » à J5 puis achat à J9 | intervalle = 5 jours, pas 9 |
-| T6 | « fini » hier, pas d'achat depuis | stock 0, suggestion = r × P |
-| T7 | `counted` 3 à J0, r = 1/jour, t = J2 | stock 1 |
-| T8 | Réserve : dentifrice, `opened_last` à J0 | « à racheter » vrai, suggestion = safety\_stock |
-| T9 | Pain, r = 1/jour, conservation 2 jours, liste de 31 jours | suggestion 2, pas 31 |
+| T01 | Rythme déclaré 1 yaourt/jour, pack de 12 acheté il y a 8 jours, liste de 7 jours | stock 4, besoin 3 → suggestion 1 pack (arrondi pièce) |
+| T02 | 2 achats seulement, pas de rythme déclaré, catalogue 0,5/pers/jour, foyer de 2 | source `catalog`, r = 1 |
+| T03 | 3 achats de 1 L à J0, J7, J14 | r appris = 1/7 L/jour, source `learned`, 2 intervalles |
+| T04 | 6 achats hebdomadaires dont un achat de 6 unités en promotion | la médiane ignore l'intervalle aberrant ; r = 1/7 |
+| T05 | Achat puis « fini » à J5 puis achat à J9 | intervalle = 5 jours, pas 9 |
+| T06 | « fini » hier, pas d'achat depuis | stock 0, suggestion = r × P |
+| T07 | `counted` 3 à J0, r = 1/jour, t = J2 | stock 1 |
+| T08 | Réserve : dentifrice, `opened_last` à J0 | « à racheter » vrai, suggestion = safety\_stock |
+| T09 | Pain, r = 1/jour, conservation 2 jours, liste de 31 jours | suggestion 2, pas 31 |
 | T10 | Achats provenant de lignes recette | exclus du calcul de r |
 | T11 | Produit ponctuel | jamais suggéré |
-| T12 | Suggestion refusée « il m'en reste » sur la liste active | non re-suggéré sur cette liste ; `counted` 1 créé |
+| T12 | Suggestion refusée « il m'en reste » sur la liste active, avec le `counted` 1 qui en résulte | non re-suggéré sur cette liste ; stock recalé à 1 (la création du `counted` par la commande est vérifiée en intégration, 9.1) |
 | T13 | 15 jours sans ouverture de l'app | stock décroît normalement, suggestions au retour (évolution « pause » hors MVP) |
 | T14 | Recette 4 portions demandée pour 2, ingrédient de base en stock suffisant | ingrédient de base non ajouté, spécifiques divisés par 2 |
 | T15 | Deux recettes partageant un ingrédient | une seule ligne, quantités cumulées |
 | T16 | Événement avec `deleted_at` | ignoré ; même résultat que s'il n'avait jamais existé |
 | T17 | Rythme appris sur 2 intervalles, 4 × la valeur catalogue | borné à 2 × catalogue |
+| T18 | Achat à J0, « fini » signalé à J1, `L` = 14 (4.4) | « fini » daté J−1, stock = quantité achetée, intervalle précédent clos à J−1 |
+| T19 | Achat à J0, « fini » signalé à J10, `L` = 14 (4.4) | « fini » daté J10, stock 0, intervalle de 10 jours |
 
 Propriétés vérifiées en complément : le moteur est idempotent (deux appels identiques donnent le même résultat), le stock n'est jamais négatif, et la quantité suggérée est nulle dès que le stock couvre la période.
 
@@ -503,6 +505,7 @@ Les identifiants étant générés côté client (UUID v7) et les écritures ét
 | --- | --- |
 | Une seule liste active par foyer (RG-6) | Index unique partiel ; en cas de conflit entre deux appareils, le second `upsert` est refusé et la liste locale est remplacée par celle du serveur (5.4) |
 | Une liste clôturée est immuable (RG-6) | Trigger refusant toute mise à jour de `list_line` dont la liste est `closed`, sauf `deleted_at` |
+| Annulation de la clôture (EF-6.5) | Commande `reopenList` : `status` repasse à `active` et `closed_at` à nul, `deleted_at` est posé sur les achats issus des lignes de la liste ; refusée par l'index unique si une autre liste est déjà active. Les lignes non cochées n'étant reportées qu'à la création de la liste suivante (EF-2.2), il n'y a rien d'autre à défaire. Une nouvelle clôture réécrit les mêmes achats (même UUID v5) et remet leur `deleted_at` à nul |
 | Clôture idempotente | L'`id` d'un événement d'achat créé à la clôture est dérivé de la ligne (UUID v5 de `list_line.id`) : deux clôtures concurrentes par deux membres du foyer produisent le même événement, conservé une seule fois par l'`upsert` |
 | Pas de suppression physique (RG-7) | Politiques RLS sans `delete` ; archivage par `archived_at` |
 | Membre d'un foyer | RLS : `household_id in (select household_id from household_member where user_id = auth.uid())`, lecture et écriture ; `household_member` lisible par ses membres, modifiable uniquement par un `owner` |
@@ -512,7 +515,7 @@ Les identifiants étant générés côté client (UUID v7) et les écritures ét
 Réduite au strict minimum :
 
 - **Création du foyer** : trigger Postgres sur `auth.users` à l'inscription, qui crée `household` (taille 1), `household_member` (`owner`) et le jeu de catégories par défaut avec leurs `system_key`. Aucun écran d'initialisation hors la taille du foyer (EF-7.1), que l'app met à jour ensuite.
-- **Export des données** (EF-7.3) : réalisé côté client depuis SQLite, en JSON, sans fonction serveur ; une fonction d'export complet (au-delà de la fenêtre de synchro) est ajoutée seulement si un utilisateur le demande.
+- **Export des données** (EF-7.3) : réalisé côté client depuis SQLite, en JSON, sans fonction serveur ; tout l'historique étant synchronisé (5.3), l'export local est complet.
 - **Suppression du compte** (EF-7.3) : fonction Postgres `delete_account()` appelée par l'app, qui supprime physiquement le foyer et ses données si l'utilisateur en est le seul membre, puis l'utilisateur. Seule suppression physique autorisée.
 
 Pas d'Edge Function au MVP. Elles n'arriveront qu'avec les notifications et l'import de commandes (section 10).
@@ -524,7 +527,7 @@ Pas d'Edge Function au MVP. Elles n'arriveront qu'avec les notifications et l'im
 
 ## 6. Frontend
 
-**Statut : proposé le 19/10/2026, à valider.**
+**Statut : décidé le 26/10/2026.**
 
 ### 6.1 Structure du projet
 
@@ -558,7 +561,7 @@ repo/
 `packages/data` expose des **dépôts par entité** (`products`, `events`, `lists`, `recipes`, `household`) avec deux faces :
 
 - des **requêtes réactives** (`watchProducts()`, `watchActiveList()`) qui renvoient un flux mis à jour à chaque écriture locale ou synchronisation ;
-- des **commandes** (`markFinished(productId)`, `closeList(listId)`, `acceptSuggestion(lineId)`) qui écrivent dans SQLite dans une transaction et appliquent les règles de 4.4 (date du « fini », `counted` sur « il m'en reste »).
+- des **commandes** (`markFinished(productId)`, `closeList(listId)`, `acceptSuggestion(lineId)`) qui écrivent dans SQLite dans une transaction et appliquent les règles de 4.4 : date du « fini » calculée par `resolveFinishedAt` de `core`, `counted` sur « il m'en reste ». Une commande ne contient aucune formule : tout calcul vient de `core`.
 
 Les écrans n'écrivent jamais de SQL et n'importent jamais PowerSync (2.9). Un hook `useProductStates()` combine le flux des produits et des événements et appelle le moteur de `core` ; son résultat est mémorisé par produit et recalculé uniquement pour les produits dont les événements ont changé, ce qui tient ENF-4 (300 produits en moins d'une seconde) sans table dérivée.
 
@@ -601,7 +604,7 @@ Un `CLAUDE.md` à la racine fixe ce que Claude Code doit respecter : la frontiè
 
 ## 7. Catalogue par défaut
 
-**Statut : proposé le 19/10/2026, à valider.** Répond à la question laissée ouverte par les spécifications fonctionnelles (constitution du catalogue).
+**Statut : décidé le 26/10/2026.** Répond à la question laissée ouverte par les spécifications fonctionnelles (constitution du catalogue).
 
 ### 7.1 Nature
 
@@ -609,7 +612,7 @@ Le catalogue est un **fichier de données livré avec l'application**, dans `pac
 
 ### 7.2 Format
 
-JSON, un fichier par catégorie pour rester relisible, assemblés au build. Schéma validé par Zod dans `core` ; une entrée :
+JSON, un fichier par catégorie pour rester relisible, assemblés au build. Schéma vérifié dans `core` par une fonction de validation écrite à la main (aucune dépendance, 6.1) ; une entrée :
 
 ```json
 {
@@ -690,7 +693,7 @@ La recherche du champ unique (EF-4.9) est implémentée dans `core`, sans dépen
 
 ## 8. Sécurité et données personnelles
 
-**Statut : proposé le 19/10/2026, à valider.**
+**Statut : décidé le 26/10/2026.**
 
 ### 8.1 Données traitées
 
@@ -726,7 +729,7 @@ L'application ne collecte **aucune** donnée de localisation, aucun prix, aucun 
 
 ### 8.5 Côté client
 
-- Validation de toutes les entrées dans `core` (Zod) avant écriture ; les contraintes Postgres restent la garantie finale.
+- Validation de toutes les entrées dans `core`, par des fonctions écrites à la main (aucune dépendance, 6.1), avant écriture ; les contraintes Postgres restent la garantie finale.
 - Pas de rendu de HTML issu des données ; les noms de produits et de recettes sont affichés comme texte.
 - Dépendances : audit automatique au CI (section 9) ; mises à jour mensuelles.
 
@@ -736,14 +739,14 @@ L'application ne collecte **aucune** donnée de localisation, aucun prix, aucun 
 
 ## 9. Qualité, CI/CD et exploitation
 
-**Statut : proposé le 19/10/2026, à valider.**
+**Statut : décidé le 26/10/2026.**
 
 ### 9.1 Tests
 
 | Niveau | Périmètre | Outil | Règle |
 | --- | --- | --- | --- |
 | Unitaires | `core` : moteur (4.8), recherche (7.5), validation du catalogue (7.3) | Vitest | Écrits avant le code ; 100 % des formules couvertes par une fixture ; exécution en moins de 10 secondes |
-| Intégration | `data` : dépôts et commandes contre une base SQLite en mémoire ; connecteur contre le projet Supabase de développement, schéma de test réinitialisé | Vitest, Docker | Vérifie les règles 4.4 (date du « fini », `counted`), 5.4 (idempotence) et 5.5 (clôture idempotente, liste unique) |
+| Intégration | `data` : dépôts et commandes contre une base SQLite en mémoire ; connecteur contre le projet Supabase de développement, schéma de test réinitialisé | Vitest, Docker | Vérifie les règles 4.4 (date du « fini », `counted`), 5.4 (idempotence) et 5.5 (clôture idempotente, annulation de la clôture, liste unique) |
 | Bout en bout | Les cinq parcours de 8 FS (première liste, « fini », planification, recette, magasin) | Maestro sur natif, Playwright sur web | Exécutés avant chaque livraison, pas à chaque commit |
 | Manuel | Le parcours de phase A sur l'iPhone réel (OPFS, plein écran, hors ligne en magasin) | Liste de contrôle dans le dépôt | À chaque changement de la couche de stockage ou de synchro |
 

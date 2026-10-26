@@ -1,7 +1,5 @@
 # Commedab — Étude de marché
 
-> Export Markdown du document de référence (Claude Docs). La version éditable fait foi.
-
 ## 1. Objet et méthode
 
 Cette étude confronte le projet (spécifications fonctionnelles v1) à l'offre existante afin de vérifier qu'il apporte une valeur réelle, d'identifier ce qui est déjà fait ailleurs, et d'ajuster le positionnement avant la phase technique.
