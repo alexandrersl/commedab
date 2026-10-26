@@ -9,11 +9,12 @@
     "node": ">=22"
   },
   "scripts": {
-    "check": "pnpm -r --if-present run typecheck && pnpm -r --if-present run lint && pnpm -r --if-present run test",
+    "check": "prettier --check . && pnpm -r --if-present run typecheck && pnpm -r --if-present run lint && pnpm -r --if-present run test",
     "typecheck": "pnpm -r --if-present run typecheck",
     "lint": "pnpm -r --if-present run lint",
     "test": "pnpm -r --if-present run test",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "prettier": "^3.6.2",
