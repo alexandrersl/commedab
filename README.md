@@ -27,13 +27,13 @@ permanente, que tout le monde abandonne au bout de deux semaines.
 
 ## Stack
 
-| Couche | Choix |
-| --- | --- |
-| Application | Expo (React Native, TypeScript), Expo Router, NativeWind |
-| Données locales | SQLite (op-sqlite sur mobile, wa-sqlite/OPFS sur web) |
-| Synchronisation | PowerSync |
-| Backend | Supabase (Postgres, Auth, RLS) |
-| Moteur d'estimation | TypeScript pur, sans dépendance, testé par fixtures |
+| Couche              | Choix                                                    |
+| ------------------- | -------------------------------------------------------- |
+| Application         | Expo (React Native, TypeScript), Expo Router, NativeWind |
+| Données locales     | SQLite (op-sqlite sur mobile, wa-sqlite/OPFS sur web)    |
+| Synchronisation     | PowerSync                                                |
+| Backend             | Supabase (Postgres, Auth, RLS)                           |
+| Moteur d'estimation | TypeScript pur, sans dépendance, testé par fixtures      |
 
 Livraison en trois phases à partir du même code : PWA, puis iOS natif, puis
 stores. Détails dans [`docs/specs-techniques.md`](docs/specs-techniques.md).
@@ -46,12 +46,12 @@ stores. Détails dans [`docs/specs-techniques.md`](docs/specs-techniques.md).
 
 ## Démarrer
 
-Prérequis : Node 22, pnpm 10.
+Prérequis : Node 22, pnpm 12.
 
 ```sh
 pnpm install
 cp .env.example .env     # puis renseigner les valeurs publiques
-pnpm check               # typage, lint, tests — doit passer avant chaque commit
+pnpm check               # formatage, typage, lint, tests — doit passer avant chaque commit
 ```
 
 L'application Expo (`apps/mobile`) est créée au premier jalon :
