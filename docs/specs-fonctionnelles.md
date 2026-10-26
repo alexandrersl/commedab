@@ -1,7 +1,5 @@
 # Commedab — Spécifications fonctionnelles v1
 
-> Export Markdown du document de référence (Claude Docs). La version éditable fait foi ; ce fichier est régénéré à chaque mise à jour des spécifications.
-
 ## 1. Objet du document
 
 Le présent document définit les spécifications fonctionnelles de la version minimale (MVP) d'une application de gestion de liste de courses fondée sur l'estimation du stock domestique. Il décrit le périmètre, les concepts, les règles de gestion et les exigences fonctionnelles et non fonctionnelles. Les choix techniques (architecture, stack, modèle physique de données) font l'objet d'un document distinct.
@@ -132,7 +130,7 @@ Chaque exigence est identifiée EF-x.y. Les critères d'acceptation en précisen
 | Id | Exigence | Critères d'acceptation |
 | --- | --- | --- |
 | EF-2.1 | La clôture d'une liste de courses enregistre un événement « acheté » daté, avec la quantité, pour chaque ligne cochée. | Chaque ligne cochée produit exactement un achat ; les lignes non cochées n'en produisent aucun. |
-| EF-2.2 | Les lignes non cochées à la clôture sont reportées sur la liste suivante, signalées comme reportées. | Une ligne reportée apparaît dans la liste suivante avec sa quantité d'origine. |
+| EF-2.2 | Les lignes non cochées à la clôture sont reportées sur la liste suivante, à sa création, signalées comme reportées. | Une ligne reportée apparaît dans la liste suivante avec sa quantité d'origine. |
 | EF-2.3 | L'historique des achats d'un produit (date, quantité) est consultable depuis sa fiche. | Les achats s'affichent du plus récent au plus ancien. |
 | EF-2.4 | L'utilisateur peut corriger ou supprimer un achat enregistré par erreur. | La correction recalcule le stock estimé et le rythme appris. |
 
@@ -178,7 +176,7 @@ Chaque exigence est identifiée EF-x.y. Les critères d'acceptation en précisen
 | EF-6.2 | Une ligne se coche ou se décoche d'un tap ; les lignes cochées passent en fin de groupe sans disparaître. | Une ligne cochée par erreur est récupérable en un tap. |
 | EF-6.3 | La quantité d'une ligne est modifiable depuis le mode magasin, notamment pour enregistrer un achat en plusieurs exemplaires (promotion, lot) ; l'écart avec la quantité prévue est pris en compte dans le stock estimé (5.3). | La quantité modifiée est celle enregistrée à l'achat. |
 | EF-6.4 | Le mode magasin fonctionne sans connexion réseau ; les modifications sont synchronisées au retour de la connexion. | Cocher, décocher et clôturer sont possibles hors ligne sans perte de données. |
-| EF-6.5 | L'action « Terminer les courses » clôture la liste et déclenche EF-2.1 et EF-2.2 après confirmation. | Une liste clôturée n'est plus modifiable. |
+| EF-6.5 | L'action « Terminer les courses » clôture la liste et déclenche EF-2.1 et EF-2.2, sans confirmation. Un message éphémère permet d'annuler la clôture : la liste redevient active, avec ses lignes cochées, et les achats enregistrés sont retirés. | Une clôture annulée ne laisse aucun achat ; une fois le message disparu, la liste clôturée n'est plus modifiable. |
 
 ### 6.7 Profil et paramètres
 
@@ -195,9 +193,9 @@ Chaque exigence est identifiée EF-x.y. Les critères d'acceptation en précisen
 | RG-1 | Un produit a une et une seule unité d'achat ; rythmes, quantités de liste et quantités d'ingrédients s'expriment dans cette unité ou en fraction décimale de celle-ci. Un même article vendu sous plusieurs conditionnements est représenté par un seul produit, l'utilisateur ajustant la quantité achetée. |
 | RG-2 | Les quantités suggérées sont arrondies au pas supérieur de l'unité d'achat : pièce entière pour un conditionnement, 100 g pour un produit au poids, 0,5 L pour un produit au volume. |
 | RG-3 | Un rythme appris requiert au moins trois achats du même produit ; en deçà, la source suivante (5.2) s'applique. |
-| RG-4 | Les achats d'un produit marqué ponctuel n'alimentent aucun apprentissage. Les lignes d'origine « recette » sont également exclues de l'apprentissage, sauf pour un produit porteur d'un rythme déclaré. |
+| RG-4 | Les achats d'un produit marqué ponctuel n'alimentent aucun apprentissage. Les lignes d'origine « recette » sont également exclues de l'apprentissage. |
 | RG-5 | Aucun ajustement explicite du rythme sur un signal isolé : un « fini » clôt l'intervalle de consommation en cours et entre dans la médiane (5.2) ; un refus « il m'en reste » devient un relevé d'une unité qui recale le stock (5.3). Un « fini » signalé peu après un achat (moins de la moitié de la durée de vie attendue d'une unité) est rattaché à la veille de cet achat, avec message annulable. |
-| RG-6 | Une seule liste est active ; une liste clôturée est immuable. |
+| RG-6 | Une seule liste est active ; une liste clôturée est immuable, sauf annulation de la clôture depuis le message éphémère qui la suit (EF-6.5). |
 | RG-7 | La suppression d'un produit référencé par une recette ou un achat est interdite ; seul l'archivage est possible. |
 | RG-8 | Les valeurs issues du catalogue sont copiées à la création du produit et ne sont jamais synchronisées ensuite. |
 | RG-9 | Les catégories « frais » et « surgelés » sont des catégories système, renommables mais non supprimables, toujours placées en fin de parcours. |

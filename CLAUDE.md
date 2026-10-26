@@ -14,13 +14,14 @@ Une règle de ce fichier qui contredit les specs est un bug de ce fichier.
 
 Expo (React Native, TypeScript strict, Expo Router, NativeWind), PowerSync,
 Supabase (Postgres, Auth, RLS). Monorepo pnpm. Web = PWA en phase A ; iOS en
-phase B. Pas de Supabase local : projet cloud `dev`.
+phase B. Pas de Supabase local : projet cloud `commedab-dev`.
 
 ## Structure et frontières (specs techniques 2.9, 6.1)
 
 - `packages/core` : moteur d'estimation, types du modèle, catalogue, recherche.
   TypeScript pur. **Aucune dépendance** (ni Expo, ni React, ni PowerSync, ni
-  navigateur). Toute fonction reçoit la date courante en paramètre.
+  navigateur). Toute fonction reçoit la date courante en paramètre, en heure
+  locale sans fuseau ; les durées sont des jours civils (specs techniques 4.1).
 - `packages/data` : schéma PowerSync, dépôts par entité, commandes,
   connecteur Supabase. Seul endroit où PowerSync et le SQL existent.
 - `apps/mobile` : écrans et navigation. N'importe jamais PowerSync, n'écrit
@@ -61,7 +62,8 @@ dans `data` derrière une interface.
 
 ## Avant chaque commit
 
-`pnpm check` (typage, lint, tests unitaires) doit passer. Conventional Commits.
+`pnpm check` (formatage, typage, lint, tests unitaires) doit passer.
+Conventional Commits.
 Aucun secret dans le dépôt : `.env` est ignoré, `.env.example` est commité.
 
 ## Vocabulaire du code
