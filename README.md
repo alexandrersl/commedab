@@ -54,10 +54,10 @@ cp .env.example .env     # puis renseigner les valeurs publiques
 pnpm check               # formatage, typage, lint, tests — doit passer avant chaque commit
 ```
 
-L'application Expo (`apps/mobile`) est créée au premier jalon :
+Lancer l'application en local (web) :
 
 ```sh
-pnpm create expo-app@latest apps/mobile --template blank-typescript
+pnpm --filter @commedab/mobile web
 ```
 
 ## Structure
