@@ -3,3 +3,12 @@ packages:
   - packages/*
 allowBuilds:
   esbuild: true
+  # Le binaire natif arrive par une dépendance optionnelle ; le script ne sert que de repli.
+  unrs-resolver: false
+auditConfig:
+  # Failles de @expo/cli (outil de développement, absent du bundle de l'app), sans
+  # correctif compatible : node-forge (aucun correctif publié) et zod 3 (corrigé en 4,
+  # que @expo/cli n'accepte pas). À réexaminer à chaque montée de SDK Expo.
+  ignoreGhsas:
+    - GHSA-86w9-cpqp-85rv
+    - GHSA-mrhx-c7xc-m3w5

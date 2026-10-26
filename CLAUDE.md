@@ -24,8 +24,11 @@ phase B. Pas de Supabase local : projet cloud `commedab-dev`.
   locale sans fuseau ; les durées sont des jours civils (specs techniques 4.1).
 - `packages/data` : schéma PowerSync, dépôts par entité, commandes,
   connecteur Supabase. Seul endroit où PowerSync et le SQL existent.
-- `apps/mobile` : écrans et navigation. N'importe jamais PowerSync, n'écrit
-  jamais de SQL, n'appelle Supabase que pour l'authentification.
+- `apps/mobile` : écrans et navigation (Expo Router, routes dans `src/app`).
+  N'importe jamais PowerSync, n'écrit jamais de SQL, n'appelle Supabase que
+  pour l'authentification (`src/auth`). Lire `apps/mobile/AGENTS.md` avant
+  de toucher une API Expo. Une dépendance s'y ajoute par
+  `pnpm exec expo install`, qui choisit la version compatible avec le SDK.
 - `supabase/` : migrations, RLS, fonctions, règles de synchro.
 
 Une dépendance ajoutée doit fonctionner sur web, iOS et Android, ou être isolée
