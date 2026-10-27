@@ -1,7 +1,8 @@
 # Fixtures du moteur
 
 Une fixture par scénario de référence (specs techniques 4.8), `T01.json`, `T02.json`…,
-toutes listées dans `index.ts`. Elles sont la définition exécutable des formules : toute
+toutes listées dans `index.ts`. `schema.ts` en donne le type et le vérifie au chargement :
+une clé inconnue ou mal typée fait échouer les tests. Elles sont la définition exécutable des formules : toute
 modification du moteur commence par une fixture.
 
 Champs d'une fixture :
@@ -17,7 +18,8 @@ Champs d'une fixture :
   (`2026-10-26T18:30:00`, specs techniques 4.1).
 - `periodDays` : durée de la liste, pour vérifier les suggestions.
 - `expected` : seules les valeurs écrites sont vérifiées (`rates`, `intervals`, `states`,
-  `finishedAt`, `suggestions`, `recipeLines`). Une quantité s'écrit en nombre ou en
+  `finishedAt`, `suggestions`, `recipeLines`). Une suggestion attendue porte `marked` :
+  proposée au seul titre du marqueur « à racheter » ou non. Une quantité s'écrit en nombre ou en
   fraction (`"1/7"`). `invalidInput` nomme le champ que `suggestForPeriod` doit refuser
   par une `InvalidInputError`.
 

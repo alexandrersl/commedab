@@ -28,7 +28,8 @@
     "suggestions": [
       {
         "productId": "yaourts",
-        "quantity": 7
+        "quantity": 7,
+        "marked": false
       }
     ]
   }

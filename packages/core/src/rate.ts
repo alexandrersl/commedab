@@ -1,5 +1,6 @@
 import { dayNumber, dayOf } from './date';
-import { liveEvents } from './events';
+import { liveEvents, type LiveEvents } from './events';
+import { checkEvents, checkHousehold, checkProduct } from './guard';
 import type { Household, LocalDate, LocalDateTime, Product, RateSource, StockEvent } from './model';
 
 const MIN_PURCHASES = 3;
@@ -32,13 +33,20 @@ export function resolveRate(
   events: readonly StockEvent[],
   household: Household,
 ): Rate {
+  checkProduct(product);
+  checkEvents(events, product.id);
+  checkHousehold(household);
+  return rateOf(product, liveEvents(events), household);
+}
+
+export function rateOf(product: Product, live: LiveEvents, household: Household): Rate {
   if (product.family === 'occasional') return NO_RATE;
 
   const declared = declaredRate(product);
   if (declared !== null) return { perDay: declared, source: 'declared', intervalCount: 0 };
 
   const catalog = catalogRate(product, household);
-  const learned = learnedRate(events, catalog);
+  const learned = learnedRate(live, catalog);
   if (learned !== null) return learned;
   if (catalog !== null) return { perDay: catalog, source: 'catalog', intervalCount: 0 };
   return NO_RATE;
@@ -50,8 +58,12 @@ export function resolveRate(
  * postérieur ; le dernier achat n'en a un que si un « fini » le suit.
  */
 export function observedIntervals(events: readonly StockEvent[]): Interval[] {
+  checkEvents(events);
   const live = liveEvents(events);
-  const purchases = purchaseDays(live);
+  return intervalsOf(purchaseDays(live), live);
+}
+
+function intervalsOf(purchases: readonly PurchaseDay[], live: LiveEvents): Interval[] {
   const finished = live.filter((event) => event.type === 'finished');
   const intervals: Interval[] = [];
 
@@ -100,9 +112,10 @@ function catalogRate(product: Product, household: Household): number | null {
 }
 
 /** Médiane des cinq derniers taux, bornée par la référence sous cinq intervalles. */
-function learnedRate(events: readonly StockEvent[], reference: number | null): Rate | null {
-  if (purchaseDays(liveEvents(events)).length < MIN_PURCHASES) return null;
-  const intervals = observedIntervals(events).slice(-MEDIAN_WINDOW);
+function learnedRate(live: LiveEvents, reference: number | null): Rate | null {
+  const purchases = purchaseDays(live);
+  if (purchases.length < MIN_PURCHASES) return null;
+  const intervals = intervalsOf(purchases, live).slice(-MEDIAN_WINDOW);
   if (intervals.length < MIN_INTERVALS) return null;
 
   let perDay = median(intervals.map((interval) => interval.perDay));
@@ -112,10 +125,14 @@ function learnedRate(events: readonly StockEvent[], reference: number | null): R
   return { perDay, source: 'learned', intervalCount: intervals.length };
 }
 
-function purchaseDays(
-  live: readonly StockEvent[],
-): { day: LocalDate; quantity: number; lastAt: LocalDateTime }[] {
-  const days: { day: LocalDate; quantity: number; lastAt: LocalDateTime }[] = [];
+interface PurchaseDay {
+  day: LocalDate;
+  quantity: number;
+  lastAt: LocalDateTime;
+}
+
+function purchaseDays(live: LiveEvents): PurchaseDay[] {
+  const days: PurchaseDay[] = [];
   for (const event of live) {
     if (event.type !== 'purchased' || event.fromRecipe) continue;
     const day = dayOf(event.occurredAt);

@@ -1,10 +1,19 @@
 import type { StockEvent } from './model';
 
-/** Événements non supprimés, du plus ancien au plus récent (EF-2.4, EF-3.4). */
-export function liveEvents(events: readonly StockEvent[]): StockEvent[] {
+declare const live: unique symbol;
+
+/**
+ * Événements non supprimés (EF-2.4, EF-3.4), du plus ancien au plus récent : la forme que
+ * lisent les calculs internes. Seul `liveEvents` la produit, une fois par appel public.
+ */
+export type LiveEvents = readonly StockEvent[] & { readonly [live]: true };
+
+export function liveEvents(events: readonly StockEvent[]): LiveEvents {
   return events
     .filter((event) => event.deletedAt === null)
-    .sort((a, b) => (a.occurredAt < b.occurredAt ? -1 : a.occurredAt > b.occurredAt ? 1 : 0));
+    .sort((a, b) =>
+      a.occurredAt < b.occurredAt ? -1 : a.occurredAt > b.occurredAt ? 1 : 0,
+    ) as readonly StockEvent[] as LiveEvents;
 }
 
 export function isAnchor(event: StockEvent): boolean {

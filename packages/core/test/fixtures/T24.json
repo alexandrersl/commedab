@@ -22,11 +22,13 @@
     "suggestions": [
       {
         "productId": "pain",
-        "quantity": 7
+        "quantity": 7,
+        "marked": false
       },
       {
         "productId": "brioche",
-        "quantity": 7
+        "quantity": 7,
+        "marked": false
       }
     ]
   }

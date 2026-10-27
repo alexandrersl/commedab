@@ -1,4 +1,4 @@
-import { InvalidInputError } from './errors';
+import { checkListLines, checkOffers, checkPeriod, checkProduct } from './guard';
 import type { ListLine, LocalDate, Offer, Product, RateSource } from './model';
 import { EPSILON, roundUpToStep } from './quantity';
 import type { ProductState } from './state';
@@ -33,9 +33,10 @@ export function suggestForPeriod(input: {
   listLines: readonly ListLine[];
   previousOffers: readonly Offer[];
 }): Suggestion[] {
-  if (!Number.isInteger(input.periodDays) || input.periodDays < 1) {
-    throw new InvalidInputError('periodDays', input.periodDays, 'doit être un entier ≥ 1');
-  }
+  checkPeriod(input.periodDays);
+  checkListLines(input.listLines);
+  checkOffers(input.previousOffers);
+  input.products.forEach(checkProduct);
   const listed = new Set(input.listLines.map((line) => line.productId));
   const suggestions: Suggestion[] = [];
 

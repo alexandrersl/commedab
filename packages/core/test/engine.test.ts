@@ -8,10 +8,10 @@ import {
   type Product,
   type Recipe,
 } from '../src/index';
-import { eventsOf, quantity, scenario, statesOf, type Fixture } from './fixture';
+import { eventsOf, quantity, scenario, statesOf } from './fixture';
 import { fixtures } from './fixtures/index';
 
-const all = (fixtures as Fixture[]).map(scenario);
+const all = fixtures.map(scenario);
 const suggestible = all.filter((s) => s.fixture.expected.invalidInput === undefined);
 const PRECISION = 6;
 
@@ -90,7 +90,11 @@ describe.each(all)('$fixture.id — $fixture.scenario', (s) => {
   if (expected.suggestions !== undefined) {
     const suggestions = expected.suggestions;
     it('suggestions', () => {
-      const actual = suggestionsOf(s)?.map(({ productId, quantity }) => ({ productId, quantity }));
+      const actual = suggestionsOf(s)?.map(({ productId, quantity, justification }) => ({
+        productId,
+        quantity,
+        marked: justification.marked,
+      }));
       expect(actual).toEqual(suggestions);
     });
   }

@@ -9,46 +9,11 @@ import {
   type LocalDateTime,
   type Product,
   type ProductState,
-  type Recipe,
   type StockEvent,
 } from '../src/index';
+import type { Fixture, Quantity } from './fixtures/schema';
 
-/** Nombre, ou fraction écrite `"1/7"` pour rester lisible dans le JSON. */
-export type Quantity = number | string;
-
-export interface Fixture {
-  id: string;
-  scenario: string;
-  household?: Household;
-  products: (Partial<Product> & { id: string })[];
-  events: (Partial<StockEvent> & Pick<StockEvent, 'productId' | 'type' | 'occurredAt'>)[];
-  listLines?: (Partial<ListLine> & { productId: string })[];
-  previousOffers?: Offer[];
-  recipes?: Recipe[];
-  recipeRequests?: { recipeId: string; servings: number }[];
-  /** « Fini » signalé à `at`, daté par `resolveFinishedAt` puis ajouté aux événements. */
-  finishedReport?: { productId: string; at: LocalDateTime };
-  now: LocalDateTime;
-  periodDays?: number;
-  expected: {
-    rates?: Record<string, { perDay?: Quantity; source?: string; intervalCount?: number }>;
-    intervals?: Record<string, number[]>;
-    states?: Record<
-      string,
-      {
-        stock?: Quantity;
-        anchorAt?: string | null;
-        depletionDate?: string | null;
-        toRebuy?: boolean;
-      }
-    >;
-    finishedAt?: FinishedAt;
-    suggestions?: { productId: string; quantity: number }[];
-    /** `suggestForPeriod` refuse l'entrée par une `InvalidInputError` sur ce champ. */
-    invalidInput?: string;
-    recipeLines?: { productId: string; quantity: number; existing: boolean }[];
-  };
-}
+export type { Fixture, Quantity };
 
 export interface Scenario {
   fixture: Fixture;

@@ -23,7 +23,8 @@
     "suggestions": [
       {
         "productId": "baguette",
-        "quantity": 2
+        "quantity": 2,
+        "marked": false
       }
     ]
   }

@@ -47,11 +47,13 @@
     "suggestions": [
       {
         "productId": "sel",
-        "quantity": 1
+        "quantity": 1,
+        "marked": true
       },
       {
         "productId": "cafe",
-        "quantity": 2
+        "quantity": 2,
+        "marked": false
       }
     ]
   }
