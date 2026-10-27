@@ -1,0 +1,10 @@
+// PWA de phase A servie comme fichiers statiques (specs techniques 6.4), sans code serveur.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "commedab",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+  },
+}

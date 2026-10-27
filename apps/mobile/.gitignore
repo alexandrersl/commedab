@@ -41,4 +41,4 @@ yarn-error.*
 /android
 
 # workers PowerSync, copiés par `pnpm web:assets`
-public/@powersync/
+public/powersync/
