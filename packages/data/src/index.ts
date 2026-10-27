@@ -3,4 +3,4 @@
 // Les écrans n'importent jamais PowerSync et n'écrivent jamais de SQL : tout passe par ici.
 // Voir docs/specs-techniques.md, sections 2.9, 5 et 6.2.
 
-export {};
+export { runStorageCheck, type StorageCheckResult } from './diagnostic/storage-check';

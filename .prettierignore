@@ -3,3 +3,4 @@ dist
 .expo
 pnpm-lock.yaml
 docs/*.md
+apps/mobile/public/@powersync

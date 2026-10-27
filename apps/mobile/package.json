@@ -6,13 +6,16 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "web": "expo start --web",
+    "web": "pnpm web:assets && expo start --web",
     "ios": "expo start --ios",
     "android": "expo start --android",
+    "build:web": "pnpm web:assets && expo export --platform web",
+    "web:assets": "pnpm --filter @commedab/data exec powersync-web copy-assets --output ../../apps/mobile/public",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },
   "dependencies": {
+    "@commedab/data": "workspace:*",
     "expo": "~58.0.19",
     "expo-constants": "~58.0.13",
     "expo-linking": "~58.0.14",

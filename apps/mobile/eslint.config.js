@@ -12,7 +12,7 @@ const supabase = {
 
 module.exports = defineConfig([
   expoConfig,
-  { ignores: ['dist/*', '.expo/*'] },
+  { ignores: ['dist/*', '.expo/*', 'public/@powersync/*'] },
   {
     rules: { 'no-restricted-imports': ['error', { patterns: [powersync, supabase] }] },
   },
