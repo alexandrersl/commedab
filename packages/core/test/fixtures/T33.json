@@ -63,11 +63,13 @@
     "suggestions": [
       {
         "productId": "lait-de-coco",
-        "quantity": 1
+        "quantity": 1,
+        "marked": true
       },
       {
         "productId": "tamarin",
-        "quantity": 1
+        "quantity": 1,
+        "marked": true
       }
     ]
   }

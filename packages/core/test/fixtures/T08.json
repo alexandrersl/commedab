@@ -41,7 +41,8 @@
     "suggestions": [
       {
         "productId": "dentifrice",
-        "quantity": 2
+        "quantity": 2,
+        "marked": true
       }
     ]
   }

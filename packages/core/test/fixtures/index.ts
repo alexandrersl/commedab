@@ -1,4 +1,5 @@
 // Fixtures du moteur (specs techniques 4.8), dans l'ordre du tableau.
+import { parseFixture, type Fixture } from './schema';
 import T01 from './T01.json';
 import T02 from './T02.json';
 import T03 from './T03.json';
@@ -33,7 +34,7 @@ import T31 from './T31.json';
 import T32 from './T32.json';
 import T33 from './T33.json';
 
-export const fixtures: unknown[] = [
+export const fixtures: Fixture[] = [
   T01,
   T02,
   T03,
@@ -67,4 +68,4 @@ export const fixtures: unknown[] = [
   T31,
   T32,
   T33,
-];
+].map(parseFixture);

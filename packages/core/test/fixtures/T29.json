@@ -30,15 +30,18 @@
     "suggestions": [
       {
         "productId": "pain-de-mie",
-        "quantity": 1
+        "quantity": 1,
+        "marked": false
       },
       {
         "productId": "jambon",
-        "quantity": 0.3
+        "quantity": 0.3,
+        "marked": false
       },
       {
         "productId": "lait",
-        "quantity": 1
+        "quantity": 1,
+        "marked": false
       }
     ]
   }

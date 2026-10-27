@@ -1,5 +1,6 @@
 import { addDays, daysBetween, withinCalendar } from './date';
-import { anchorValue, isAnchor, lastIndex, liveEvents } from './events';
+import { anchorValue, isAnchor, lastIndex, liveEvents, type LiveEvents } from './events';
+import { checkDateTime, checkEvents, checkProduct, checkRate } from './guard';
 import { EPSILON } from './quantity';
 import type { Rate } from './rate';
 import type { LocalDate, LocalDateTime, Product, StockEvent } from './model';
@@ -28,7 +29,19 @@ export function estimateStock(
   rate: Rate,
   now: LocalDateTime,
 ): StockEstimate {
-  const live = liveEvents(events);
+  checkProduct(product);
+  checkEvents(events, product.id);
+  checkRate(rate);
+  checkDateTime('now', now);
+  return stockOf(product, liveEvents(events), rate, now);
+}
+
+export function stockOf(
+  product: Product,
+  live: LiveEvents,
+  rate: Rate,
+  now: LocalDateTime,
+): StockEstimate {
   const lastPurchase = live[lastIndex(live, (event) => event.type === 'purchased')];
   const lastPurchaseAt = lastPurchase?.occurredAt ?? null;
   const lastPurchaseQuantity = lastPurchase?.quantity ?? null;

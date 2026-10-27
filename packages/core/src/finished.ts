@@ -1,5 +1,6 @@
 import { addDays, dayOf, daysBetween } from './date';
 import { anchorValue, isAnchor, lastIndex, liveEvents } from './events';
+import { checkDateTime, checkEvents, checkRate } from './guard';
 import type { LocalDate, LocalDateTime, StockEvent } from './model';
 import type { Rate } from './rate';
 
@@ -17,6 +18,9 @@ export function resolveFinishedAt(
   rate: Rate,
   reportedAt: LocalDateTime,
 ): FinishedAt {
+  checkEvents(events);
+  checkRate(rate);
+  checkDateTime('reportedAt', reportedAt);
   const asReported: FinishedAt = { at: reportedAt, advanced: false };
   if (rate.perDay <= 0) return asReported;
 

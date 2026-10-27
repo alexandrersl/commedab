@@ -358,6 +358,8 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 
 Un type `ProductState` regroupe les sorties des deux premières fonctions ; c'est lui que les écrans affichent (fiche produit, accueil, justification EF-4.8).
 
+Chaque fonction vérifie ses entrées et lève une `InvalidInputError`, qui nomme le champ fautif, pour ce que `data` ne doit jamais transmettre : date qui n'est pas au format exact `AAAA-MM-JJTHH:MM:SS` ou qui n'existe pas (les dates sont comparées comme des textes, leur format doit être unique), quantité négative ou non finie, achat ou relevé sans quantité, événement d'un autre produit, foyer de moins d'une personne, période qui n'est pas un entier d'au moins un jour, recette sans portion. Une valeur de rythme, de durée de vie ou de conservation nulle ou négative n'est pas une erreur : elle vaut absence (4.3, 4.5).
+
 ### 4.3 Rythme de consommation
 
 Le rythme `r` s'exprime en unités d'achat par jour. Sources par priorité (5.2 FS) :

@@ -1,6 +1,8 @@
+import { liveEvents } from './events';
+import { checkDateTime, checkEvents, checkHousehold, checkProduct } from './guard';
 import type { Household, LocalDateTime, Product, StockEvent } from './model';
-import { resolveRate, type Rate } from './rate';
-import { estimateStock, type StockEstimate } from './stock';
+import { rateOf, type Rate } from './rate';
+import { stockOf, type StockEstimate } from './stock';
 
 /** État d'un produit, affiché par les écrans (fiche, accueil, justification EF-4.8). */
 export interface ProductState extends StockEstimate {
@@ -14,6 +16,11 @@ export function productState(
   household: Household,
   now: LocalDateTime,
 ): ProductState {
-  const rate = resolveRate(product, events, household);
-  return { productId: product.id, rate, ...estimateStock(product, events, rate, now) };
+  checkProduct(product);
+  checkEvents(events, product.id);
+  checkHousehold(household);
+  checkDateTime('now', now);
+  const live = liveEvents(events);
+  const rate = rateOf(product, live, household);
+  return { productId: product.id, rate, ...stockOf(product, live, rate, now) };
 }

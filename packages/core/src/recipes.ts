@@ -1,3 +1,4 @@
+import { checkListLines, checkRecipe } from './guard';
 import type { ListLine, Product, Recipe } from './model';
 import { EPSILON, roundUpToStep } from './quantity';
 import type { ProductState } from './state';
@@ -21,8 +22,10 @@ export function applyRecipes(input: {
   states: ReadonlyMap<string, ProductState>;
   listLines: readonly ListLine[];
 }): RecipeLine[] {
+  checkListLines(input.listLines);
   const required = new Map<string, { specific: number; base: number }>();
   for (const { recipe, servings } of input.requests) {
+    checkRecipe(recipe, servings);
     const scale = servings / recipe.servings;
     for (const ingredient of recipe.ingredients) {
       const total = required.get(ingredient.productId) ?? { specific: 0, base: 0 };

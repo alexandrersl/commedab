@@ -57,7 +57,8 @@
     "suggestions": [
       {
         "productId": "tahin",
-        "quantity": 1
+        "quantity": 1,
+        "marked": true
       }
     ]
   }
