@@ -1,0 +1,74 @@
+{
+  "id": "T33",
+  "scenario": "Produit sans rythme connu, « fini » après un achat issu d'une recette",
+  "products": [
+    {
+      "id": "lait-de-coco"
+    },
+    {
+      "id": "tamarin"
+    }
+  ],
+  "events": [
+    {
+      "productId": "lait-de-coco",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-09-01T10:00:00"
+    },
+    {
+      "productId": "lait-de-coco",
+      "type": "purchased",
+      "quantity": 3,
+      "occurredAt": "2026-10-01T10:00:00",
+      "fromRecipe": true
+    },
+    {
+      "productId": "lait-de-coco",
+      "type": "finished",
+      "occurredAt": "2026-10-05T20:00:00"
+    },
+    {
+      "productId": "tamarin",
+      "type": "purchased",
+      "quantity": 4,
+      "occurredAt": "2026-10-01T10:00:00",
+      "fromRecipe": true
+    },
+    {
+      "productId": "tamarin",
+      "type": "finished",
+      "occurredAt": "2026-10-05T20:00:00"
+    }
+  ],
+  "now": "2026-10-06T10:00:00",
+  "periodDays": 7,
+  "expected": {
+    "rates": {
+      "lait-de-coco": {
+        "source": "none"
+      },
+      "tamarin": {
+        "source": "none"
+      }
+    },
+    "states": {
+      "lait-de-coco": {
+        "toRebuy": true
+      },
+      "tamarin": {
+        "toRebuy": true
+      }
+    },
+    "suggestions": [
+      {
+        "productId": "lait-de-coco",
+        "quantity": 1
+      },
+      {
+        "productId": "tamarin",
+        "quantity": 1
+      }
+    ]
+  }
+}

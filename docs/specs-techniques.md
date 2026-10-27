@@ -258,7 +258,7 @@ Un jeu par défaut est créé à la création du foyer (EF-1.7).
 | contents\_qty, contents\_unit | numeric, text, nullables | contenance : 1000 et `g`, 6 et `piece` |
 | shelf\_life\_days | smallint, nullable | durée de conservation (RG-10) |
 | catalog\_entry\_id, catalog\_version | text, smallint, nullables | origine catalogue (RG-8) |
-| catalog\_rate\_qty, catalog\_lifetime\_days, catalog\_scaling | numeric, smallint, text, nullables | rythme indicatif copié du catalogue à la création, pour une personne (`per_person`) ou pour le foyer (`per_household`) ; multiplié par la taille du foyer à l'exécution (4.3), jamais resynchronisé avec le catalogue (RG-8) |
+| catalog\_rate\_qty, catalog\_lifetime\_days, catalog\_scaling | numeric, smallint, text, nullables | rythme indicatif copié du catalogue à la création, pour une personne (`per_person`) ou pour le foyer (`per_household`) ; multiplié par la taille du foyer à l'exécution (4.3), nul valant `per_person`, jamais resynchronisé avec le catalogue (RG-8) |
 | archived\_at, deleted\_at | timestamptz | archivage EF-1.4 |
 | created\_at, updated\_at | timestamptz |  |
 
@@ -364,7 +364,7 @@ Le rythme `r` s'exprime en unités d'achat par jour. Sources par priorité (5.2 
 
 1. **Déclaré** : `r = declared_qty / declared_per_days`. Pour la famille réserve, l'utilisateur saisit une durée de vie `L` par unité : `r = 1 / L`. Une quantité ou une durée nulle ou négative vaut absence de rythme déclaré : on passe à la source suivante (T23).
 2. **Appris** : voir ci-dessous ; retenu seulement si au moins 3 achats éligibles (RG-3).
-3. **Catalogue** : depuis les valeurs copiées sur le produit à sa création : `r = catalog_rate_qty × size` si `catalog_scaling = per_person`, sinon la valeur telle quelle ; réserve : `r = 1 / catalog_lifetime_days`. Une valeur nulle ou négative est ignorée (T22) : elle ramènerait la borne du rythme appris à zéro. La taille du foyer est lue à l'exécution, donc une modification s'applique immédiatement aux produits sur rythme catalogue (5.4 FS) ; une mise à jour du catalogue ne change rien (RG-8).
+3. **Catalogue** : depuis les valeurs copiées sur le produit à sa création : `r = catalog_rate_qty` si `catalog_scaling = per_household`, sinon `r = catalog_rate_qty × size` ; un `catalog_scaling` nul vaut `per_person`, comme une entrée du catalogue sans `household_scaling` (7.2, T32) ; réserve : `r = 1 / catalog_lifetime_days`. Une valeur nulle ou négative est ignorée (T22) : elle ramènerait la borne du rythme appris à zéro. La taille du foyer est lue à l'exécution, donc une modification s'applique immédiatement aux produits sur rythme catalogue (5.4 FS) ; une mise à jour du catalogue ne change rien (RG-8).
 4. **Aucun** : produit sans rythme (ponctuel ou inconnu) ; jamais suggéré.
 
 **Rythme appris.** Soient les achats éligibles du produit, triés par date : `P1 … Pn` avec leurs quantités `q1 … qn`. Un achat est éligible s'il ne provient pas d'une ligne d'origine recette (RG-4).
@@ -402,10 +402,12 @@ Pour une liste couvrant `P` jours à la date `t` :
 | --- | --- | --- |
 | À rythme | `besoin = r × min(P, shelf_life_days ou P) − stock(t)` positif | `besoin` arrondi au pas supérieur de l'unité : 1 pour `piece`, 0,1 pour `weight` (kg), 0,5 pour `volume` (L) (RG-2, RG-10) |
 | À réserve | marqueur « à racheter » (même sans rythme), ou épuisement prévu avant `t + P`, soit `stock(t) < r × P` | `safety_stock` unités |
-| À rythme, sans rythme connu | marqueur « à racheter », une seule fois (voir ci-dessous) | quantité du dernier achat (1 unité sans achat), arrondie au pas de l'unité |
+| À rythme, sans rythme connu | marqueur « à racheter », une seule fois (voir ci-dessous) | quantité du dernier achat hors recette (1 unité sans achat), arrondie au pas de l'unité |
 | Ponctuel, archivé | jamais |  |
 
 `P` est un nombre entier de jours, au moins 1 : une autre valeur est refusée par une erreur `InvalidInputError` (T25). Une durée de conservation nulle ou négative est ignorée (T24).
+
+**Quantité habituelle.** Un achat issu d'une ligne recette est exclu de la quantité du dernier achat, comme de l'apprentissage (RG-4) : trois briques de lait de coco achetées pour un curry ne font pas de trois la quantité habituelle. Sans achat hors recette, la suggestion est d'une unité (T33).
 
 **Arrondi et conservation.** L'arrondi au pas supérieur (RG-2) prime sur la borne de conservation (RG-10) : la quantité suggérée est au moins le besoin et le dépasse de moins d'un pas. Un pain de mie consommé à raison de 0,4 par jour et conservé 2 jours donne un besoin de 0,8 et une suggestion de 1 (T29). Arrondir vers le bas ne proposerait rien.
 
@@ -460,6 +462,8 @@ Les tests sont écrits avant le moteur, sous forme de fixtures JSON (produit, fo
 | T29 | Besoin de 0,8 pièce borné par la conservation (4.5) | suggestion 1 : l'arrondi dépasse le besoin de moins d'un pas |
 | T30 | Achats en 1969-1970 et en février-mars 2100 (4.1) | intervalles de 7 jours, dates d'épuisement exactes |
 | T31 | Épuisement prévu au-delà de l'an 9999 (4.4) | aucune date d'épuisement, sans erreur |
+| T32 | Rythme catalogue sans `catalog_scaling`, foyer de 3 (4.3) | traité comme `per_person` : × 3 ; `per_household` inchangé |
+| T33 | Produit sans rythme, « fini » après un achat recette (4.5) | suggestion de la quantité du dernier achat hors recette, 1 sans achat hors recette |
 
 Propriétés vérifiées en complément : le moteur est idempotent (deux appels identiques donnent le même résultat), le stock n'est jamais négatif, la quantité suggérée est nulle dès que le stock couvre la période, et une suggestion « à rythme » dépasse le besoin de moins d'un pas.
 

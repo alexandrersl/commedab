@@ -1,0 +1,32 @@
+{
+  "id": "T32",
+  "scenario": "Rythme catalogue sans mise à l'échelle renseignée, foyer de 3",
+  "household": {
+    "size": 3
+  },
+  "products": [
+    {
+      "id": "oeufs",
+      "catalogRateQty": 0.5
+    },
+    {
+      "id": "sel",
+      "catalogRateQty": 0.5,
+      "catalogScaling": "per_household"
+    }
+  ],
+  "events": [],
+  "now": "2026-10-01T10:00:00",
+  "expected": {
+    "rates": {
+      "oeufs": {
+        "perDay": 1.5,
+        "source": "catalog"
+      },
+      "sel": {
+        "perDay": 0.5,
+        "source": "catalog"
+      }
+    }
+  }
+}

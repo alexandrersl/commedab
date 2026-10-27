@@ -84,7 +84,7 @@ function suggestedQuantity(
           ? { quantity: roundUpToStep(need, product.unitKind), marked: false }
           : null;
       }
-      const quantity = roundUpToStep(state.lastPurchaseQuantity ?? 1, product.unitKind);
+      const quantity = roundUpToStep(state.lastEligiblePurchaseQuantity ?? 1, product.unitKind);
       return marked ? { quantity, marked: true } : null;
     }
     case 'reserve': {
