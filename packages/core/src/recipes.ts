@@ -20,6 +20,7 @@ export function applyRecipes(input: {
   requests: readonly { recipe: Recipe; servings: number }[];
   products: ReadonlyMap<string, Product>;
   states: ReadonlyMap<string, ProductState>;
+  /** Lignes non cochées de la liste : états `pending` et `returned` (4.9). */
   listLines: readonly ListLine[];
 }): RecipeLine[] {
   checkListLines(input.listLines);

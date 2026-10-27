@@ -1,14 +1,6 @@
 import { dayOf } from './date';
 import { InvalidInputError } from './errors';
-import type {
-  Household,
-  ListLine,
-  LocalDateTime,
-  Offer,
-  Product,
-  Recipe,
-  StockEvent,
-} from './model';
+import type { Household, ListLine, LocalDateTime, Product, Recipe, StockEvent } from './model';
 import type { Rate } from './rate';
 
 // Gardes des fonctions publiques : elles refusent ce que `data` ne doit jamais transmettre.
@@ -73,6 +65,10 @@ export function checkHousehold(household: Household): void {
   if (!Number.isInteger(household.size) || household.size < 1) {
     throw new InvalidInputError('household.size', household.size, 'doit être un entier ≥ 1');
   }
+  const period = household.periodDays;
+  if (period !== null && (!Number.isInteger(period) || period < 1 || period > 31)) {
+    throw new InvalidInputError('household.periodDays', period, 'doit être un entier de 1 à 31');
+  }
 }
 
 export function checkRate(rate: Rate): void {
@@ -80,11 +76,17 @@ export function checkRate(rate: Rate): void {
 }
 
 export function checkListLines(lines: readonly ListLine[]): void {
-  for (const line of lines) checkQuantity(`listLine[${line.productId}].quantity`, line.quantity);
-}
-
-export function checkOffers(offers: readonly Offer[]): void {
-  for (const offer of offers) checkDateTime(`offer[${offer.productId}].offeredAt`, offer.offeredAt);
+  for (const line of lines) {
+    const field = `listLine[${line.id}]`;
+    checkQuantity(`${field}.quantity`, line.quantity);
+    checkDateTime(`${field}.createdAt`, line.createdAt);
+    if (line.checkedAt !== null) checkDateTime(`${field}.checkedAt`, line.checkedAt);
+    if (line.deletedAt !== null) checkDateTime(`${field}.deletedAt`, line.deletedAt);
+    if (line.postponedAt !== null) checkDateTime(`${field}.postponedAt`, line.postponedAt);
+    else if (line.decision === 'postponed') {
+      throw new InvalidInputError(`${field}.postponedAt`, null, 'est obligatoire pour postponed');
+    }
+  }
 }
 
 export function checkRecipe(recipe: Recipe, servings: number): void {

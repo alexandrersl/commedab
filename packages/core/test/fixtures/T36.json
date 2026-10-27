@@ -1,0 +1,26 @@
+{
+  "id": "T36",
+  "scenario": "Deux sessions de courses seulement : période par défaut",
+  "products": [],
+  "events": [],
+  "listLines": [
+    {
+      "productId": "pain",
+      "createdAt": "2026-09-01T09:00:00",
+      "checkedAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "pain",
+      "createdAt": "2026-09-01T09:00:00",
+      "checkedAt": "2026-10-08T10:00:00"
+    }
+  ],
+  "now": "2026-10-10T10:00:00",
+  "expected": {
+    "period": {
+      "days": 7,
+      "source": "default",
+      "intervalCount": 0
+    }
+  }
+}

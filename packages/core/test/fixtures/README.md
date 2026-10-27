@@ -10,15 +10,17 @@ Champs d'une fixture :
 - `products`, `events` : seuls les champs utiles au scénario sont écrits ; `fixture.ts`
   complète avec les valeurs par défaut du modèle (pièce, famille `rhythm`, stock de
   sécurité 1…). Les quantités sont en unités d'achat (RG-1).
-- `household` (taille 1 par défaut), `listLines`, `recipes`, `recipeRequests` : selon le
-  scénario.
+- `household` (taille 1 et période automatique par défaut), `listLines`, `recipes`,
+  `recipeRequests` : selon le scénario. Les lignes cochées (`checkedAt`) forment les
+  sessions de courses (specs techniques 4.9) ; une ligne est créée à `now` par défaut.
 - `finishedReport` : un « fini » signalé, daté par `resolveFinishedAt` puis ajouté aux
   événements avant les autres vérifications.
 - `now` et les dates des événements sont en heure locale sans fuseau
   (`2026-10-26T18:30:00`, specs techniques 4.1).
 - `periodDays` : durée de la liste, pour vérifier les suggestions.
 - `expected` : seules les valeurs écrites sont vérifiées (`rates`, `intervals`, `states`,
-  `finishedAt`, `suggestions`, `recipeLines`). Une suggestion attendue porte `marked` :
+  `finishedAt`, `suggestions`, `recipeLines`, `sessions`, `ongoing`, `lineStates`,
+  `period`). Une suggestion attendue porte `marked` :
   proposée au seul titre du marqueur « à racheter » ou non. Une quantité s'écrit en nombre ou en
   fraction (`"1/7"`). `invalidInput` nomme le champ que `suggestForPeriod` doit refuser
   par une `InvalidInputError`.

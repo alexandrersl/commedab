@@ -1,12 +1,15 @@
 {
   "id": "T21",
-  "scenario": "Produit sans rythme connu marqué « fini », déjà proposé sur une liste créée depuis et pas ajouté ; un second produit n'a été proposé qu'avant son « fini »",
+  "scenario": "Produit sans rythme connu marqué « fini », puis une session de courses commencée depuis, sans achat ; un second produit n'est marqué « fini » qu'après cette session",
   "products": [
     {
       "id": "houmous"
     },
     {
       "id": "tahin"
+    },
+    {
+      "id": "pain"
     }
   ],
   "events": [
@@ -31,16 +34,20 @@
       "productId": "tahin",
       "type": "finished",
       "occurredAt": "2026-10-08T20:00:00"
-    }
-  ],
-  "previousOffers": [
-    {
-      "productId": "houmous",
-      "offeredAt": "2026-10-06T10:00:00"
     },
     {
-      "productId": "tahin",
-      "offeredAt": "2026-09-27T10:00:00"
+      "productId": "pain",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-06T10:00:00",
+      "fromRecipe": false
+    }
+  ],
+  "listLines": [
+    {
+      "productId": "pain",
+      "createdAt": "2026-09-01T09:00:00",
+      "checkedAt": "2026-10-06T10:00:00"
     }
   ],
   "now": "2026-10-13T10:00:00",
@@ -53,6 +60,9 @@
       "tahin": {
         "toRebuy": true
       }
+    },
+    "lineStates": {
+      "l1": "past"
     },
     "suggestions": [
       {

@@ -1,0 +1,146 @@
+{
+  "id": "T35",
+  "scenario": "État des lignes avant et après la fin de la dernière session (10/10, close à 13:00), pendant une session en cours le 12/10",
+  "products": [
+    {
+      "id": "pain",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    },
+    {
+      "id": "beurre",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    },
+    {
+      "id": "jambon",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    },
+    {
+      "id": "cafe",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    },
+    {
+      "id": "riz",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    },
+    {
+      "id": "pates",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    },
+    {
+      "id": "lait",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    },
+    {
+      "id": "oeufs",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    },
+    {
+      "id": "the",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    }
+  ],
+  "events": [
+    {
+      "productId": "lait",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-10T10:00:00"
+    },
+    {
+      "productId": "oeufs",
+      "type": "purchased",
+      "quantity": 12,
+      "occurredAt": "2026-10-12T17:30:00"
+    }
+  ],
+  "listLines": [
+    {
+      "productId": "pain",
+      "createdAt": "2026-10-09T09:00:00"
+    },
+    {
+      "productId": "beurre",
+      "createdAt": "2026-10-09T09:00:00",
+      "deletedAt": "2026-10-09T12:00:00"
+    },
+    {
+      "productId": "jambon",
+      "createdAt": "2026-10-09T09:00:00",
+      "deletedAt": "2026-10-11T12:00:00"
+    },
+    {
+      "productId": "cafe",
+      "createdAt": "2026-10-11T12:00:00",
+      "decision": "refused_have"
+    },
+    {
+      "productId": "riz",
+      "createdAt": "2026-10-09T09:00:00",
+      "decision": "postponed",
+      "postponedAt": "2026-10-09T12:00:00"
+    },
+    {
+      "productId": "pates",
+      "createdAt": "2026-10-09T09:00:00",
+      "decision": "postponed",
+      "postponedAt": "2026-10-11T12:00:00"
+    },
+    {
+      "productId": "lait",
+      "createdAt": "2026-10-09T09:00:00",
+      "checkedAt": "2026-10-10T10:00:00"
+    },
+    {
+      "productId": "oeufs",
+      "createdAt": "2026-10-09T09:00:00",
+      "checkedAt": "2026-10-12T17:30:00"
+    },
+    {
+      "productId": "the",
+      "createdAt": "2026-10-09T12:00:00",
+      "decision": "refused_stop"
+    }
+  ],
+  "now": "2026-10-12T18:00:00",
+  "periodDays": 7,
+  "expected": {
+    "ongoing": "2026-10-12T17:30:00",
+    "lineStates": {
+      "l1": "pending",
+      "l2": "past",
+      "l3": "withdrawn",
+      "l4": "withdrawn",
+      "l5": "returned",
+      "l6": "postponed",
+      "l7": "past",
+      "l8": "checked",
+      "l9": "past"
+    },
+    "suggestions": [
+      {
+        "productId": "beurre",
+        "quantity": 7,
+        "marked": false
+      },
+      {
+        "productId": "lait",
+        "quantity": 7,
+        "marked": false
+      },
+      {
+        "productId": "the",
+        "quantity": 7,
+        "marked": false
+      }
+    ]
+  }
+}

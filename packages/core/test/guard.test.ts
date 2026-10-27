@@ -3,10 +3,14 @@ import {
   applyRecipes,
   estimateStock,
   InvalidInputError,
+  listView,
   observedIntervals,
   productState,
   resolveFinishedAt,
+  resolvePeriod,
+  shoppingSessions,
   suggestForPeriod,
+  type ListLine,
   type Product,
   type Rate,
   type StockEvent,
@@ -35,7 +39,7 @@ const purchase: StockEvent = {
   deletedAt: null,
 };
 const rate: Rate = { perDay: 1 / 7, source: 'learned', intervalCount: 2 };
-const household = { size: 1 };
+const household = { size: 1, periodDays: null };
 const now = '2026-10-05T10:00:00';
 
 function rejects(run: () => unknown, field: string): void {
@@ -97,32 +101,33 @@ describe('gardes des fonctions publiques', () => {
     );
   });
 
-  it('refuse un foyer vide et un rythme négatif', () => {
-    rejects(() => productState(product, [], { size: 0 }, now), 'household.size');
+  it('refuse un foyer vide, une période fixée hors de 1 à 31 jours et un rythme négatif', () => {
+    rejects(() => productState(product, [], { size: 0, periodDays: null }, now), 'household.size');
+    rejects(() => resolvePeriod({ size: 2, periodDays: 0 }, []), 'household.periodDays');
+    rejects(() => resolvePeriod({ size: 2, periodDays: 32 }, []), 'household.periodDays');
     rejects(() => resolveFinishedAt([purchase], { ...rate, perDay: -1 }, now), 'rate.perDay');
   });
 
-  it('refuse une période non entière, une ligne négative, une offre mal datée', () => {
-    const base = { products: [], states: new Map(), listLines: [], previousOffers: [] };
-    rejects(() => suggestForPeriod({ ...base, periodDays: 1.5 }), 'periodDays');
+  it('refuse une période non entière, une ligne négative, mal datée ou reportée sans date', () => {
+    const line: ListLine = {
+      id: 'l1',
+      productId: 'lait',
+      quantity: 1,
+      decision: null,
+      createdAt: now,
+      checkedAt: null,
+      postponedAt: null,
+      deletedAt: null,
+    };
+    const list = listView([], now);
     rejects(
-      () =>
-        suggestForPeriod({
-          ...base,
-          periodDays: 7,
-          listLines: [{ productId: 'lait', quantity: -1, decision: null }],
-        }),
-      'listLine[lait].quantity',
+      () => suggestForPeriod({ products: [], states: new Map(), periodDays: 1.5, list }),
+      'periodDays',
     );
-    rejects(
-      () =>
-        suggestForPeriod({
-          ...base,
-          periodDays: 7,
-          previousOffers: [{ productId: 'lait', offeredAt: '2026-10-05' }],
-        }),
-      'offer[lait].offeredAt',
-    );
+    rejects(() => listView([{ ...line, quantity: -1 }], now), 'listLine[l1].quantity');
+    rejects(() => listView([{ ...line, checkedAt: '2026-10-05' }], now), 'listLine[l1].checkedAt');
+    rejects(() => listView([{ ...line, decision: 'postponed' }], now), 'listLine[l1].postponedAt');
+    rejects(() => shoppingSessions(['2026-10-05T25:00:00']), 'checks[0]');
   });
 
   it('refuse une recette sans portion', () => {

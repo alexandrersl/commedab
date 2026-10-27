@@ -3,7 +3,6 @@ import {
   resolveFinishedAt,
   resolveRate,
   type FinishedAt,
-  type Offer,
   type Household,
   type ListLine,
   type LocalDateTime,
@@ -21,7 +20,6 @@ export interface Scenario {
   products: Product[];
   events: StockEvent[];
   listLines: ListLine[];
-  previousOffers: Offer[];
   finishedAt: FinishedAt | null;
 }
 
@@ -34,7 +32,7 @@ export function quantity(value: Quantity): number {
 
 /** Complète la fixture avec les valeurs par défaut du modèle (specs techniques 3.3). */
 export function scenario(fixture: Fixture): Scenario {
-  const household = fixture.household ?? { size: 1 };
+  const household: Household = { size: 1, periodDays: null, ...fixture.household };
   const products: Product[] = fixture.products.map((product) => ({
     unitKind: 'piece',
     family: 'rhythm',
@@ -55,9 +53,14 @@ export function scenario(fixture: Fixture): Scenario {
     deletedAt: null,
     ...event,
   }));
-  const listLines: ListLine[] = (fixture.listLines ?? []).map((line) => ({
+  const listLines: ListLine[] = (fixture.listLines ?? []).map((line, i) => ({
+    id: `l${i + 1}`,
     quantity: 1,
     decision: null,
+    createdAt: fixture.now,
+    checkedAt: null,
+    postponedAt: null,
+    deletedAt: null,
     ...line,
   }));
 
@@ -78,8 +81,7 @@ export function scenario(fixture: Fixture): Scenario {
       deletedAt: null,
     });
   }
-  const previousOffers = fixture.previousOffers ?? [];
-  return { fixture, household, products, events, listLines, previousOffers, finishedAt };
+  return { fixture, household, products, events, listLines, finishedAt };
 }
 
 export function eventsOf(events: readonly StockEvent[], productId: string): StockEvent[] {
