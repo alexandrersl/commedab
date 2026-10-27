@@ -1,0 +1,67 @@
+{
+  "id": "T30",
+  "scenario": "Dates avant 1970 et en 2100 (année non bissextile)",
+  "products": [
+    {
+      "id": "avant"
+    },
+    {
+      "id": "apres"
+    }
+  ],
+  "events": [
+    {
+      "productId": "avant",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "1969-12-25T10:00:00"
+    },
+    {
+      "productId": "avant",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "1970-01-01T10:00:00"
+    },
+    {
+      "productId": "avant",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "1970-01-08T10:00:00"
+    },
+    {
+      "productId": "apres",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2100-02-22T10:00:00"
+    },
+    {
+      "productId": "apres",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2100-03-01T10:00:00"
+    },
+    {
+      "productId": "apres",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2100-03-08T10:00:00"
+    }
+  ],
+  "now": "2100-03-09T10:00:00",
+  "expected": {
+    "intervals": {
+      "avant": [7, 7],
+      "apres": [7, 7]
+    },
+    "states": {
+      "avant": {
+        "stock": 0,
+        "depletionDate": "1970-01-15"
+      },
+      "apres": {
+        "stock": "6/7",
+        "depletionDate": "2100-03-15"
+      }
+    }
+  }
+}

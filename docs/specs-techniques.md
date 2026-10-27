@@ -340,7 +340,7 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 
 - Module **TypeScript pur**, sans accès à la base ni au réseau : il reçoit des objets (produit, événements, foyer, date courante) et rend des objets. Il tourne sur l'appareil, appelé par la couche d'accès aux données.
 - **Déterministe** : la date courante est un paramètre, jamais lue par le moteur. Même entrée, même sortie, ce qui rend les tests exacts.
-- **Dates locales** : le moteur reçoit les dates en heure locale de l'appareil, sans fuseau (`2026-10-26T18:30:00`) ; la couche `data` convertit `occurred_at` (UTC) dans le fuseau de l'appareil avant l'appel. Une durée en jours est une différence de jours civils : un achat samedi soir et un « fini » dimanche matin sont séparés d'un jour. L'heure ne sert qu'à ordonner deux événements du même jour. Le moteur ne manipule jamais de fuseau horaire.
+- **Dates locales** : le moteur reçoit les dates en heure locale de l'appareil, sans fuseau (`2026-10-26T18:30:00`) ; la couche `data` convertit `occurred_at` (UTC) dans le fuseau de l'appareil avant l'appel. Une durée en jours est une différence de jours civils : un achat samedi soir et un « fini » dimanche matin sont séparés d'un jour. L'heure ne sert qu'à ordonner deux événements du même jour. Le moteur ne manipule jamais de fuseau horaire. Les dates vont de l'an 0000 à l'an 9999 (format `AAAA-MM-JJ`) ; le calendrier est grégorien, 2100 n'est pas bissextile.
 - **Sans état** : rien n'est mémorisé entre deux appels ; `product_state` et `learned_rate` (3.5) sont les sorties du moteur, recalculées à la demande.
 - **Arithmétique simple** : pas de statistique au-delà d'une médiane, pas d'apprentissage automatique (risque « sur-ingénierie » des spécifications fonctionnelles).
 
@@ -362,9 +362,9 @@ Un type `ProductState` regroupe les sorties des deux premières fonctions ; c'es
 
 Le rythme `r` s'exprime en unités d'achat par jour. Sources par priorité (5.2 FS) :
 
-1. **Déclaré** : `r = declared_qty / declared_per_days`. Pour la famille réserve, l'utilisateur saisit une durée de vie `L` par unité : `r = 1 / L`.
+1. **Déclaré** : `r = declared_qty / declared_per_days`. Pour la famille réserve, l'utilisateur saisit une durée de vie `L` par unité : `r = 1 / L`. Une quantité ou une durée nulle ou négative vaut absence de rythme déclaré : on passe à la source suivante (T23).
 2. **Appris** : voir ci-dessous ; retenu seulement si au moins 3 achats éligibles (RG-3).
-3. **Catalogue** : depuis les valeurs copiées sur le produit à sa création : `r = catalog_rate_qty × size` si `catalog_scaling = per_person`, sinon la valeur telle quelle ; réserve : `r = 1 / catalog_lifetime_days`. La taille du foyer est lue à l'exécution, donc une modification s'applique immédiatement aux produits sur rythme catalogue (5.4 FS) ; une mise à jour du catalogue ne change rien (RG-8).
+3. **Catalogue** : depuis les valeurs copiées sur le produit à sa création : `r = catalog_rate_qty × size` si `catalog_scaling = per_person`, sinon la valeur telle quelle ; réserve : `r = 1 / catalog_lifetime_days`. Une valeur nulle ou négative est ignorée (T22) : elle ramènerait la borne du rythme appris à zéro. La taille du foyer est lue à l'exécution, donc une modification s'applique immédiatement aux produits sur rythme catalogue (5.4 FS) ; une mise à jour du catalogue ne change rien (RG-8).
 4. **Aucun** : produit sans rythme (ponctuel ou inconnu) ; jamais suggéré.
 
 **Rythme appris.** Soient les achats éligibles du produit, triés par date : `P1 … Pn` avec leurs quantités `q1 … qn`. Un achat est éligible s'il ne provient pas d'une ligne d'origine recette (RG-4).
@@ -372,7 +372,7 @@ Le rythme `r` s'exprime en unités d'achat par jour. Sources par priorité (5.2 
 - Pour chaque achat `Pk`, l'intervalle de consommation `dk` est le nombre de jours entre `Pk` et le premier des deux événements suivants : l'achat `Pk+1`, ou un « fini » postérieur à `Pk`. Le dernier achat n'a donc d'intervalle que si un « fini » le suit (T19) ; un intervalle de zéro jour (« fini » le jour même de l'achat) est ignoré. Les deux sont des bornes supérieures : l'utilisateur peut signaler « fini » quelques jours après l'épuisement réel, mais ce signal reste plus proche de la vérité que l'achat suivant, et la médiane absorbe les retards ponctuels. Un « fini » se signale en un seul geste et prend la date du jour ; la date reste corrigeable depuis la fiche produit mais n'est jamais demandée (ENF-8).
 - Taux observé sur l'intervalle : `rk = qk / dk`.
 - Le rythme appris est la **médiane des cinq derniers `rk`** (ou de tous s'il y en a moins de cinq, minimum deux, soit trois achats). La médiane ignore un achat exceptionnel (promotion, réception) sans qu'il faille le détecter.
-- Deux achats du même jour civil comptent comme un seul, quantités cumulées : un intervalle dure toujours au moins un jour.
+- Deux achats du même jour civil comptent comme un seul, quantités cumulées : un intervalle dure toujours au moins un jour (T26).
 
 **Borne de sécurité.** Tant que moins de cinq intervalles sont disponibles, le rythme appris est borné entre 0,5 × et 2 × la valeur du catalogue (sans valeur catalogue, pas de borne ; un rythme déclaré n'entre pas en jeu, puisqu'il passe avant le rythme appris). Au-delà de cinq intervalles, la médiane seule fait foi.
 
@@ -385,7 +385,8 @@ stock(t) = max(0, A + Σ achats après l'ancre − r × jours(ancre → t))
 ```
 
 - `A` : valeur de l'ancre, `r` : rythme retenu (0 si aucun).
-- Date d'épuisement prévue : `ancre + (A + Σ achats) / r` si `r > 0`, arrondie au jour supérieur : c'est le premier jour où le stock estimé est nul.
+- Date d'épuisement prévue : `ancre + (A + Σ achats) / r` si `r > 0`, arrondie au jour supérieur : c'est le premier jour où le stock estimé est nul. Au-delà de l'an 9999, aucune date n'est rendue (T31).
+- Un « fini » sans achat antérieur est une ancre de valeur 0 comme une autre : stock 0, « à racheter » vrai (T27).
 - Marqueur « à racheter » (toute famille sauf ponctuel, EF-3.2) : vrai si le dernier événement non-achat est `opened_last` ou `finished` et qu'aucun achat ne lui est postérieur.
 - Un événement avec `deleted_at` est ignoré (EF-2.4, EF-3.4) ; `occurred_at` fait foi, pas `created_at`.
 
@@ -404,9 +405,13 @@ Pour une liste couvrant `P` jours à la date `t` :
 | À rythme, sans rythme connu | marqueur « à racheter », une seule fois (voir ci-dessous) | quantité du dernier achat (1 unité sans achat), arrondie au pas de l'unité |
 | Ponctuel, archivé | jamais |  |
 
+`P` est un nombre entier de jours, au moins 1 : une autre valeur est refusée par une erreur `InvalidInputError` (T25). Une durée de conservation nulle ou négative est ignorée (T24).
+
+**Arrondi et conservation.** L'arrondi au pas supérieur (RG-2) prime sur la borne de conservation (RG-10) : la quantité suggérée est au moins le besoin et le dépasse de moins d'un pas. Un pain de mie consommé à raison de 0,4 par jour et conservé 2 jours donne un besoin de 0,8 et une suggestion de 1 (T29). Arrondir vers le bas ne proposerait rien.
+
 Un produit ayant une ligne sur la liste active, même retirée (`deleted_at`) ou refusée (`decision` de refus), n'est pas suggéré : `data` transmet ces lignes au moteur.
 
-Une suggestion due au seul marqueur « à racheter » (produit sans rythme connu, ou réserve dont l'épuisement n'est pas prévu dans la période) n'est faite qu'une fois : si une liste créée depuis le marqueur l'a déjà proposée et que l'utilisateur ne l'a pas ajoutée, elle n'est plus proposée. Un nouvel événement (« fini », « entamé ») la rend de nouveau possible ; un achat lève le marqueur. `data` transmet les lignes d'origine `suggestion` des listes clôturées, avec leur date de création. Tests T20 et T21.
+Une suggestion due au seul marqueur « à racheter » (produit sans rythme connu, ou réserve dont l'épuisement n'est pas prévu dans la période) n'est faite qu'une fois : si une liste créée depuis le marqueur, ou à la même seconde (T28), l'a déjà proposée et que l'utilisateur ne l'a pas ajoutée, elle n'est plus proposée. Un nouvel événement (« fini », « entamé ») la rend de nouveau possible ; un achat lève le marqueur. `data` transmet les lignes d'origine `suggestion` des listes clôturées, avec leur date de création. Tests T20 et T21.
 
 **Justification** (EF-4.8) : le moteur en rend les éléments (stock estimé, date d'épuisement prévue, source du rythme, nombre d'intervalles) ; l'écran les met en mots sans les termes « rythme », « famille » ni « stock » (ENF-8). Exemple : « Il t'en reste environ 2, épuisé vers le 24 oct. · d'après tes 4 derniers achats ».
 
@@ -445,8 +450,18 @@ Les tests sont écrits avant le moteur, sous forme de fixtures JSON (produit, fo
 | T19 | Achat à J0, « fini » signalé à J10, `L` = 14 (4.4) | « fini » daté J10, stock 0, intervalle de 10 jours |
 | T20 | Produit créé à la volée, sans rythme, acheté une fois (2 unités) puis « fini » | « à racheter » vrai, suggestion 2 |
 | T21 | Même produit, déjà proposé sur une liste créée depuis le « fini » et pas ajouté | non suggéré ; un produit proposé seulement avant son « fini » l'est |
+| T22 | Valeur catalogue 0 ou négative (4.3) | ignorée : rythme appris sans borne, ou aucun rythme |
+| T23 | Rythme déclaré de 0 unité (4.3) | ignoré : rythme catalogue ou appris |
+| T24 | Durée de conservation 0 ou négative (4.5) | ignorée : la période seule s'applique |
+| T25 | Liste de 0 jour (4.5) | `InvalidInputError` sur `periodDays` |
+| T26 | Deux achats le même jour, puis deux achats hebdomadaires (4.3) | un seul achat de quantité cumulée : intervalles 7 et 7 |
+| T27 | « Fini » avant tout achat (4.4) | stock 0, « à racheter » vrai, suggestion sans quantité négative |
+| T28 | Proposé sur une liste créée à la seconde même du « fini » (4.5) | compte comme proposé depuis le marqueur : non suggéré |
+| T29 | Besoin de 0,8 pièce borné par la conservation (4.5) | suggestion 1 : l'arrondi dépasse le besoin de moins d'un pas |
+| T30 | Achats en 1969-1970 et en février-mars 2100 (4.1) | intervalles de 7 jours, dates d'épuisement exactes |
+| T31 | Épuisement prévu au-delà de l'an 9999 (4.4) | aucune date d'épuisement, sans erreur |
 
-Propriétés vérifiées en complément : le moteur est idempotent (deux appels identiques donnent le même résultat), le stock n'est jamais négatif, et la quantité suggérée est nulle dès que le stock couvre la période.
+Propriétés vérifiées en complément : le moteur est idempotent (deux appels identiques donnent le même résultat), le stock n'est jamais négatif, la quantité suggérée est nulle dès que le stock couvre la période, et une suggestion « à rythme » dépasse le besoin de moins d'un pas.
 
 ## 5. API et synchronisation
 

@@ -1,0 +1,51 @@
+{
+  "id": "T23",
+  "scenario": "Rythme déclaré de 0 unité : pas de rythme déclaré, on passe au rythme appris ou au catalogue",
+  "products": [
+    {
+      "id": "yaourt",
+      "declaredQty": 0,
+      "declaredPerDays": 7,
+      "catalogRateQty": 0.5,
+      "catalogScaling": "per_person"
+    },
+    {
+      "id": "cafe",
+      "declaredQty": 0,
+      "declaredPerDays": 7
+    }
+  ],
+  "events": [
+    {
+      "productId": "cafe",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "cafe",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-08T10:00:00"
+    },
+    {
+      "productId": "cafe",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-15T10:00:00"
+    }
+  ],
+  "now": "2026-10-16T10:00:00",
+  "expected": {
+    "rates": {
+      "yaourt": {
+        "perDay": 0.5,
+        "source": "catalog"
+      },
+      "cafe": {
+        "perDay": "1/7",
+        "source": "learned"
+      }
+    }
+  }
+}

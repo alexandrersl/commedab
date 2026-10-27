@@ -77,13 +77,17 @@ export function observedIntervals(events: readonly StockEvent[]): Interval[] {
 
 function declaredRate(product: Product): number | null {
   const { declaredQty, declaredPerDays } = product;
-  if (declaredQty === null || declaredPerDays === null || declaredPerDays <= 0) return null;
+  if (declaredQty === null || declaredPerDays === null) return null;
+  if (declaredQty <= 0 || declaredPerDays <= 0) return null;
   return declaredQty / declaredPerDays;
 }
 
-/** Valeurs copiées du catalogue à la création, ajustées à la taille actuelle du foyer. */
+/**
+ * Valeurs copiées du catalogue à la création, ajustées à la taille actuelle du foyer. Une
+ * valeur nulle ou négative est ignorée : elle annulerait la borne du rythme appris.
+ */
 function catalogRate(product: Product, household: Household): number | null {
-  if (product.catalogRateQty !== null) {
+  if (product.catalogRateQty !== null && product.catalogRateQty > 0) {
     return product.catalogScaling === 'per_household'
       ? product.catalogRateQty
       : product.catalogRateQty * household.size;

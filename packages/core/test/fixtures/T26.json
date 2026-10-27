@@ -1,0 +1,54 @@
+{
+  "id": "T26",
+  "scenario": "Deux achats le même jour, puis deux achats hebdomadaires : le premier jour compte pour un seul achat",
+  "products": [
+    {
+      "id": "oeufs"
+    }
+  ],
+  "events": [
+    {
+      "productId": "oeufs",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-01T08:00:00"
+    },
+    {
+      "productId": "oeufs",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-01T18:00:00"
+    },
+    {
+      "productId": "oeufs",
+      "type": "purchased",
+      "quantity": 2,
+      "occurredAt": "2026-10-08T10:00:00"
+    },
+    {
+      "productId": "oeufs",
+      "type": "purchased",
+      "quantity": 2,
+      "occurredAt": "2026-10-15T10:00:00"
+    }
+  ],
+  "now": "2026-10-16T10:00:00",
+  "expected": {
+    "intervals": {
+      "oeufs": [7, 7]
+    },
+    "rates": {
+      "oeufs": {
+        "perDay": "2/7",
+        "source": "learned",
+        "intervalCount": 2
+      }
+    },
+    "states": {
+      "oeufs": {
+        "stock": "12/7",
+        "anchorAt": "2026-10-01T08:00:00"
+      }
+    }
+  }
+}

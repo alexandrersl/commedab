@@ -1,0 +1,45 @@
+{
+  "id": "T29",
+  "scenario": "Arrondi au pas de l'unité au-delà de rythme × conservation (RG-2 prime sur RG-10)",
+  "products": [
+    {
+      "id": "pain-de-mie",
+      "declaredQty": 2,
+      "declaredPerDays": 5,
+      "shelfLifeDays": 2
+    },
+    {
+      "id": "jambon",
+      "unitKind": "weight",
+      "declaredQty": 0.21,
+      "declaredPerDays": 3,
+      "shelfLifeDays": 3
+    },
+    {
+      "id": "lait",
+      "unitKind": "volume",
+      "declaredQty": 1,
+      "declaredPerDays": 5,
+      "shelfLifeDays": 4
+    }
+  ],
+  "events": [],
+  "now": "2026-10-01T10:00:00",
+  "periodDays": 7,
+  "expected": {
+    "suggestions": [
+      {
+        "productId": "pain-de-mie",
+        "quantity": 1
+      },
+      {
+        "productId": "jambon",
+        "quantity": 0.3
+      },
+      {
+        "productId": "lait",
+        "quantity": 1
+      }
+    ]
+  }
+}
