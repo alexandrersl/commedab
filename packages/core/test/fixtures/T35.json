@@ -23,16 +23,6 @@
       "declaredPerDays": 1
     },
     {
-      "id": "riz",
-      "declaredQty": 1,
-      "declaredPerDays": 1
-    },
-    {
-      "id": "pates",
-      "declaredQty": 1,
-      "declaredPerDays": 1
-    },
-    {
       "id": "lait",
       "declaredQty": 1,
       "declaredPerDays": 1
@@ -83,18 +73,6 @@
       "decision": "refused_have"
     },
     {
-      "productId": "riz",
-      "createdAt": "2026-10-09T09:00:00",
-      "decision": "postponed",
-      "postponedAt": "2026-10-09T12:00:00"
-    },
-    {
-      "productId": "pates",
-      "createdAt": "2026-10-09T09:00:00",
-      "decision": "postponed",
-      "postponedAt": "2026-10-11T12:00:00"
-    },
-    {
       "productId": "lait",
       "createdAt": "2026-10-09T09:00:00",
       "checkedAt": "2026-10-10T10:00:00"
@@ -119,11 +97,9 @@
       "l2": "past",
       "l3": "withdrawn",
       "l4": "withdrawn",
-      "l5": "returned",
-      "l6": "postponed",
-      "l7": "past",
-      "l8": "checked",
-      "l9": "past"
+      "l5": "past",
+      "l6": "checked",
+      "l7": "past"
     },
     "suggestions": [
       {

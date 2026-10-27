@@ -108,7 +108,7 @@ describe('gardes des fonctions publiques', () => {
     rejects(() => resolveFinishedAt([purchase], { ...rate, perDay: -1 }, now), 'rate.perDay');
   });
 
-  it('refuse une période non entière, une ligne négative, mal datée ou reportée sans date', () => {
+  it('refuse une période non entière, une ligne négative ou mal datée', () => {
     const line: ListLine = {
       id: 'l1',
       productId: 'lait',
@@ -116,7 +116,6 @@ describe('gardes des fonctions publiques', () => {
       decision: null,
       createdAt: now,
       checkedAt: null,
-      postponedAt: null,
       deletedAt: null,
     };
     const list = listView([], now);
@@ -126,7 +125,6 @@ describe('gardes des fonctions publiques', () => {
     );
     rejects(() => listView([{ ...line, quantity: -1 }], now), 'listLine[l1].quantity');
     rejects(() => listView([{ ...line, checkedAt: '2026-10-05' }], now), 'listLine[l1].checkedAt');
-    rejects(() => listView([{ ...line, decision: 'postponed' }], now), 'listLine[l1].postponedAt');
     rejects(() => shoppingSessions(['2026-10-05T25:00:00']), 'checks[0]');
   });
 

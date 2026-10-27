@@ -14,7 +14,7 @@ export interface ShoppingSession {
 }
 
 /** États d'une ligne (specs techniques 4.9). */
-export type LineState = 'pending' | 'checked' | 'postponed' | 'returned' | 'withdrawn' | 'past';
+export type LineState = 'pending' | 'checked' | 'withdrawn' | 'past';
 
 export interface ListView {
   sessions: ShoppingSession[];
@@ -41,8 +41,8 @@ export function shoppingSessions(checks: readonly LocalDateTime[]): ShoppingSess
 
 /**
  * Sessions et état de chaque ligne à la date `now`. Une ligne cochée quitte la liste à la fin
- * de sa session ; retirée, refusée ou reportée, elle compte jusqu'à la fin de la première
- * session terminée après son retrait, son refus ou son report.
+ * de sa session ; retirée ou refusée, elle compte jusqu'à la fin de la première session
+ * terminée après son retrait ou son refus.
  */
 export function listView(lines: readonly ListLine[], now: LocalDateTime): ListView {
   checkListLines(lines);
@@ -64,9 +64,6 @@ export function listView(lines: readonly ListLine[], now: LocalDateTime): ListVi
     }
     if (line.decision === 'refused_have' || line.decision === 'refused_stop') {
       return closedSince(line.createdAt) ? 'past' : 'withdrawn';
-    }
-    if (line.decision === 'postponed' && line.postponedAt !== null) {
-      return closedSince(line.postponedAt) ? 'returned' : 'postponed';
     }
     return 'pending';
   };

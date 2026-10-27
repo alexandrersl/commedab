@@ -59,7 +59,6 @@ export function scenario(fixture: Fixture): Scenario {
     decision: null,
     createdAt: fixture.now,
     checkedAt: null,
-    postponedAt: null,
     deletedAt: null,
     ...line,
   }));
