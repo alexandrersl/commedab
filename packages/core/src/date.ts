@@ -35,6 +35,13 @@ export function addDays(at: LocalDate | LocalDateTime, days: number): LocalDate 
   return new Date((dayNumber(at) + days) * DAY_MS).toISOString().slice(0, 10);
 }
 
+/** `at + hours`, sur l'heure locale : un changement d'heure n'est pas vu (4.9). */
+export function addHours(at: LocalDateTime, hours: number): LocalDateTime {
+  const [hour, minute, second] = at.slice(11).split(':').map(Number);
+  const time = ((hour ?? 0) + hours) * 3_600_000 + (minute ?? 0) * 60_000 + (second ?? 0) * 1000;
+  return new Date(dayNumber(at) * DAY_MS + time).toISOString().slice(0, 19);
+}
+
 export function dayOf(at: LocalDateTime): LocalDate {
   return addDays(at, 0);
 }

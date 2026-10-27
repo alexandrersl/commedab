@@ -1,9 +1,10 @@
 import type {
   FinishedAt,
   Household,
+  LineState,
   ListLine,
   LocalDateTime,
-  Offer,
+  Period,
   Product,
   Recipe,
   StockEvent,
@@ -15,11 +16,10 @@ export type Quantity = number | string;
 export interface Fixture {
   id: string;
   scenario: string;
-  household?: Household;
+  household?: Partial<Household>;
   products: (Partial<Product> & { id: string })[];
   events: (Partial<StockEvent> & Pick<StockEvent, 'productId' | 'type' | 'occurredAt'>)[];
   listLines?: (Partial<ListLine> & { productId: string })[];
-  previousOffers?: Offer[];
   recipes?: Recipe[];
   recipeRequests?: { recipeId: string; servings: number }[];
   /** « Fini » signalé à `at`, daté par `resolveFinishedAt` puis ajouté aux événements. */
@@ -40,6 +40,11 @@ export interface Fixture {
     >;
     finishedAt?: FinishedAt;
     suggestions?: { productId: string; quantity: number; marked: boolean }[];
+    /** Sessions de courses formées par les coches des lignes ; `ongoing` : la session en cours. */
+    sessions?: { startedAt: string; endedAt: string; closesAt?: string }[];
+    ongoing?: string | null;
+    lineStates?: Record<string, LineState>;
+    period?: Partial<Period>;
     /** `suggestForPeriod` refuse l'entrée par une `InvalidInputError` sur ce champ. */
     invalidInput?: string;
     recipeLines?: { productId: string; quantity: number; existing: boolean }[];
@@ -138,9 +143,14 @@ const event = object(
 );
 const listLine = object(
   {
+    id: string,
     productId: string,
     quantity: number,
-    decision: nullable(oneOf('accepted', 'modified', 'refused_have', 'refused_stop')),
+    decision: nullable(oneOf('accepted', 'modified', 'refused_have', 'refused_stop', 'postponed')),
+    createdAt: string,
+    checkedAt: nullable(string),
+    postponedAt: nullable(string),
+    deletedAt: nullable(string),
   },
   ['productId'],
 );
@@ -180,6 +190,16 @@ const expected = object({
       'marked',
     ]),
   ),
+  sessions: array(
+    object({ startedAt: string, endedAt: string, closesAt: string }, ['startedAt', 'endedAt']),
+  ),
+  ongoing: nullable(string),
+  lineStates: record(oneOf('pending', 'checked', 'postponed', 'returned', 'withdrawn', 'past')),
+  period: object({
+    days: number,
+    source: oneOf('declared', 'learned', 'default'),
+    intervalCount: number,
+  }),
   invalidInput: string,
   recipeLines: array(
     object({ productId: string, quantity: number, existing: boolean }, [
@@ -193,13 +213,10 @@ const fixture = object(
   {
     id: string,
     scenario: string,
-    household: object({ size: number }, ['size']),
+    household: object({ size: number, periodDays: nullable(number) }),
     products: array(product),
     events: array(event),
     listLines: array(listLine),
-    previousOffers: array(
-      object({ productId: string, offeredAt: string }, ['productId', 'offeredAt']),
-    ),
     recipes: array(recipe),
     recipeRequests: array(object({ recipeId: string, servings: number }, ['recipeId', 'servings'])),
     finishedReport: object({ productId: string, at: string }, ['productId', 'at']),

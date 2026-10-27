@@ -8,11 +8,13 @@ export type Family = 'rhythm' | 'reserve' | 'occasional';
 export type CatalogScaling = 'per_person' | 'per_household';
 export type StockEventType = 'purchased' | 'opened_last' | 'finished' | 'counted';
 export type RateSource = 'declared' | 'learned' | 'catalog' | 'none';
-export type LineDecision = 'accepted' | 'modified' | 'refused_have' | 'refused_stop';
+export type LineDecision = 'accepted' | 'modified' | 'refused_have' | 'refused_stop' | 'postponed';
 export type IngredientKind = 'base' | 'specific';
 
 export interface Household {
   size: number;
+  /** Période de la liste fixée par l'utilisateur, de 1 à 31 jours ; null = apprise (4.9). */
+  periodDays: number | null;
 }
 
 /** Produit tel que le moteur le lit ; toutes les quantités sont en unités d'achat (RG-1). */
@@ -42,17 +44,18 @@ export interface StockEvent {
   deletedAt: LocalDateTime | null;
 }
 
-/** Ligne de la liste active, y compris retirée ou refusée. */
+/** Ligne de la liste du foyer, y compris cochée, retirée, refusée ou reportée (4.9). */
 export interface ListLine {
+  id: string;
   productId: string;
   quantity: number;
   decision: LineDecision | null;
-}
-
-/** Suggestion déjà proposée sur une liste précédente (ligne d'origine `suggestion`). */
-export interface Offer {
-  productId: string;
-  offeredAt: LocalDateTime;
+  /** Date du refus pour une suggestion refusée. */
+  createdAt: LocalDateTime;
+  checkedAt: LocalDateTime | null;
+  postponedAt: LocalDateTime | null;
+  /** Date du retrait. */
+  deletedAt: LocalDateTime | null;
 }
 
 export interface Recipe {

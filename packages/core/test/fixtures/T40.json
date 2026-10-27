@@ -1,0 +1,38 @@
+{
+  "id": "T40",
+  "scenario": "Période fixée à 10 jours, sessions hebdomadaires",
+  "household": {
+    "periodDays": 10
+  },
+  "products": [],
+  "events": [],
+  "listLines": [
+    {
+      "productId": "pain",
+      "createdAt": "2026-09-01T09:00:00",
+      "checkedAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "pain",
+      "createdAt": "2026-09-01T09:00:00",
+      "checkedAt": "2026-10-08T10:00:00"
+    },
+    {
+      "productId": "pain",
+      "createdAt": "2026-09-01T09:00:00",
+      "checkedAt": "2026-10-15T10:00:00"
+    },
+    {
+      "productId": "pain",
+      "createdAt": "2026-09-01T09:00:00",
+      "checkedAt": "2026-10-22T10:00:00"
+    }
+  ],
+  "now": "2026-10-23T10:00:00",
+  "expected": {
+    "period": {
+      "days": 10,
+      "source": "declared"
+    }
+  }
+}

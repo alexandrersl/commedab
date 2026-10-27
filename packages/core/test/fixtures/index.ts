@@ -33,6 +33,15 @@ import T30 from './T30.json';
 import T31 from './T31.json';
 import T32 from './T32.json';
 import T33 from './T33.json';
+import T34 from './T34.json';
+import T35 from './T35.json';
+import T36 from './T36.json';
+import T37 from './T37.json';
+import T38 from './T38.json';
+import T39 from './T39.json';
+import T40 from './T40.json';
+import T41 from './T41.json';
+import T42 from './T42.json';
 
 export const fixtures: Fixture[] = [
   T01,
@@ -68,4 +77,13 @@ export const fixtures: Fixture[] = [
   T31,
   T32,
   T33,
+  T34,
+  T35,
+  T36,
+  T37,
+  T38,
+  T39,
+  T40,
+  T41,
+  T42,
 ].map(parseFixture);

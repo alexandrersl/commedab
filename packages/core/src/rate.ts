@@ -1,6 +1,7 @@
 import { dayNumber, dayOf } from './date';
 import { liveEvents, type LiveEvents } from './events';
 import { checkEvents, checkHousehold, checkProduct } from './guard';
+import { median } from './median';
 import type { Household, LocalDate, LocalDateTime, Product, RateSource, StockEvent } from './model';
 
 const MIN_PURCHASES = 3;
@@ -145,12 +146,4 @@ function purchaseDays(live: LiveEvents): PurchaseDay[] {
     }
   }
   return days;
-}
-
-function median(values: readonly number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  const middle = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1
-    ? (sorted[middle] as number)
-    : ((sorted[middle - 1] as number) + (sorted[middle] as number)) / 2;
 }

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   applyRecipes,
   InvalidInputError,
+  listView,
   observedIntervals,
+  resolvePeriod,
   unitStep,
   suggestForPeriod,
   type Product,
@@ -28,8 +30,7 @@ function suggestionsOf(s: (typeof all)[number]) {
     products: s.products,
     states: statesOf(s, s.fixture.now),
     periodDays,
-    listLines: s.listLines,
-    previousOffers: s.previousOffers,
+    list: listView(s.listLines, s.fixture.now),
   });
 }
 
@@ -96,6 +97,32 @@ describe.each(all)('$fixture.id — $fixture.scenario', (s) => {
         marked: justification.marked,
       }));
       expect(actual).toEqual(suggestions);
+    });
+  }
+
+  if (expected.sessions !== undefined || expected.ongoing !== undefined) {
+    const { sessions, ongoing } = expected;
+    it('sessions de courses', () => {
+      const view = listView(s.listLines, now);
+      if (sessions !== undefined) expect(view.sessions).toMatchObject(sessions);
+      if (ongoing !== undefined) expect(view.ongoing?.startedAt ?? null).toBe(ongoing);
+    });
+  }
+
+  if (expected.lineStates !== undefined) {
+    const lineStates = expected.lineStates;
+    it('état des lignes', () => {
+      const actual = Object.fromEntries(
+        listView(s.listLines, now).lines.map(({ line, state }) => [line.id, state]),
+      );
+      expect(actual).toMatchObject(lineStates);
+    });
+  }
+
+  if (expected.period !== undefined) {
+    const period = expected.period;
+    it('période de la liste', () => {
+      expect(resolvePeriod(s.household, listView(s.listLines, now).sessions)).toMatchObject(period);
     });
   }
 

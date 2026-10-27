@@ -4,7 +4,7 @@
 
 export * from './model';
 export { InvalidInputError } from './errors';
-export { addDays, dayOf, daysBetween } from './date';
+export { addDays, addHours, dayOf, daysBetween } from './date';
 export { roundUpToStep, unitStep } from './quantity';
 export { observedIntervals, resolveRate, type Interval, type Rate } from './rate';
 export { estimateStock, type StockEstimate } from './stock';
@@ -12,3 +12,12 @@ export { resolveFinishedAt, type FinishedAt } from './finished';
 export { productState, type ProductState } from './state';
 export { suggestForPeriod, type Justification, type Suggestion } from './suggest';
 export { applyRecipes, type RecipeLine } from './recipes';
+export {
+  listView,
+  SESSION_GAP_HOURS,
+  shoppingSessions,
+  type LineState,
+  type ListView,
+  type ShoppingSession,
+} from './session';
+export { DEFAULT_PERIOD_DAYS, resolvePeriod, type Period } from './period';

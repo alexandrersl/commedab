@@ -1,9 +1,12 @@
 {
   "id": "T28",
-  "scenario": "Proposé sur une liste créée à la seconde même du « fini » : compte comme proposé depuis le marqueur",
+  "scenario": "Session de courses commencée à la seconde même du « fini », terminée : compte comme commencée après le marqueur",
   "products": [
     {
       "id": "houmous"
+    },
+    {
+      "id": "pain"
     }
   ],
   "events": [
@@ -17,12 +20,19 @@
       "productId": "houmous",
       "type": "finished",
       "occurredAt": "2026-10-05T20:00:00"
+    },
+    {
+      "productId": "pain",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-05T20:00:00"
     }
   ],
-  "previousOffers": [
+  "listLines": [
     {
-      "productId": "houmous",
-      "offeredAt": "2026-10-05T20:00:00"
+      "productId": "pain",
+      "createdAt": "2026-09-01T09:00:00",
+      "checkedAt": "2026-10-05T20:00:00"
     }
   ],
   "now": "2026-10-13T10:00:00",
