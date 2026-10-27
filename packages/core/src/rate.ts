@@ -83,8 +83,9 @@ function declaredRate(product: Product): number | null {
 }
 
 /**
- * Valeurs copiées du catalogue à la création, ajustées à la taille actuelle du foyer. Une
- * valeur nulle ou négative est ignorée : elle annulerait la borne du rythme appris.
+ * Valeurs copiées du catalogue à la création, ajustées à la taille actuelle du foyer : par
+ * personne sauf `per_household`, comme dans le catalogue. Une valeur nulle ou négative est
+ * ignorée : elle annulerait la borne du rythme appris.
  */
 function catalogRate(product: Product, household: Household): number | null {
   if (product.catalogRateQty !== null && product.catalogRateQty > 0) {

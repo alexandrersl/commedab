@@ -13,6 +13,8 @@ export interface StockEstimate {
   toRebuy: boolean;
   lastPurchaseAt: LocalDateTime | null;
   lastPurchaseQuantity: number | null;
+  /** Quantité du dernier achat hors recette (RG-4) : la quantité habituelle. */
+  lastEligiblePurchaseQuantity: number | null;
 }
 
 /**
@@ -30,6 +32,9 @@ export function estimateStock(
   const lastPurchase = live[lastIndex(live, (event) => event.type === 'purchased')];
   const lastPurchaseAt = lastPurchase?.occurredAt ?? null;
   const lastPurchaseQuantity = lastPurchase?.quantity ?? null;
+  const lastEligiblePurchaseQuantity =
+    live[lastIndex(live, (event) => event.type === 'purchased' && !event.fromRecipe)]?.quantity ??
+    null;
 
   const anchorIndex = lastIndex(live, isAnchor);
   const anchor = live[anchorIndex];
@@ -43,6 +48,7 @@ export function estimateStock(
       toRebuy: false,
       lastPurchaseAt,
       lastPurchaseQuantity,
+      lastEligiblePurchaseQuantity,
     };
   }
 
@@ -67,5 +73,6 @@ export function estimateStock(
       purchases.length === 0,
     lastPurchaseAt,
     lastPurchaseQuantity,
+    lastEligiblePurchaseQuantity,
   };
 }

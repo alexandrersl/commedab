@@ -30,6 +30,8 @@ import T28 from './T28.json';
 import T29 from './T29.json';
 import T30 from './T30.json';
 import T31 from './T31.json';
+import T32 from './T32.json';
+import T33 from './T33.json';
 
 export const fixtures: unknown[] = [
   T01,
@@ -63,4 +65,6 @@ export const fixtures: unknown[] = [
   T29,
   T30,
   T31,
+  T32,
+  T33,
 ];
