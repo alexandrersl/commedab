@@ -175,6 +175,9 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@commedab/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       expo:
         specifier: ~58.0.19
         version: 58.0.19(@babel/core@7.29.7(supports-color@7.2.0))(@expo/metro-runtime@58.0.15)(expo-router@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-web@0.21.4(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.7(supports-color@7.2.0))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@7.2.0))(supports-color@7.2.0))(react-native@0.88.0(@babel/core@7.29.7(supports-color@7.2.0))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@7.2.0))(supports-color@7.2.0))(@types/react@19.3.0)(react@19.3.0)(supports-color@7.2.0))(react@19.3.0)(supports-color@7.2.0))(react-native@0.88.0(@babel/core@7.29.7(supports-color@7.2.0))(@react-native/metro-config@0.88.0(@babel/core@7.29.7(supports-color@7.2.0))(supports-color@7.2.0))(@types/react@19.3.0)(react@19.3.0)(supports-color@7.2.0))(react@19.3.0)(supports-color@7.2.0)(typescript@6.0.3)
@@ -245,6 +248,12 @@ importers:
       '@commedab/core':
         specifier: workspace:*
         version: link:../core
+      '@powersync/common':
+        specifier: ^2.4.0
+        version: 2.4.0
+      '@powersync/web':
+        specifier: ^2.5.0
+        version: 2.5.0(@powersync/common@2.4.0)(@powersync/shared-internals@1.4.0(@powersync/common@2.4.0))
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.5
@@ -1093,6 +1102,9 @@ packages:
     resolution: {integrity: sha512-u3UPsIilWKOM3F9CXtrG8LEJmNxwoCQC/XVj4IKYXvvpx7QIi/Kg1LI5uDmDpKlac62NUtX7eLjRh+jVZcLOzw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
 
+  '@journeyapps/wa-sqlite@2.0.7':
+    resolution: {integrity: sha512-mc6xUricl4QB2s8QTRGS+FofSr1cjwDtf6dPXAdMBuGWodjfEgkSJGDPWQ7zVqgc7hMfXYLT7WIfEBAxara8YA==}
+
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
 
@@ -1184,6 +1196,21 @@ packages:
 
   '@oxc-project/types@0.154.0':
     resolution: {integrity: sha512-KYOUGQFlLWR+s4QMV2Q9ko38TZm7EdO87Qm7rvZLqk/webse/cDjtyxKhg/47l0byCbs/k46LT8qc4PKjAikzA==}
+
+  '@powersync/common@2.4.0':
+    resolution: {integrity: sha512-ngVogy+B8NQeI5l+0Es8qMxnGozUie8Q6R4+0/AHA3oBAhDG5UmeYw/LquTzZJSOPnCmvGgFSqovblV+JKzxKQ==}
+
+  '@powersync/shared-internals@1.4.0':
+    resolution: {integrity: sha512-OiqqDuW6tePW4Ed7C5IWutBKrtcqKuTMlVMQNwUZtKtqr7ZrqKlb+YP5l4niuz8mpqDYo3/HNU0dpc+3mneSBQ==}
+    peerDependencies:
+      '@powersync/common': ^2.4.0
+
+  '@powersync/web@2.5.0':
+    resolution: {integrity: sha512-/K2ZUjIdqvtFeoLfPetPcE+uioShBWzrTrOa8hpoZ7i62S8wgj47i+VPnKTXI7WQmXuxTGGZFUFnahinf6wjPg==}
+    hasBin: true
+    peerDependencies:
+      '@powersync/common': ^2.4.0
+      '@powersync/shared-internals': ^1.4.0
 
   '@radix-ui/primitive@1.2.0':
     resolution: {integrity: sha512-KABY+VMIRPJL+Vyzv/335FEhXXD/xDv8BMb1kl48/aXJZMH0LtHCTx5ga5RnxaEP3nZHtmTLf1P9vanmFX46bw==}
@@ -2121,6 +2148,9 @@ packages:
   color@4.2.3:
     resolution: {integrity: sha512-1rXeuUUiGGrykh+CeBdu5Ie7OJwinCgQY0bc7GCRxy5xVHy+moaqkpL/jqQq0MtQOeYcrqEz4abc5f0KtU7W4A==}
     engines: {node: '>=12.5.0'}
+
+  comlink@4.4.2:
+    resolution: {integrity: sha512-OxGdvBmJuNKSCMO4NTl1L47VRp6xn2wG4F/2hYzB6tiCb709otOxtEYCSvK80PtjODfXXZu8ds+Nw5kVCjqd2g==}
 
   commander@12.1.0:
     resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
@@ -5361,6 +5391,8 @@ snapshots:
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
+  '@journeyapps/wa-sqlite@2.0.7': {}
+
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
@@ -5422,6 +5454,20 @@ snapshots:
     optional: true
 
   '@oxc-project/types@0.154.0': {}
+
+  '@powersync/common@2.4.0': {}
+
+  '@powersync/shared-internals@1.4.0(@powersync/common@2.4.0)':
+    dependencies:
+      '@powersync/common': 2.4.0
+
+  '@powersync/web@2.5.0(@powersync/common@2.4.0)(@powersync/shared-internals@1.4.0(@powersync/common@2.4.0))':
+    dependencies:
+      '@journeyapps/wa-sqlite': 2.0.7
+      '@powersync/common': 2.4.0
+      '@powersync/shared-internals': 1.4.0(@powersync/common@2.4.0)
+      comlink: 4.4.2
+      commander: 12.1.0
 
   '@radix-ui/primitive@1.2.0': {}
 
@@ -6378,6 +6424,8 @@ snapshots:
     dependencies:
       color-convert: 2.0.1
       color-string: 1.9.1
+
+  comlink@4.4.2: {}
 
   commander@12.1.0: {}
 

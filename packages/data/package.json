@@ -15,7 +15,9 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@commedab/core": "workspace:*"
+    "@commedab/core": "workspace:*",
+    "@powersync/common": "^2.4.0",
+    "@powersync/web": "^2.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
