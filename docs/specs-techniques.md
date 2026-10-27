@@ -2,7 +2,22 @@
 
 ## Objet et statut
 
-Ce document fixe les choix techniques de l'application décrite dans les spécifications fonctionnelles v1 (MVP mono-utilisateur, stock estimé sans inventaire) et éclairée par l'étude de marché. Il est rédigé décision par décision, dans l'ordre où elles se contraignent ; chaque section porte un statut.
+Ce document fixe les choix techniques de l'application décrite dans les spécifications fonctionnelles v2 (MVP d'un foyer partagé entre ses membres, stock estimé sans inventaire) et éclairée par l'étude de marché. Il est rédigé décision par décision, dans l'ordre où elles se contraignent ; chaque section porte un statut.
+
+| Version | Date | Changements |
+| --- | --- | --- |
+| 1.0 | 26/10/2026 | Toutes les sections décidées |
+| 1.1 | 27/10/2026 | Revue du moteur : cas limites, gardes d'entrée, quantité habituelle hors recette (T22 à T33) |
+| 2.0 | 27/10/2026 | Spécifications fonctionnelles v2, résumées ci-dessous |
+
+Changements de la v2 :
+
+- Plus de table `shopping_list` : `list_line` appartient au foyer, la liste est permanente. Cocher crée l'achat (UUID v5 de la ligne), décocher pose son `deleted_at` ; plus de clôture, de `reopenList` ni d'index de liste active (3.3, 5.5).
+- Sessions de courses, état des lignes et période de la liste calculés par `core` (`listView`, `resolvePeriod`, 4.9), jamais stockés. `household.default_period_days` devient `period_days`, nul en réglage automatique.
+- La suggestion due au seul marqueur « à racheter » vaut jusqu'à la fin de la première session de courses commencée après le marqueur ; les lignes retirées, refusées ou reportées bloquent la suggestion jusqu'à la fin de la session suivante (4.5, 4.9).
+- Écrans : quatre onglets Liste, Produits, Recettes, Compte ; plus d'Accueil ni de mode magasin (6.3).
+- Foyer partagé dès le MVP : invitation par lien, `household_invitation` hors synchro, fonctions `create_invitation`, `accept_invitation`, `leave_household`, `remove_member` (5.6).
+- Agrégation anonyme des noms de produits soumise à l'accord du foyer, `household.catalog_contribution` (7.3, 8.1).
 
 Contraintes de départ, indépendantes des choix :
 
@@ -34,7 +49,7 @@ L'application est développée avec **Expo (React Native)** en TypeScript, avec 
 
 ```
 Phase A · PWA ──(80 % de suggestions acceptées ; 99 €/an, un Mac)──▶ Phase B · Natif iOS ──(app jugée satisfaisante ; revue Apple)──▶ Phase C · App Store
-Expo web sur l'écran d'accueil        Build iOS du même code, TestFlight          Publication, puis Android ; partage du foyer,
+Expo web sur l'écran d'accueil        Build iOS du même code, TestFlight          Publication, puis Android,
 usage quotidien, coût zéro            persistance native, widgets                 notifications ; web gardé en accès secondaire
 ```
 
@@ -94,7 +109,7 @@ App Expo  ◀──▶  SQLite local  ◀──▶  Moteur de synchro  ◀──
 écrans,         réplique du         PowerSync,               Postgres (référence),
 moteur TS pur   foyer, écritures    règles par foyer,        Auth, RLS par foyer,
 web/iOS/Android en file, hors ligne pousse / tire / rejoue   fonctions serveur
-──────────────── tout est rattaché à un foyer, dès le MVP mono-utilisateur ────────────────
+─────────────────── tout est rattaché à un foyer, partagé dès le MVP ───────────────────
 ```
 
 Ce modèle « réplique locale, autorité serveur » répond aux trois exigences à la fois : hors ligne en magasin (la lecture et l'écriture sont locales), réactivité en un geste (aucun aller-retour réseau), et structure long terme (le partage du foyer en temps réel et le multi-appareil sont le fonctionnement normal du moteur, pas une fonctionnalité à ajouter).
@@ -130,7 +145,7 @@ Ce modèle « réplique locale, autorité serveur » répond aux trois exigences
 ### 2.5 Compte et foyer
 
 - Inscription par e-mail à la première ouverture, immédiatement suivie de la création automatique d'un foyer dont l'utilisateur est membre. Aucun autre écran d'initialisation que la taille du foyer (EF-7.1).
-- Toute table métier porte une colonne `household_id`, jamais `user_id` : la politique RLS autorise un utilisateur sur les lignes des foyers dont il est membre. Le partage (évolution 2) se résume alors à ajouter un membre.
+- Toute table métier porte une colonne `household_id`, jamais `user_id` : la politique RLS autorise un utilisateur sur les lignes des foyers dont il est membre. Le partage se résume alors à ajouter un membre, par une invitation (EF-7.4, 5.6).
 - Les règles de synchro PowerSync sélectionnent les lignes par `household_id` ; un appareil ne reçoit que son foyer.
 
 ### 2.6 Limites et points de vigilance
@@ -180,7 +195,7 @@ Coût estimé d'un remplacement dans ces conditions : réécriture de la couche 
 
 ## 3. Modèle de données
 
-**Statut : validé le 19/10/2026.**
+**Statut : validé le 19/10/2026, révisé le 27/10/2026 (v2).**
 
 ### 3.1 Vue d'ensemble
 
@@ -192,8 +207,8 @@ household ──▶ product ◀╌╌ catalog_entry (fichier, copié jamais lié
    ▼            │  └── recipe_ingredient ──▶ recipe
 category ◀──────┤
                 ├── stock_event (acheté, entamé, fini, relevé ; daté)
-                │        ▲ achat à la clôture
-shopping_list ──┴── list_line (quantité, origine, décision, coché)
+                │        ▲ achat à la coche
+                └── list_line (quantité, origine, décision, cochée, reportée)
 Chaque table porte household_id ; les flèches vont de l'enfant vers la référence.
 ```
 
@@ -218,16 +233,29 @@ Chaque table porte household_id ; les flèches vont de l'enfant vers la référe
 | id | uuid |  |
 | name | text | optionnel |
 | size | smallint | taille du foyer (5.4 FS), défaut 1 |
-| default\_period\_days | smallint | dernière période utilisée (EF-4.1), défaut 7 |
+| period\_days | smallint, nullable | période de la liste fixée dans l'onglet Compte, de 1 à 31 (EF-4.1) ; nul = automatique, apprise des sessions de courses (4.9) |
+| catalog\_contribution | boolean | accord du foyer pour l'agrégation anonyme de ses noms de produits (EF-7.6, 7.3) ; faux par défaut |
 | created\_at, updated\_at | timestamptz |  |
 
-**household\_member** — lien utilisateur ↔ foyer. Mono-utilisateur au MVP, mais c'est cette table qui rend le partage trivial.
+**household\_member** — lien utilisateur ↔ foyer. Un compte appartient à un seul foyer au MVP (index unique sur `user_id`) ; un foyer a un ou plusieurs membres (EF-7.4).
 
 | Colonne | Type | Note |
 | --- | --- | --- |
 | household\_id | uuid |  |
 | user\_id | uuid | référence `auth.users` |
-| role | text | `owner`, `member` |
+| role | text | `owner` (créateur du foyer, peut retirer un membre), `member` |
+| email | text | copie de l'e-mail du compte, affichée aux autres membres ; tenue à jour par un trigger sur `auth.users` |
+| created\_at | timestamptz |  |
+
+**household\_invitation** — invitation à rejoindre un foyer (EF-7.4). Table serveur seulement : ni synchronisée, ni accessible au client autrement que par les fonctions de 5.6.
+
+| Colonne | Type | Note |
+| --- | --- | --- |
+| id, household\_id | uuid |  |
+| token\_hash | text | SHA-256 du jeton du lien ; le jeton lui-même n'est jamais stocké |
+| created\_by | uuid | membre qui invite |
+| expires\_at | timestamptz | création + 7 jours |
+| accepted\_by, accepted\_at | uuid, timestamptz, nullables | usage unique |
 | created\_at | timestamptz |  |
 
 **category** — rayon, ordonné pour le parcours en magasin.
@@ -271,32 +299,25 @@ Un jeu par défaut est créé à la création du foyer (EF-1.7).
 | quantity | numeric, nullable | obligatoire pour `purchased` et `counted` |
 | occurred\_at | timestamptz | date métier, modifiable ; distincte de `created_at` |
 | source | text | `list`, `manual` |
-| list\_line\_id | uuid, nullable | ligne d'origine pour un achat à la clôture (EF-2.1) ; porte l'origine recette pour RG-4 |
+| list\_line\_id | uuid, nullable | ligne cochée d'origine d'un achat (EF-2.1) ; porte l'origine recette pour RG-4 |
 | deleted\_at, created\_at | timestamptz |  |
 
 Index : `(household_id, product_id, occurred_at desc)`.
 
-**shopping\_list**
+**list\_line** — une ligne de la liste du foyer, unique et permanente (EF-4.7) : il n'y a pas de table de listes. Les lignes ne sont jamais supprimées : cochées lors d'une session de courses terminée, retirées ou refusées, elles restent en base sans être affichées (4.9), et alimentent l'indicateur d'acceptation (2.4 FS) sans table supplémentaire.
 
 | Colonne | Type | Note |
 | --- | --- | --- |
-| id, household\_id | uuid |  |
-| status | text | `active`, `closed` ; index unique partiel sur `(household_id) where status = 'active'` (RG-6, EF-4.7) |
-| period\_days | smallint |  |
-| created\_at, closed\_at | timestamptz |  |
-
-**list\_line** — une ligne de liste. Les suggestions refusées restent en base avec leur décision : c'est ce qui alimente l'indicateur d'acceptation (2.4 FS) sans table supplémentaire.
-
-| Colonne | Type | Note |
-| --- | --- | --- |
-| id, household\_id, list\_id, product\_id | uuid |  |
-| quantity | numeric |  |
+| id, household\_id, product\_id | uuid |  |
+| quantity | numeric | quantité de l'achat créé à la coche (EF-4.5) |
 | suggested\_qty | numeric, nullable | quantité proposée à l'origine, pour mesurer les modifications |
-| origin | text | `suggestion`, `manual`, `recipe`, `carried_over` |
+| origin | text | `suggestion`, `manual`, `recipe` |
 | recipe\_id | uuid, nullable |  |
-| decision | text, nullable | `accepted`, `modified`, `refused_have`, `refused_stop` ; nul pour une ligne manuelle |
-| checked\_at | timestamptz, nullable | coché en magasin |
-| deleted\_at, created\_at, updated\_at | timestamptz |  |
+| decision | text, nullable | `accepted`, `modified`, `refused_have`, `refused_stop`, `postponed` ; nul pour une ligne manuelle. Une suggestion refusée est enregistrée comme une ligne de décision de refus, jamais affichée |
+| checked\_at | timestamptz, nullable | coché ; nul une fois décoché |
+| postponed\_at | timestamptz, nullable | reporté (`decision = postponed`, EF-4.5) |
+| deleted\_at | timestamptz, nullable | retiré (EF-4.5) |
+| created\_at, updated\_at | timestamptz |  |
 
 **recipe** et **recipe\_ingredient**
 
@@ -317,6 +338,7 @@ Calculées sur l'appareil à partir des tables synchronisées, jamais envoyées 
 | --- | --- |
 | product\_state | par produit : dernier événement, stock estimé, rythme retenu et sa source (`declared`, `learned`, `catalog`), date d'épuisement prévue, marqueur « à racheter », justification textuelle de la suggestion (EF-4.8) |
 | learned\_rate | par produit : rythme appris, nombre d'achats pris en compte, date de calcul (RG-3, RG-4, RG-5) |
+| list\_view | sessions de courses, session en cours, état de chaque ligne et période de la liste retenue (4.9) |
 
 Au MVP, ces données sont calculées à la volée par le moteur (section 4) et mémorisées en mémoire ; une table SQLite locale non synchronisée ne sera introduite que si la mesure ENF-4 l'exige.
 
@@ -329,18 +351,18 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 ### 3.7 Points tranchés le 19/10/2026
 
 1. `occurred_at` est modifiable sur un événement ; l'apprentissage recalcule depuis le journal à chaque fois, aucun état intermédiaire à invalider.
-2. La justification d'une suggestion (EF-4.8) est recalculée à l'affichage par le moteur, à partir de `product_state` ; aucune colonne en base. Sur une liste clôturée, la justification n'est plus affichée.
+2. La justification d'une suggestion (EF-4.8) est recalculée à l'affichage par le moteur, à partir de `product_state` ; aucune colonne en base. Une suggestion acceptée devient une ligne, qui ne porte plus de justification.
 3. Pas de fenêtre de synchro au MVP (décidé le 26/10/2026, remplace la fenêtre de 12 mois) : tout l'historique est synchronisé et le moteur le prend en compte en entier (5.7).
 
 ## 4. Moteur d'estimation
 
-**Statut : décidé le 19/10/2026** (rythme appris par médiane des cinq derniers intervalles ; une simplification de RG-5 signalée en 4.7).
+**Statut : décidé le 19/10/2026, révisé le 27/10/2026 (v2)** (rythme appris par médiane des cinq derniers intervalles ; une simplification de RG-5 signalée en 4.7 ; sessions de courses et période de la liste en 4.9).
 
 ### 4.1 Principes
 
 - Module **TypeScript pur**, sans accès à la base ni au réseau : il reçoit des objets (produit, événements, foyer, date courante) et rend des objets. Il tourne sur l'appareil, appelé par la couche d'accès aux données.
 - **Déterministe** : la date courante est un paramètre, jamais lue par le moteur. Même entrée, même sortie, ce qui rend les tests exacts.
-- **Dates locales** : le moteur reçoit les dates en heure locale de l'appareil, sans fuseau (`2026-10-26T18:30:00`) ; la couche `data` convertit `occurred_at` (UTC) dans le fuseau de l'appareil avant l'appel. Une durée en jours est une différence de jours civils : un achat samedi soir et un « fini » dimanche matin sont séparés d'un jour. L'heure ne sert qu'à ordonner deux événements du même jour. Le moteur ne manipule jamais de fuseau horaire. Les dates vont de l'an 0000 à l'an 9999 (format `AAAA-MM-JJ`) ; le calendrier est grégorien, 2100 n'est pas bissextile.
+- **Dates locales** : le moteur reçoit les dates en heure locale de l'appareil, sans fuseau (`2026-10-26T18:30:00`) ; la couche `data` convertit `occurred_at` (UTC) dans le fuseau de l'appareil avant l'appel. Une durée en jours est une différence de jours civils : un achat samedi soir et un « fini » dimanche matin sont séparés d'un jour. Hors sessions de courses (4.9), l'heure ne sert qu'à ordonner deux événements du même jour. Le moteur ne manipule jamais de fuseau horaire. Les dates vont de l'an 0000 à l'an 9999 (format `AAAA-MM-JJ`) ; le calendrier est grégorien, 2100 n'est pas bissextile.
 - **Sans état** : rien n'est mémorisé entre deux appels ; `product_state` et `learned_rate` (3.5) sont les sorties du moteur, recalculées à la demande.
 - **Arithmétique simple** : pas de statistique au-delà d'une médiane, pas d'apprentissage automatique (risque « sur-ingénierie » des spécifications fonctionnelles).
 
@@ -352,13 +374,16 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 | `estimateStock` | produit, événements du produit, rythme, date courante | stock estimé, date d'ancrage, date d'épuisement prévue, marqueur « à racheter » |
 | `observedIntervals` | événements du produit | intervalles de consommation observés (fiche produit, tests) |
 | `productState` | produit, événements du produit, foyer, date courante | `ProductState` : rythme et stock estimé |
-| `suggestForPeriod` | produits, leurs états, période en jours, lignes de la liste active, suggestions des listes précédentes | lignes suggérées : produit, quantité, éléments de justification |
-| `applyRecipes` | recettes choisies avec portions, états des produits, lignes existantes | lignes ajoutées ou cumulées |
+| `suggestForPeriod` | produits, leurs états, période en jours, vue de la liste (`listView`) | lignes suggérées : produit, quantité, éléments de justification |
+| `applyRecipes` | recettes choisies avec portions, états des produits, lignes non cochées de la liste (états `pending` et `returned`, 4.9) | lignes ajoutées ou cumulées |
+| `shoppingSessions` | dates des coches du foyer | sessions de courses : début, dernière coche, fermeture (4.9) |
+| `listView` | lignes de la liste, date courante | sessions, session en cours, état de chaque ligne (4.9) |
+| `resolvePeriod` | foyer, sessions de courses | période de la liste en jours, source (`declared`, `learned`, `default`), nombre d'intervalles utilisés (4.9) |
 | `resolveFinishedAt` | produit, événements du produit, rythme, date du signalement | date à enregistrer pour le « fini », et si elle a été avancée (4.4) |
 
-Un type `ProductState` regroupe les sorties des deux premières fonctions ; c'est lui que les écrans affichent (fiche produit, accueil, justification EF-4.8).
+Un type `ProductState` regroupe les sorties des deux premières fonctions ; c'est lui que les écrans affichent (fiche produit, onglet Produits, justification EF-4.8).
 
-Chaque fonction vérifie ses entrées et lève une `InvalidInputError`, qui nomme le champ fautif, pour ce que `data` ne doit jamais transmettre : date qui n'est pas au format exact `AAAA-MM-JJTHH:MM:SS` ou qui n'existe pas (les dates sont comparées comme des textes, leur format doit être unique), quantité négative ou non finie, achat ou relevé sans quantité, événement d'un autre produit, foyer de moins d'une personne, période qui n'est pas un entier d'au moins un jour, recette sans portion. Une valeur de rythme, de durée de vie ou de conservation nulle ou négative n'est pas une erreur : elle vaut absence (4.3, 4.5).
+Chaque fonction vérifie ses entrées et lève une `InvalidInputError`, qui nomme le champ fautif, pour ce que `data` ne doit jamais transmettre : date qui n'est pas au format exact `AAAA-MM-JJTHH:MM:SS` ou qui n'existe pas (les dates sont comparées comme des textes, leur format doit être unique), quantité négative ou non finie, achat ou relevé sans quantité, événement d'un autre produit, foyer de moins d'une personne ou de période fixée hors de 1 à 31 jours, période qui n'est pas un entier d'au moins un jour, ligne reportée sans date de report, recette sans portion. Une valeur de rythme, de durée de vie ou de conservation nulle ou négative n'est pas une erreur : elle vaut absence (4.3, 4.5).
 
 ### 4.3 Rythme de consommation
 
@@ -398,7 +423,7 @@ Un « il m'en reste » (EF-3.3, EF-4.4) est enregistré comme un `counted` d'une
 
 ### 4.5 Quantité suggérée
 
-Pour une liste couvrant `P` jours à la date `t` :
+Pour une période de `P` jours (4.9) à la date `t` :
 
 | Famille | Condition de suggestion | Quantité |
 | --- | --- | --- |
@@ -413,15 +438,15 @@ Pour une liste couvrant `P` jours à la date `t` :
 
 **Arrondi et conservation.** L'arrondi au pas supérieur (RG-2) prime sur la borne de conservation (RG-10) : la quantité suggérée est au moins le besoin et le dépasse de moins d'un pas. Un pain de mie consommé à raison de 0,4 par jour et conservé 2 jours donne un besoin de 0,8 et une suggestion de 1 (T29). Arrondir vers le bas ne proposerait rien.
 
-Un produit ayant une ligne sur la liste active, même retirée (`deleted_at`) ou refusée (`decision` de refus), n'est pas suggéré : `data` transmet ces lignes au moteur.
+Un produit dont une ligne bloque la suggestion n'est pas suggéré : ligne non cochée, cochée pendant la session en cours, reportée, ou retirée ou refusée depuis la fin de la dernière session (4.9, T12, T35).
 
-Une suggestion due au seul marqueur « à racheter » (produit sans rythme connu, ou réserve dont l'épuisement n'est pas prévu dans la période) n'est faite qu'une fois : si une liste créée depuis le marqueur, ou à la même seconde (T28), l'a déjà proposée et que l'utilisateur ne l'a pas ajoutée, elle n'est plus proposée. Un nouvel événement (« fini », « entamé ») la rend de nouveau possible ; un achat lève le marqueur. `data` transmet les lignes d'origine `suggestion` des listes clôturées, avec leur date de création. Tests T20 et T21.
+Une suggestion due au seul marqueur « à racheter » (produit sans rythme connu, ou réserve dont l'épuisement n'est pas prévu dans la période) ne vaut que jusqu'aux courses suivantes : dès qu'une session de courses commencée après le marqueur, ou à la même seconde (T28), s'est terminée sans que le produit soit acheté, elle n'est plus proposée. Une session déjà commencée au moment du marqueur ne compte pas : le produit marqué « fini » en magasin est encore proposé aux courses d'après (T42). Un nouvel événement (« fini », « entamé ») la rend de nouveau possible ; un achat lève le marqueur. Tests T20, T21, T28, T42.
 
 **Justification** (EF-4.8) : le moteur en rend les éléments (stock estimé, date d'épuisement prévue, source du rythme, nombre d'intervalles) ; l'écran les met en mots sans les termes « rythme », « famille » ni « stock » (ENF-8). Exemple : « Il t'en reste environ 2, épuisé vers le 24 oct. · d'après tes 4 derniers achats ».
 
 ### 4.6 Recettes
 
-Pour une recette de `S` portions de référence, demandée pour `S'` portions : chaque ingrédient de quantité `qi` donne `qi × S' / S`. Les quantités d'ingrédients sont enregistrées en unités d'achat (3.3) : la conversion depuis des grammes ou des millilitres, par la contenance, se fait à la saisie et non dans le moteur. Un ingrédient `specific` est ajouté intégralement ; un ingrédient `base` n'est ajouté qu'à hauteur de `max(0, quantité requise − stock(t))`, la quantité requise étant le total des recettes ajoutées ensemble. Les quantités sont cumulées sur une ligne existante du même produit (EF-5.5) et arrondies au pas de l'unité après cumul.
+Pour une recette de `S` portions de référence, demandée pour `S'` portions : chaque ingrédient de quantité `qi` donne `qi × S' / S`. Les quantités d'ingrédients sont enregistrées en unités d'achat (3.3) : la conversion depuis des grammes ou des millilitres, par la contenance, se fait à la saisie et non dans le moteur. Un ingrédient `specific` est ajouté intégralement ; un ingrédient `base` n'est ajouté qu'à hauteur de `max(0, quantité requise − stock(t))`, la quantité requise étant le total des recettes ajoutées ensemble. Les quantités sont cumulées sur la ligne non cochée du même produit, s'il en existe une (EF-5.5), et arrondies au pas de l'unité après cumul.
 
 ### 4.7 Écart assumé avec les spécifications fonctionnelles
 
@@ -444,7 +469,7 @@ Les tests sont écrits avant le moteur, sous forme de fixtures JSON (produit, fo
 | T09 | Pain, r = 1/jour, conservation 2 jours, liste de 31 jours | suggestion 2, pas 31 |
 | T10 | Achats provenant de lignes recette | exclus du calcul de r |
 | T11 | Produit ponctuel | jamais suggéré |
-| T12 | Suggestion refusée « il m'en reste » sur la liste active, avec le `counted` 1 qui en résulte | non re-suggéré sur cette liste ; stock recalé à 1 (la création du `counted` par la commande est vérifiée en intégration, 9.1) |
+| T12 | Suggestion refusée « il m'en reste », avec le `counted` 1 qui en résulte | non re-suggéré avant la fin des courses suivantes ; stock recalé à 1 (la création du `counted` par la commande est vérifiée en intégration, 9.1) |
 | T13 | 15 jours sans ouverture de l'app | stock décroît normalement, suggestions au retour (évolution « pause » hors MVP) |
 | T14 | Recette 4 portions demandée pour 2, ingrédient de base en stock suffisant | ingrédient de base non ajouté, spécifiques divisés par 2 |
 | T15 | Deux recettes partageant un ingrédient | une seule ligne, quantités cumulées |
@@ -453,25 +478,57 @@ Les tests sont écrits avant le moteur, sous forme de fixtures JSON (produit, fo
 | T18 | Achat à J0, « fini » signalé à J1, `L` = 14 (4.4) | « fini » daté J−1 à 23:59:59, l'achat de J0 reste en stock, intervalle précédent clos à J−1 |
 | T19 | Achat à J0, « fini » signalé à J10, `L` = 14 (4.4) | « fini » daté J10, stock 0, intervalle de 10 jours |
 | T20 | Produit créé à la volée, sans rythme, acheté une fois (2 unités) puis « fini » | « à racheter » vrai, suggestion 2 |
-| T21 | Même produit, déjà proposé sur une liste créée depuis le « fini » et pas ajouté | non suggéré ; un produit proposé seulement avant son « fini » l'est |
+| T21 | Même produit, après une session de courses commencée depuis le « fini », sans achat | non suggéré ; un produit marqué « fini » après cette session l'est |
 | T22 | Valeur catalogue 0 ou négative (4.3) | ignorée : rythme appris sans borne, ou aucun rythme |
 | T23 | Rythme déclaré de 0 unité (4.3) | ignoré : rythme catalogue ou appris |
 | T24 | Durée de conservation 0 ou négative (4.5) | ignorée : la période seule s'applique |
 | T25 | Liste de 0 jour (4.5) | `InvalidInputError` sur `periodDays` |
 | T26 | Deux achats le même jour, puis deux achats hebdomadaires (4.3) | un seul achat de quantité cumulée : intervalles 7 et 7 |
 | T27 | « Fini » avant tout achat (4.4) | stock 0, « à racheter » vrai, suggestion sans quantité négative |
-| T28 | Proposé sur une liste créée à la seconde même du « fini » (4.5) | compte comme proposé depuis le marqueur : non suggéré |
+| T28 | Session de courses commencée à la seconde même du « fini », terminée (4.5) | compte comme commencée après le marqueur : non suggéré |
 | T29 | Besoin de 0,8 pièce borné par la conservation (4.5) | suggestion 1 : l'arrondi dépasse le besoin de moins d'un pas |
 | T30 | Achats en 1969-1970 et en février-mars 2100 (4.1) | intervalles de 7 jours, dates d'épuisement exactes |
 | T31 | Épuisement prévu au-delà de l'an 9999 (4.4) | aucune date d'épuisement, sans erreur |
 | T32 | Rythme catalogue sans `catalog_scaling`, foyer de 3 (4.3) | traité comme `per_person` : × 3 ; `per_household` inchangé |
 | T33 | Produit sans rythme, « fini » après un achat recette (4.5) | suggestion de la quantité du dernier achat hors recette, 1 sans achat hors recette |
+| T34 | Coches à 10:00, 10:20, 12:59, 16:00 et 19:00 (4.9) | trois sessions : moins de 3 h d'écart regroupe, 3 h tout juste sépare ; la dernière est en cours |
+| T35 | Lignes non cochée, cochée, retirée, refusée, reportée, avant et après la fin de la dernière session (4.9) | état de chaque ligne ; seules les lignes passées laissent suggérer leur produit |
+| T36 | Deux sessions seulement (4.9) | période par défaut : 7 jours |
+| T37 | Quatre sessions dont deux le même jour (4.9) | sessions du même jour comptées une fois ; médiane 5,5 arrondie à 6 jours |
+| T38 | Sessions espacées de 40 et 45 jours (4.9) | période bornée à 31 jours |
+| T39 | Sessions quatre jours de suite (4.9) | période bornée à 2 jours |
+| T40 | Période fixée à 10 jours, sessions hebdomadaires (4.9) | période déclarée : 10 jours |
+| T41 | Six intervalles entre sessions : 20, 20, 20, 7, 7, 7 jours (4.9) | médiane des cinq derniers : 7 jours, pas 13,5 |
+| T42 | Produit marqué « fini » pendant une session de courses, qui se termine (4.5) | encore suggéré : la session avait commencé avant le marqueur |
 
 Propriétés vérifiées en complément : le moteur est idempotent (deux appels identiques donnent le même résultat), le stock n'est jamais négatif, la quantité suggérée est nulle dès que le stock couvre la période, et une suggestion « à rythme » dépasse le besoin de moins d'un pas.
 
+### 4.9 Sessions de courses et période de la liste
+
+**Sessions.** Une coche est le `checked_at` d'une ligne cochée et non retirée. Les coches du foyer, tous membres confondus, triées par date, forment des sessions : deux coches consécutives espacées de moins de 3 h appartiennent à la même session (T34). Une session commence à sa première coche, se termine à sa dernière, et se ferme 3 h après la dernière ; elle est en cours tant que sa fermeture n'est pas atteinte. Les heures se lisent sur les dates locales (4.1) : un changement d'heure peut décaler une fermeture d'une heure, sans conséquence. `shoppingSessions` rend les sessions ; `listView` y ajoute la session en cours et l'état de chaque ligne. Rien n'est stocké.
+
+**État des lignes.** Une ligne retirée l'est à son `deleted_at`, une ligne refusée à sa création, une ligne reportée à son `postponed_at` ; « la dernière fermeture » est celle de la dernière session fermée à la date courante.
+
+| État | Ligne | Affichée | Bloque la suggestion |
+| --- | --- | --- | --- |
+| `pending` | ni cochée, ni retirée, ni refusée, ni reportée | oui | oui |
+| `checked` | cochée pendant la session en cours | oui, barrée en fin de groupe | oui |
+| `postponed` | reportée, aucune session fermée depuis le report | non | oui |
+| `returned` | reportée, une session s'est fermée depuis le report | oui, signalée comme reportée | oui |
+| `withdrawn` | retirée ou refusée après la dernière fermeture | non | oui |
+| `past` | cochée lors d'une session fermée, ou retirée ou refusée avant la dernière fermeture | non | non |
+
+Une ligne cochée quitte donc la liste à la fermeture de sa session (EF-4.12). Les maquettes la retiraient aussi à l'ouverture suivante de l'app ; la règle est ramenée à la seule fermeture, parce que l'ouverture est propre à chaque appareil (deux membres verraient deux listes) et qu'iOS recharge une PWA restée en arrière-plan, ce qui viderait les lignes cochées en plein magasin. Une ligne reportée revient à la fermeture de la première session postérieure au report : reportée en magasin, après ces courses ; reportée à la maison, après les suivantes (EF-4.5).
+
+**Période de la liste.** `resolvePeriod` retient, dans l'ordre :
+
+1. **Déclarée** : `household.period_days`, de 1 à 31 jours, si l'utilisateur l'a fixée dans l'onglet Compte (T40).
+2. **Apprise** : les sessions sont ramenées au jour civil de leur début, deux sessions du même jour comptant pour une (T37). À partir de trois jours de courses, la période est la médiane des cinq derniers intervalles entre jours consécutifs (T41), arrondie au jour le plus proche (une demi-journée vers le haut), bornée entre 2 et 31 jours (T38, T39). La fenêtre de cinq intervalles est celle du rythme appris (4.3) : elle suit un changement d'habitude en quelques semaines.
+3. **Par défaut** : 7 jours (T36).
+
 ## 5. API et synchronisation
 
-**Statut : décidé le 19/10/2026.**
+**Statut : décidé le 19/10/2026, révisé le 27/10/2026 (v2).**
 
 ### 5.1 Principe
 
@@ -508,14 +565,13 @@ bucket_definitions:
       - select * from product where household_id = bucket.household_id
       - select * from recipe where household_id = bucket.household_id
       - select * from recipe_ingredient where household_id = bucket.household_id
-      - select * from shopping_list where household_id = bucket.household_id
       - select * from list_line where household_id = bucket.household_id
       - select * from stock_event where household_id = bucket.household_id
 ```
 
 - Tout l'historique du foyer est synchronisé au MVP : pas de fenêtre glissante. Le volume d'un foyer (quelques Mo par an) ne la justifie pas avant plusieurs années ; elle sera introduite alors, par une colonne `period_key` (année-mois) filtrée dans ces règles, sans changement de modèle.
 - `deleted_at` est synchronisé comme les autres colonnes : une suppression logique est une mise à jour ordinaire.
-- Le catalogue n'apparaît pas : il est dans le binaire de l'app.
+- Le catalogue n'apparaît pas : il est dans le binaire de l'app. `household_invitation` non plus : elle reste sur le serveur (3.3).
 
 ### 5.4 Connecteur d'envoi
 
@@ -531,20 +587,21 @@ Les identifiants étant générés côté client (UUID v7) et les écritures ét
 
 | Règle | Mise en œuvre |
 | --- | --- |
-| Une seule liste active par foyer (RG-6) | Index unique partiel ; en cas de conflit entre deux appareils, le second `upsert` est refusé et la liste locale est remplacée par celle du serveur (5.4) |
-| Une liste clôturée est immuable (RG-6) | Trigger refusant toute mise à jour de `list_line` dont la liste est `closed`, sauf `deleted_at` |
-| Annulation de la clôture (EF-6.5) | Commande `reopenList` : `status` repasse à `active` et `closed_at` à nul, `deleted_at` est posé sur les achats issus des lignes de la liste ; refusée par l'index unique si une autre liste est déjà active. Les lignes non cochées n'étant reportées qu'à la création de la liste suivante (EF-2.2), il n'y a rien d'autre à défaire. Une nouvelle clôture réécrit les mêmes achats (même UUID v5) et remet leur `deleted_at` à nul |
-| Clôture idempotente | L'`id` d'un événement d'achat créé à la clôture est dérivé de la ligne (UUID v5 de `list_line.id`) : deux clôtures concurrentes par deux membres du foyer produisent le même événement, conservé une seule fois par l'`upsert` |
+| Achat à la coche idempotent (EF-2.1) | L'`id` de l'achat créé en cochant une ligne est l'UUID v5 de `list_line.id`. Cocher crée l'événement ; décocher pose son `deleted_at` ; recocher le remet à nul et met à jour `occurred_at` et `quantity`, comme une modification de quantité sur une ligne cochée. Deux membres qui cochent la même ligne produisent le même événement, conservé une seule fois par l'`upsert` ; la dernière écriture fixe l'état |
 | Pas de suppression physique (RG-7) | Politiques RLS sans `delete` ; archivage par `archived_at` |
-| Membre d'un foyer | RLS : `household_id in (select household_id from household_member where user_id = auth.uid())`, lecture et écriture ; `household_member` lisible par ses membres, modifiable uniquement par un `owner` |
+| Membre d'un foyer | RLS : `household_id in (select household_id from household_member where user_id = auth.uid())`, lecture et écriture ; `household_member` lisible par ses membres, écrit uniquement par les fonctions de 5.6 |
+| Un compte, un foyer (EF-7.4) | Index unique sur `household_member.user_id` |
+| Invitations | `household_invitation` sans politique RLS d'accès client : seules `create_invitation` et `accept_invitation` (`security definer`) la lisent et l'écrivent |
 
 ### 5.6 Logique serveur
 
 Réduite au strict minimum :
 
-- **Création du foyer** : trigger Postgres sur `auth.users` à l'inscription, qui crée `household` (taille 1), `household_member` (`owner`) et le jeu de catégories par défaut avec leurs `system_key`. Aucun écran d'initialisation hors la taille du foyer (EF-7.1), que l'app met à jour ensuite.
+- **Création du foyer** : trigger Postgres sur `auth.users` à l'inscription, qui crée `household` (taille 1, `period_days` nul, `catalog_contribution` faux), `household_member` (`owner`) et le jeu de catégories par défaut avec leurs `system_key`. Aucun écran d'initialisation hors la taille du foyer (EF-7.1), que l'app met à jour ensuite.
+- **Invitation** (EF-7.4) : `create_invitation()`, appelée par un membre, tire un jeton aléatoire de 128 bits, en enregistre l'empreinte SHA-256 avec une expiration à 7 jours et rend le jeton ; l'app en fait le lien `https://commedab.app/invitation/<jeton>` et ouvre la feuille de partage du système. `accept_invitation(jeton)` vérifie l'empreinte, l'expiration et l'usage unique, retire l'appelant de son foyer (supprimé avec ses données s'il en était le seul membre), l'ajoute comme `member` au foyer invitant et marque l'invitation acceptée. L'app demande confirmation avant l'appel si le foyer quitté contient des produits, puis vide sa base locale et se resynchronise.
+- **Départ et retrait** (EF-7.4) : `leave_household()` retire l'appelant et lui crée un foyer neuf, comme à l'inscription ; `remove_member(user_id)`, réservée à l'`owner`, fait de même pour le membre retiré. Un `owner` qui part transmet son rôle au membre le plus ancien.
 - **Export des données** (EF-7.3) : réalisé côté client depuis SQLite, en JSON, sans fonction serveur ; tout l'historique étant synchronisé (5.3), l'export local est complet.
-- **Suppression du compte** (EF-7.3) : fonction Postgres `delete_account()` appelée par l'app, qui supprime physiquement le foyer et ses données si l'utilisateur en est le seul membre, puis l'utilisateur. Seule suppression physique autorisée.
+- **Suppression du compte** (EF-7.3) : fonction Postgres `delete_account()` appelée par l'app, qui supprime physiquement le foyer et ses données si l'utilisateur en est le seul membre, sinon seulement son appartenance (rôle `owner` transmis au membre le plus ancien), puis l'utilisateur. Seules suppressions physiques autorisées, avec celle du foyer quitté par `accept_invitation`.
 
 Pas d'Edge Function au MVP. Elles n'arriveront qu'avec les notifications et l'import de commandes (section 10).
 
@@ -555,7 +612,7 @@ Pas d'Edge Function au MVP. Elles n'arriveront qu'avec les notifications et l'im
 
 ## 6. Frontend
 
-**Statut : décidé le 26/10/2026.**
+**Statut : décidé le 26/10/2026, révisé le 27/10/2026 (v2).**
 
 ### 6.1 Structure du projet
 
@@ -586,27 +643,29 @@ repo/
 
 ### 6.2 Couche d'accès aux données
 
-`packages/data` expose des **dépôts par entité** (`products`, `events`, `lists`, `recipes`, `household`) avec deux faces :
+`packages/data` expose des **dépôts par entité** (`products`, `events`, `list`, `recipes`, `household`) avec deux faces :
 
-- des **requêtes réactives** (`watchProducts()`, `watchActiveList()`) qui renvoient un flux mis à jour à chaque écriture locale ou synchronisation ;
-- des **commandes** (`markFinished(productId)`, `closeList(listId)`, `acceptSuggestion(lineId)`) qui écrivent dans SQLite dans une transaction et appliquent les règles de 4.4 : date du « fini » calculée par `resolveFinishedAt` de `core`, `counted` sur « il m'en reste ». Une commande ne contient aucune formule : tout calcul vient de `core`.
+- des **requêtes réactives** (`watchProducts()`, `watchList()`) qui renvoient un flux mis à jour à chaque écriture locale ou synchronisation ;
+- des **commandes** (`checkLine`, `uncheckLine`, `setLineQuantity`, `removeLine`, `postponeLine`, `acceptSuggestion`, `refuseSuggestion`, `stopBuying`, `markFinished`) qui écrivent dans SQLite dans une transaction et appliquent les règles de 4.4 et 5.5 : date du « fini » calculée par `resolveFinishedAt` de `core`, `counted` sur « il m'en reste », achat créé, retiré ou mis à jour avec la coche d'une ligne. Une commande ne contient aucune formule : tout calcul vient de `core`.
+
+La Liste passe les lignes du foyer à `listView` (4.9) : seules les lignes affichées sont rendues, `resolvePeriod` donne la période et `suggestForPeriod` reçoit la vue entière.
 
 Les écrans n'écrivent jamais de SQL et n'importent jamais PowerSync (2.9). Un hook `useProductStates()` combine le flux des produits et des événements et appelle le moteur de `core` ; son résultat est mémorisé par produit et recalculé uniquement pour les produits dont les événements ont changé, ce qui tient ENF-4 (300 produits en moins d'une seconde) sans table dérivée.
 
 ### 6.3 Écrans du MVP
 
-Quatre onglets et une fiche. Le mode magasin n'est pas un écran : c'est l'onglet Liste pendant une liste active.
+Quatre onglets, Liste · Produits · Recettes · Compte, une fiche produit et l'écran d'invitation. Il n'y a ni écran d'accueil ni mode magasin : la Liste, onglet par défaut, sert à préparer et à faire les courses (EF-4.7).
 
 | Écran | Contenu | Gestes clés |
 | --- | --- | --- |
-| **Accueil** | Produits probablement bas (EF-3.3), raccourci vers la liste active ou vers une nouvelle liste, barre de recherche « marquer fini » | Un tap « fini », un tap « il m'en reste » ; annulation par message éphémère |
-| **Liste** (planification) | Période en tête, suggestions avec justification en une ligne (EF-4.8), champ de saisie unique en bas (EF-4.9), bouton « ajouter une recette » | Tap accepter, tap refuser avec choix « il m'en reste / je n'en achète plus », second tap sur une ligne = +1, tap sur la justification ouvre le relevé (EF-3.5) |
-| **Liste** (en magasin) | Même écran basculé : lignes groupées par rayon dans l'ordre configuré (« À classer » en tête pour les produits sans catégorie), cochées en fin de groupe, gros éléments, bouton « Terminer les courses » | Tap cocher, tap maintenu pour changer la quantité ; aucune navigation requise pendant les courses |
-| **Produits** | Recherche instantanée, groupée par catégorie, stock estimé et dernier achat en sous-titre (EF-1.8) | Tap ouvre la fiche ; tap maintenu « fini » |
+| **Liste** | Lignes groupées par rayon dans l'ordre configuré (« À classer » en tête, frais et surgelés en dernier) ; lignes cochées barrées en fin de groupe jusqu'à la fin de la session (4.9), lignes revenues d'un report signalées ; panneau des suggestions replié, pastille « N suggestions », justification en une ligne une fois déplié (EF-4.8, EF-4.13) ; champ de saisie unique en bas (EF-4.9) | Tap sur la case : cocher, décocher. Tap sur le nom : mini-feuille (quantité −/+, « Retirer », « Reporter », fiche produit). Balayage vers la gauche : retirer. Dans le panneau : accepter, refuser « il m'en reste » ou « je n'en achète plus », tap sur la justification pour le relevé (EF-3.5). Ni confirmation ni message éphémère |
+| **Produits** | Section « Il t'en reste sûrement peu » en tête (EF-3.3), puis le référentiel groupé par rayon, « il t'en reste environ 2 » et dernier achat en sous-titre (EF-1.8) ; recherche instantanée, qui sert aussi à marquer fini | Un tap « fini », un tap « il m'en reste », annulation par message éphémère ; tap sur un produit pour sa fiche |
 | **Recettes** | Liste des recettes, création avec nom, portions, ingrédients par le même champ de saisie unique | Tap « ajouter à la liste » avec choix des portions |
-| **Fiche produit** | Nom, catégorie, unité ; section « Réglages » repliée par défaut : famille, rythme, contenance, conservation, stock de sécurité, relevé (EF-3.5) ; historique des achats et événements avec correction et annulation (EF-2.4, EF-3.4) | Tout est modifiable en place ; rien n'est demandé |
+| **Compte** | Taille du foyer, période de la liste (automatique, ou fixée de 1 à 31 jours), membres et invitation, ordre et noms des rayons, e-mail, mot de passe, déconnexion, agrégation anonyme (désactivée par défaut), export, suppression du compte, diagnostic (6.5) | Chaque réglage s'applique au foyer dès qu'il change ; seuls rejoindre ou quitter un foyer et supprimer le compte demandent confirmation |
+| **Fiche produit** | Nom, catégorie, unité, « Je n'en achète plus » ; section « Réglages » repliée par défaut : famille, rythme, contenance, conservation, stock de sécurité, relevé (EF-3.5) ; historique des achats et événements avec correction et annulation (EF-2.4, EF-3.4) | Tout est modifiable en place ; rien n'est demandé |
+| **Invitation** (route `invitation/[token]`) | Ouverte par le lien d'invitation : connexion ou création du compte, puis rattachement au foyer (EF-7.1, EF-7.4) | Un tap « Rejoindre » |
 
-Règle transversale (ENF-8) : aucun écran de l'onglet Liste ni de l'Accueil n'affiche les mots « rythme », « famille » ou « stock » ; ils disent « il t'en reste environ 2 » et « proposé parce que tu en prends chaque semaine ».
+Règle transversale (ENF-8) : aucun écran des onglets Liste et Produits n'affiche les mots « rythme », « famille » ou « stock » ; ils disent « il t'en reste environ 2 » et « proposé parce que tu en prends chaque semaine ».
 
 ### 6.4 PWA (phase A)
 
@@ -619,7 +678,7 @@ Règle transversale (ENF-8) : aucun écran de l'onglet Liste ni de l'Accueil n'a
 
 - Aucune action n'attend le réseau ; toute écriture est locale puis synchronisée (2.1).
 - Un indicateur discret (point dans l'en-tête) signale « synchronisé », « en attente » ou « erreur » ; jamais de bandeau bloquant.
-- Un échec définitif du connecteur (5.4) est journalisé et visible dans un écran Réglages > Diagnostic, avec export du journal.
+- Un échec définitif du connecteur (5.4) est journalisé et visible dans l'onglet Compte > Diagnostic, avec export du journal.
 
 ### 6.6 Conventions pour le développement assisté
 
@@ -677,7 +736,7 @@ Un champ `catalog_version` (entier) est porté par le fichier assemblé et copi�
 1. **Génération assistée** : Claude produit un premier jet de 250 à 300 entrées à partir de la liste des catégories, par lots de catégorie, avec consigne de rester générique et de donner des rythmes plausibles pour un adulte en France.
 2. **Relecture manuelle** complète par l'auteur, qui corrige noms, alias et rythmes ; cette relecture est le vrai contrôle de qualité, l'étape 1 ne fait que gagner du temps.
 3. **Tests automatiques** sur le fichier assemblé : identifiants uniques, `category_key` existant, un seul des deux champs de rythme et cohérent avec la famille, rythmes dans une plage plausible (0,01 à 5 unités/jour ; durée de vie de 3 à 365 jours), aucun doublon de nom normalisé.
-4. **Enrichissement par l'usage** : les produits créés par les utilisateurs sans correspondance catalogue (EF-1.3) sont agrégés côté serveur par une requête sur `product.name_normalized`, exécutée à la main par l'auteur, ne retenant que les noms présents dans au moins 5 foyers distincts et sans aucun rattachement à un compte. Les plus fréquents sont ajoutés au catalogue, relus comme en 2. Cet usage agrégé est déclaré dans la politique de confidentialité (section 8).
+4. **Enrichissement par l'usage** : les produits créés par les utilisateurs sans correspondance catalogue (EF-1.3) sont agrégés côté serveur par une requête sur `product.name_normalized`, exécutée à la main par l'auteur, limitée aux foyers qui l'ont accepté (`household.catalog_contribution`, EF-7.6), ne retenant que les noms présents dans au moins 5 foyers distincts et sans aucun rattachement à un compte. Les plus fréquents sont ajoutés au catalogue, relus comme en 2. Cet usage agrégé est déclaré dans la politique de confidentialité (section 8).
 
 Taille visée au MVP : 250 à 300 entrées, soit l'essentiel des courses d'un foyer français ; un catalogue trop grand nuit à la recherche plus qu'il n'aide.
 
@@ -721,18 +780,20 @@ La recherche du champ unique (EF-4.9) est implémentée dans `core`, sans dépen
 
 ## 8. Sécurité et données personnelles
 
-**Statut : décidé le 26/10/2026.**
+**Statut : décidé le 26/10/2026, révisé le 27/10/2026 (v2).**
 
 ### 8.1 Données traitées
 
 | Donnée | Finalité | Base |
 | --- | --- | --- |
 | E-mail, mot de passe haché (ou identifiant Google) | Compte et connexion | Supabase Auth |
+| E-mail des membres | Affiché aux autres membres du foyer (EF-7.4) | `household_member.email` |
+| Invitations | Rejoindre un foyer (EF-7.4) ; empreinte du jeton seulement | `household_invitation`, serveur seul |
 | Taille du foyer | Valeurs par défaut (5.4 FS) | `household` |
 | Produits, achats, événements, listes, recettes | Le service lui-même | Tables du foyer |
 | Journal de diagnostic local | Dépannage par l'utilisateur (6.5) | Appareil uniquement |
 
-L'application ne collecte **aucune** donnée de localisation, aucun prix, aucun identifiant publicitaire, aucune analyse d'usage tierce (ENF-5). Le seul usage secondaire des données est l'agrégation anonyme des noms de produits pour le catalogue (7.3, étape 4), limitée aux noms présents dans au moins 5 foyers et déclarée dans la politique de confidentialité.
+L'application ne collecte **aucune** donnée de localisation, aucun prix, aucun identifiant publicitaire, aucune analyse d'usage tierce (ENF-5). Le seul usage secondaire des données est l'agrégation anonyme des noms de produits pour le catalogue (7.3, étape 4), limitée aux foyers qui l'ont acceptée (EF-7.6, désactivée par défaut) et aux noms présents dans au moins 5 foyers, et déclarée dans la politique de confidentialité.
 
 ### 8.2 Protection
 
@@ -746,7 +807,8 @@ L'application ne collecte **aucune** donnée de localisation, aucun prix, aucun 
 
 - Mot de passe : 10 caractères minimum, vérification contre les listes de mots de passe compromis (option Supabase Auth), pas de règles de composition.
 - Réinitialisation par e-mail ; sessions longues avec jeton de rafraîchissement (pas de reconnexion quotidienne).
-- Suppression du compte depuis l'app (EF-7.3) par la fonction `delete_account()` (5.6) ; effective immédiatement, sans délai de rétention.
+- Suppression du compte depuis l'app (EF-7.3) par la fonction `delete_account()` (5.6) ; effective immédiatement, sans délai de rétention. Les données du foyer restent tant qu'il a un autre membre.
+- Lien d'invitation : jeton de 128 bits à usage unique, valable 7 jours, stocké seulement sous forme d'empreinte (5.6).
 - Export depuis l'app en JSON (EF-7.3), généré sur l'appareil depuis SQLite.
 
 ### 8.4 Obligations
@@ -774,8 +836,8 @@ L'application ne collecte **aucune** donnée de localisation, aucun prix, aucun 
 | Niveau | Périmètre | Outil | Règle |
 | --- | --- | --- | --- |
 | Unitaires | `core` : moteur (4.8), recherche (7.5), validation du catalogue (7.3) | Vitest | Écrits avant le code ; 100 % des formules couvertes par une fixture ; exécution en moins de 10 secondes |
-| Intégration | `data` : dépôts et commandes contre une base SQLite en mémoire ; connecteur contre le projet Supabase de développement, schéma de test réinitialisé | Vitest, Docker | Vérifie les règles 4.4 (date du « fini », `counted`), 5.4 (idempotence) et 5.5 (clôture idempotente, annulation de la clôture, liste unique) |
-| Bout en bout | Les cinq parcours de 8 FS (première liste, « fini », planification, recette, magasin) | Maestro sur natif, Playwright sur web | Exécutés avant chaque livraison, pas à chaque commit |
+| Intégration | `data` : dépôts et commandes contre une base SQLite en mémoire ; connecteur contre le projet Supabase de développement, schéma de test réinitialisé | Vitest, Docker | Vérifie les règles 4.4 (date du « fini », `counted`), 5.4 (idempotence) et 5.5 (achat à la coche idempotent, invitations, un compte par foyer) |
+| Bout en bout | Les parcours de 8 FS (première liste, courses, « fini », suggestions, invitation, recette) | Maestro sur natif, Playwright sur web | Exécutés avant chaque livraison, pas à chaque commit |
 | Manuel | Le parcours de phase A sur l'iPhone réel (OPFS, plein écran, hors ligne en magasin) | Liste de contrôle dans le dépôt | À chaque changement de la couche de stockage ou de synchro |
 
 Le moteur est la seule partie où la couverture est exigée ; ailleurs, les tests suivent les bugs rencontrés.
@@ -821,7 +883,7 @@ Les règles de synchro PowerSync sont déployées par le CLI PowerSync dans la m
 - **Erreurs** : Sentry (plan gratuit) sur l'app et le web, sans données personnelles dans les événements (noms de produits exclus des messages d'erreur).
 - **Sauvegardes** : plan gratuit Supabase sans sauvegarde automatique ; un script hebdomadaire (`pg_dump` par le CLI, lancé par GitHub Actions) archive la base dans un stockage privé. Supprimé si passage au plan Pro.
 - **Surveillance** : tableau de bord PowerSync (usage, erreurs de synchro) et Supabase (requêtes lentes) ; aucune alerte au MVP au-delà des e-mails des deux services.
-- **Indicateur produit** : le taux d'acceptation des suggestions (2.4 FS) est calculé sur l'appareil et affiché dans Réglages > Diagnostic ; aucune remontée serveur.
+- **Indicateur produit** : le taux d'acceptation des suggestions (2.4 FS) est calculé sur l'appareil et affiché dans Compte > Diagnostic ; aucune remontée serveur.
 - **Pause hebdomadaire** des projets gratuits (2.6) : une action planifiée GitHub Actions envoie une requête quotidienne triviale aux deux services pour éviter la mise en pause. Supprimée au passage en Pro.
 
 ### 9.6 Points tranchés
@@ -836,12 +898,11 @@ Les règles de synchro PowerSync sont déployées par le CLI PowerSync dans la m
 | Évolution | Déjà prévu dans le MVP | Reste à faire le moment venu |
 | --- | --- | --- |
 | 1. Planning des repas par créneau | Recettes et portions en base ; `list_line.origin = recipe` | Table `meal_slot` (foyer, date, moment, recette, portions) ; la période de la liste dérivée du planning |
-| 2. Multi-utilisateur, partage du foyer | `household_member`, RLS et règles de synchro par foyer, écritures idempotentes, temps réel par construction (5.5) | Écran d'invitation (lien ou code), rôles, retrait d'un membre ; connexion Apple si Google est proposé |
-| 3. Catalogue de recettes et suggestions | Modèle de recette ; `base_ingredient` dans le catalogue | Source de recettes (import par URL en priorité), classement par stock estimé |
-| 4. Prix et budget | Rien de bloquant ; `stock_event.purchased` est l'endroit naturel d'un prix | Colonne `price` nullable sur l'événement d'achat, agrégats par liste |
-| 5. Pause de consommation (absence) | Le moteur reçoit la date courante en paramètre (4.1) | Table `household_pause` (début, fin) ; le moteur soustrait les jours de pause du temps écoulé |
-| 6. Alerte de péremption, notifications | `shelf_life_days`, dates d'achat | Natif seulement (phase B) : Expo Notifications, calcul local quotidien par tâche en arrière-plan ; aucune Edge Function tant que l'alerte est calculée sur l'appareil |
-| 7. Répartition des courses entre membres | Lignes synchronisées entre membres en une seconde | Colonne `assigned_to` nullable sur `list_line` (ou affectation par catégorie), filtre « ma part » dans le mode magasin |
+| 2. Catalogue de recettes et suggestions | Modèle de recette ; `base_ingredient` dans le catalogue | Source de recettes (import par URL en priorité), classement par stock estimé |
+| 3. Prix et budget | Rien de bloquant ; `stock_event.purchased` est l'endroit naturel d'un prix | Colonne `price` nullable sur l'événement d'achat, agrégats par session de courses |
+| 4. Pause de consommation (absence) | Le moteur reçoit la date courante en paramètre (4.1) | Table `household_pause` (début, fin) ; le moteur soustrait les jours de pause du temps écoulé |
+| 5. Alerte de péremption, notifications | `shelf_life_days`, dates d'achat | Natif seulement (phase B) : Expo Notifications, calcul local quotidien par tâche en arrière-plan ; aucune Edge Function tant que l'alerte est calculée sur l'appareil |
+| 6. Répartition des courses entre membres | Foyer partagé, lignes synchronisées entre membres en une seconde | Colonne `assigned_to` nullable sur `list_line` (ou affectation par catégorie), filtre « ma part » sur la Liste |
 | Import de commandes drive | Modèle d'événement d'achat avec `source` | Edge Function d'import, correspondance produits drive → produits génériques, `source = import` |
 | Code-barres | Produit générique | Table `product_barcode` (code, produit) ; scan natif (phase B) ; variantes rattachées au produit générique |
 
@@ -852,4 +913,4 @@ Les règles de synchro PowerSync sont déployées par le CLI PowerSync dans la m
 3. Le moteur reste pur et sans effet de bord ; une nouvelle règle est une nouvelle fonction avec ses fixtures.
 4. Les écrans ne voient ni SQL ni PowerSync ; une évolution passe par un nouveau dépôt ou une nouvelle commande dans `data`.
 5. Le catalogue n'écrit jamais dans `product`.
-6. Aucune fonction serveur n'est nécessaire à l'usage quotidien ; elles n'existent que pour l'inscription, la suppression de compte et, plus tard, les imports.
+6. Aucune fonction serveur n'est nécessaire à l'usage quotidien ; elles n'existent que pour l'inscription, l'invitation et le départ d'un foyer, la suppression de compte et, plus tard, les imports.

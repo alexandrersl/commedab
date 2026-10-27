@@ -42,7 +42,9 @@ dans `data` derrière une interface.
 - Le stock n'est jamais stocké : il est calculé par `core` depuis `stock_event`.
 - Le catalogue est un JSON dans `core`, copié dans `product` à la création,
   jamais resynchronisé.
-- Un événement d'achat créé à la clôture a pour id un UUID v5 de `list_line.id`.
+- Un achat créé en cochant une ligne a pour id un UUID v5 de `list_line.id` ;
+  décocher pose son `deleted_at`. Sessions de courses et période de la liste
+  sont calculées par `core`, jamais stockées (specs techniques 4.9).
 
 ## Moteur (specs techniques 4)
 
@@ -54,12 +56,13 @@ dans `data` derrière une interface.
 
 ## Interface (ENF-8)
 
-- Les écrans Liste et Accueil ne montrent jamais les mots « rythme »,
+- Les onglets Liste et Produits ne montrent jamais les mots « rythme »,
   « famille », « stock ». On dit « il t'en reste environ 2 », « proposé parce
   que tu en prends chaque semaine ».
 - Un seul champ obligatoire par formulaire (le nom ; la catégorie pour un
   produit, différable).
-- Un geste = une action, sans confirmation, avec annulation par message
+- Un geste = une action, sans confirmation. Sur la Liste, on annule par le
+  geste inverse (décocher), sans message éphémère ; ailleurs, par message
   éphémère. « Fini » prend la date du jour ; la date n'est jamais demandée.
 - Tout fonctionne hors ligne ; aucune action n'attend le réseau.
 
@@ -72,7 +75,7 @@ Aucun secret dans le dépôt : `.env` est ignoré, `.env.example` est commité.
 ## Vocabulaire du code
 
 Anglais, `snake_case` en base, `camelCase` en TypeScript. Tables :
-`household`, `household_member`, `category`, `product`, `stock_event`,
-`shopping_list`, `list_line`, `recipe`, `recipe_ingredient`. Événements :
+`household`, `household_member`, `household_invitation`, `category`,
+`product`, `stock_event`, `list_line`, `recipe`, `recipe_ingredient`. Événements :
 `purchased`, `opened_last`, `finished`, `counted`. Familles : `rhythm`,
 `reserve`, `occasional`.
