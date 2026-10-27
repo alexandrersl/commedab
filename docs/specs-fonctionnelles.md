@@ -1,4 +1,4 @@
-# Commedab — Spécifications fonctionnelles v1
+# Commedab — Spécifications fonctionnelles v2
 
 ## 1. Objet du document
 
@@ -8,6 +8,19 @@ Le présent document définit les spécifications fonctionnelles de la version m
 | --- | --- | --- |
 | 1.0 | 15/10/2026 | Validée pour cadrage technique |
 | 1.1 | 20/10/2026 | Alignée avec les spécifications techniques (compte, rythme appris, règle RG-5, produits créés à la volée, catégorie différable) |
+| 2.0 | 27/10/2026 | Maquettes v2, résumées ci-dessous |
+
+Changements de la v2 :
+
+- La Liste est l'écran d'accueil : une liste unique et permanente du foyer, toujours groupée par rayon et toujours cochable. Plus d'écran Accueil ni de mode magasin ; les exigences du mode magasin (EF-6.x) rejoignent 6.4.
+- Cocher une ligne enregistre l'achat, décocher le retire. Plus de clôture de liste ni de « Terminer les courses » : les coches espacées de moins de 3 h forment une session de courses, à la fin de laquelle les lignes cochées quittent la liste.
+- Une ligne se retire sans achat ou se reporte aux courses suivantes, depuis une mini-feuille ou par balayage.
+- La période de la liste n'est plus demandée : 7 jours, puis l'intervalle habituel entre deux sessions de courses ; elle se fixe dans l'onglet Compte.
+- Les suggestions sont rangées dans un panneau replié, signalé par une pastille.
+- « Archiver » devient « Je n'en achète plus ».
+- « Fini » et « il m'en reste » passent dans l'onglet Produits, sous « Il t'en reste sûrement peu ».
+- Nouvel onglet Compte, avec les membres du foyer et l'invitation : un foyer se partage entre plusieurs comptes dès le MVP. L'agrégation anonyme des noms de produits devient un accord explicite, désactivé par défaut.
+- Navigation en quatre onglets : Liste, Produits, Recettes, Compte.
 
 ## 2. Contexte et objectifs
 
@@ -17,7 +30,7 @@ Les applications de liste de courses existantes partent d'une liste vide que l'u
 
 ### 2.2 Proposition
 
-L'application déduit le contenu de la liste de courses à partir de l'historique des achats et d'un rythme de consommation par produit, déclaré ou appris. Le stock domestique n'est jamais saisi : il est estimé, et l'utilisateur ne fait que valider ses courses et signaler les écarts.
+L'application déduit le contenu de la liste de courses à partir de l'historique des achats et d'un rythme de consommation par produit, déclaré ou appris. Le stock domestique n'est jamais saisi : il est estimé, et l'utilisateur ne fait que cocher ce qu'il achète et signaler les écarts.
 
 ### 2.3 Principe de conception : simple par défaut, paramétrable à la demande
 
@@ -29,7 +42,7 @@ L'application doit pouvoir être utilisée comme une liste de courses ordinaire,
 - Aucun produit de consommation régulière n'est oublié sur deux cycles de courses consécutifs.
 - L'ajout d'une recette n'introduit aucun ingrédient déjà présent en stock estimé suffisant.
 
-Ces objectifs sont mesurés par un indicateur conservé localement : pour chaque liste, le nombre de suggestions acceptées, modifiées et refusées, ainsi que le nombre de lignes ajoutées manuellement. L'objectif est atteint lorsque les suggestions acceptées sans modification dépassent 80 % sur trois listes consécutives.
+Ces objectifs sont mesurés par un indicateur conservé localement : pour chaque session de courses, le nombre de suggestions acceptées, modifiées et refusées, ainsi que le nombre de lignes ajoutées manuellement. L'objectif est atteint lorsque les suggestions acceptées sans modification dépassent 80 % sur trois sessions de courses consécutives.
 
 ## 3. Périmètre
 
@@ -37,24 +50,26 @@ Ces objectifs sont mesurés par un indicateur conservé localement : pour chaque
 
 | Sujet | Décision | Justification |
 | --- | --- | --- |
-| Utilisateurs | Mono-utilisateur, un seul foyer | Usage personnel ; le partage multi-compte est différé, mais toute donnée est rattachée à un foyer dès le MVP |
+| Utilisateurs | Un foyer, partagé par un ou plusieurs comptes sur invitation | Les courses d'un foyer se font à plusieurs ; toute donnée étant rattachée au foyer, le partage n'ajoute qu'un membre |
 | Compte | Obligatoire, créé à la première ouverture (e-mail et mot de passe, ou Google) | Les données survivent à un changement d'appareil ; multi-appareil dès le MVP |
 | Référentiel produit | Produits génériques (« lait », « yaourts nature »), sans marque ni code-barres | Saisie rapide, liste lisible |
 | Inventaire initial | Aucun | Effort rédhibitoire ; le stock se construit à partir des achats |
 | Niveau de stock | Événements discrets (acheté, entamé, fini), jamais de jauge ; un relevé manuel reste possible mais n'est jamais demandé | Une jauge continue n'est pas maintenue dans la durée |
 | Prix et budget | Hors périmètre | Sans valeur sur le problème ciblé |
 | Recettes | Ingrédients et portions uniquement, sans instructions ni catalogue de recettes | Elles ne servent qu'à alimenter la liste |
-| Mode magasin | Une seule vue, groupée par rayon | Plusieurs vues n'apportent rien en rayon |
+| Liste | Un seul écran, la Liste, pour préparer et faire les courses ; toujours groupée par rayon | Un mode à basculer s'oublie ; plusieurs vues n'apportent rien en rayon |
+| Navigation | Quatre onglets : Liste (écran d'accueil), Produits, Recettes, Compte ; une fiche par produit | Chaque onglet répond à un moment : faire ses courses, signaler ce qui manque, cuisiner, régler |
+| Fin des courses | Aucune action : les coches espacées de moins de 3 h forment une session, qui se termine d'elle-même | Un bouton « Terminer » s'oublie, et l'oubli fausse les dates d'achat |
 
 ### 3.2 Hors périmètre du MVP
 
-Les fonctionnalités suivantes sont explicitement exclues : planification des repas par créneau, lecture de codes-barres, partage multi-utilisateur, catalogue de recettes et suggestions, profils par enseigne, suivi des prix, notifications push, import de tickets de caisse.
+Les fonctionnalités suivantes sont explicitement exclues : planification des repas par créneau, lecture de codes-barres, répartition des courses entre membres, catalogue de recettes et suggestions, profils par enseigne, suivi des prix, notifications push, import de tickets de caisse.
 
 ## 4. Acteurs
 
 | Acteur | Description |
 | --- | --- |
-| Utilisateur | Personne unique qui gère les courses du foyer. Seul acteur humain du MVP. |
+| Membre | Personne du foyer disposant d'un compte. Un foyer compte un ou plusieurs membres, invités par un membre existant (EF-7.4) ; tous voient et modifient les mêmes données. « L'utilisateur » désigne dans ce document n'importe quel membre. |
 | Système | L'application elle-même, qui estime les stocks, apprend les rythmes et construit les suggestions. |
 
 ## 5. Glossaire et concepts
@@ -69,8 +84,10 @@ Les fonctionnalités suivantes sont explicitement exclues : planification des re
 | Événement de stock | Fait daté enregistré sur un produit : acheté, entamé (dernière réserve), fini, ou relevé (quantité constatée par l'utilisateur, facultatif). |
 | Stock estimé | Quantité probable restante au foyer, calculée et jamais saisie (voir 5.3). |
 | Catalogue | Base de produits courants livrée avec l'application, avec des valeurs par défaut. |
-| Taille du foyer | Nombre de personnes, réglage de profil servant aux valeurs par défaut (voir 5.4). |
-| Liste de courses | Ensemble de lignes (produit, quantité, état coché ou non, origine : suggestion, saisie manuelle, recette ou report) couvrant une période donnée. |
+| Taille du foyer | Nombre de personnes, réglage du foyer servant aux valeurs par défaut (voir 5.4). |
+| Liste de courses | Liste unique et permanente du foyer, écran d'accueil de l'application : des lignes (produit, quantité, cochée ou non, origine : suggestion, saisie manuelle ou recette). Elle n'est jamais créée ni clôturée. |
+| Session de courses | Suite de coches espacées de moins de 3 h, quel que soit le membre qui coche. Elle se termine d'elle-même 3 h après la dernière coche ; elle est déduite des coches et jamais saisie (EF-4.11). |
+| Période de la liste | Nombre de jours que les suggestions doivent couvrir : 7 au départ, puis l'intervalle habituel entre deux sessions de courses (EF-4.1). |
 | Recette | Nom, nombre de portions et liste d'ingrédients référencés dans le référentiel produits. |
 
 ### 5.1 Familles de produits
@@ -98,7 +115,7 @@ Le stock estimé est reconstruit depuis le dernier événement d'ancrage : un «
 
 ### 5.4 Taille du foyer
 
-Réglage de profil demandé au premier lancement et modifiable. Il n'intervient que dans les valeurs par défaut : les rythmes indicatifs du catalogue sont exprimés pour une personne et multipliés à la création du produit selon un coefficient propre à chaque entrée du catalogue (« par personne » pour les yaourts, « par foyer » pour le liquide vaisselle) ; il fixe également le nombre de portions proposé lors de l'ajout d'une recette. Une modification ultérieure ne recalcule que les produits encore sur leur rythme par défaut ; les rythmes déclarés ou appris ne sont jamais modifiés.
+Réglage du foyer demandé au premier lancement et modifiable dans l'onglet Compte. Il n'intervient que dans les valeurs par défaut : les rythmes indicatifs du catalogue sont exprimés pour une personne et multipliés à la création du produit selon un coefficient propre à chaque entrée du catalogue (« par personne » pour les yaourts, « par foyer » pour le liquide vaisselle) ; il fixe également le nombre de portions proposé lors de l'ajout d'une recette. Une modification ultérieure ne recalcule que les produits encore sur leur rythme par défaut ; les rythmes déclarés ou appris ne sont jamais modifiés.
 
 ### 5.5 Attributs facultatifs du produit
 
@@ -106,7 +123,7 @@ Réglage de profil demandé au premier lancement et modifiable. Il n'intervient 
 | --- | --- |
 | Contenance | Quantité contenue dans une unité d'achat (paquet de 1 kg, boîte de 6 œufs). Permet d'exprimer un rythme ou un ingrédient en grammes, litres ou pièces, converti en fraction d'unité d'achat (RG-1). |
 | Durée de conservation | Durée pendant laquelle le produit reste consommable (pain : 2 jours, yaourts : 3 semaines). Borne la quantité suggérée quelle que soit la période choisie (RG-10). |
-| Ponctuel | Produit acheté sans régularité (apéritif, réception). Jamais suggéré, exclu de l'apprentissage (RG-4). Attribué uniquement par l'utilisateur (fiche produit, ou refus « je n'en achète plus ») ; jamais par défaut : un produit créé à la volée est « à rythme » sans rythme, et devient suggérable dès que son rythme est appris ou déclaré, ou une fois après un « fini » (EF-3.2). |
+| Ponctuel | Produit acheté sans régularité (apéritif, réception). Jamais suggéré, exclu de l'apprentissage (RG-4). Attribué uniquement par l'utilisateur, depuis la fiche produit ; jamais par défaut : un produit créé à la volée est « à rythme » sans rythme, et devient suggérable dès que son rythme est appris ou déclaré, ou une fois après un « fini » (EF-3.2). |
 
 ## 6. Exigences fonctionnelles
 
@@ -119,44 +136,49 @@ Chaque exigence est identifiée EF-x.y. Les critères d'acceptation en précisen
 | EF-1.1 | L'utilisateur peut créer un produit en une saisie : seuls le nom et la catégorie sont demandés ; l'unité d'achat (pièce par défaut), la famille (à rythme par défaut), le rythme et les attributs de 5.5 sont facultatifs et modifiables ensuite. | Un produit est créé avec le nom et la catégorie en moins de 10 secondes. |
 | EF-1.2 | L'utilisateur peut créer un produit à partir du catalogue par recherche sur le nom ; la fiche est pré-remplie (catégorie, famille, unité, contenance, durée de conservation, rythme ajusté au foyer) et modifiable avant validation. | La recherche renvoie les entrées du catalogue correspondantes ; le produit créé appartient à l'utilisateur et n'est pas modifié par une mise à jour ultérieure du catalogue. |
 | EF-1.3 | L'utilisateur peut créer un produit à la volée depuis la liste de courses en saisissant un nom inconnu ; la catégorie est demandée mais peut être différée : sans catégorie, le produit est rangé dans un groupe « À classer » affiché en tête de liste. Le produit est « à rythme » sans rythme connu ; il n'est suggéré qu'après trois achats (RG-3) ou un rythme déclaré, ou une fois après un « fini » (EF-3.2). | Le produit apparaît immédiatement dans la liste et dans le référentiel. |
-| EF-1.4 | L'utilisateur peut modifier ou archiver un produit. Un produit archivé n'est plus suggéré mais conserve son historique. | Les achats passés restent consultables après archivage. |
-| EF-1.5 | Les catégories sont ordonnées par l'utilisateur par glisser-déposer. L'ordre détermine le parcours en magasin. | L'ordre est conservé entre deux sessions et appliqué au mode magasin. |
-| EF-1.6 | L'utilisateur peut déclarer, modifier ou supprimer le rythme d'un produit. | Un rythme déclaré est utilisé en priorité sur toute autre source dès la planification suivante. |
-| EF-1.7 | Un jeu de catégories par défaut est livré avec l'application dans un ordre de parcours usuel ; l'utilisateur peut en créer, renommer, fusionner ou supprimer, sauf les catégories système (RG-9). | La suppression d'une catégorie demande vers quelle catégorie déplacer ses produits. |
-| EF-1.8 | Le référentiel est consultable par recherche sur le nom et par catégorie, avec le stock estimé et la date du dernier achat de chaque produit. | La recherche répond à la frappe sans validation. |
+| EF-1.4 | L'utilisateur peut modifier un produit, ou indiquer « Je n'en achète plus » depuis sa fiche ou en refusant une suggestion (EF-4.4) : le produit est archivé, n'est plus suggéré et conserve son historique. Le retrouver par le champ unique (EF-4.9) et l'ajouter à la liste le réactive. | Les achats passés restent consultables après archivage ; un produit archivé reste trouvable par la recherche. |
+| EF-1.5 | Les rayons (catégories) sont ordonnés par glisser-déposer dans l'onglet Compte. L'ordre détermine le parcours en magasin. | L'ordre est conservé, partagé par les membres du foyer et appliqué à la Liste. |
+| EF-1.6 | L'utilisateur peut déclarer, modifier ou supprimer le rythme d'un produit. | Un rythme déclaré est utilisé en priorité sur toute autre source dès le calcul suivant des suggestions. |
+| EF-1.7 | Un jeu de catégories par défaut est livré avec l'application dans un ordre de parcours usuel ; l'utilisateur peut, dans l'onglet Compte, en créer, renommer, fusionner ou supprimer, sauf les catégories système (RG-9). | La suppression d'une catégorie demande vers quelle catégorie déplacer ses produits. |
+| EF-1.8 | L'onglet Produits présente le référentiel, consultable par recherche sur le nom et par catégorie, avec le stock estimé et la date du dernier achat de chaque produit ; la section « Il t'en reste sûrement peu » (EF-3.3) est en tête. | La recherche répond à la frappe sans validation. |
 
 ### 6.2 Achats et historique
 
 | Id | Exigence | Critères d'acceptation |
 | --- | --- | --- |
-| EF-2.1 | La clôture d'une liste de courses enregistre un événement « acheté » daté, avec la quantité, pour chaque ligne cochée. | Chaque ligne cochée produit exactement un achat ; les lignes non cochées n'en produisent aucun. |
-| EF-2.2 | Les lignes non cochées à la clôture sont reportées sur la liste suivante, à sa création, signalées comme reportées. | Une ligne reportée apparaît dans la liste suivante avec sa quantité d'origine. |
+| EF-2.1 | Cocher une ligne enregistre un événement « acheté », daté de l'instant de la coche, avec la quantité de la ligne ; décocher la ligne retire cet achat (EF-4.10). | Chaque ligne cochée produit exactement un achat ; une ligne décochée, retirée ou reportée n'en laisse aucun. |
+| EF-2.2 | Une ligne non cochée reste sur la liste d'une session de courses à l'autre ; une ligne reportée (EF-4.5) revient à la fin des courses suivantes, signalée comme reportée. | Une ligne reportée revient avec sa quantité. |
 | EF-2.3 | L'historique des achats d'un produit (date, quantité) est consultable depuis sa fiche. | Les achats s'affichent du plus récent au plus ancien. |
-| EF-2.4 | L'utilisateur peut corriger ou supprimer un achat enregistré par erreur. | La correction recalcule le stock estimé et le rythme appris. |
+| EF-2.4 | L'utilisateur peut corriger ou supprimer un achat enregistré par erreur : depuis la Liste tant que dure la session de courses (EF-4.5, EF-4.10), puis depuis la fiche produit. | La correction recalcule le stock estimé et le rythme appris. |
 
 ### 6.3 Réapprovisionnement
 
 | Id | Exigence | Critères d'acceptation |
 | --- | --- | --- |
-| EF-3.1 | L'utilisateur peut signaler « fini » ou « entamé la dernière réserve » sur un produit en un geste, depuis l'écran d'accueil ou la fiche produit. | L'événement prend la date du jour (corrigeable depuis la fiche, jamais demandée) et recale le stock estimé selon 5.3 ; un message éphémère confirme « proposé à la prochaine liste » et permet d'annuler. |
-| EF-3.2 | Un événement ne modifie jamais une liste de courses existante ; il marque le produit « à racheter » en vue de la prochaine planification, même sans rythme connu. Un produit proposé à ce seul titre ne l'est qu'une fois : s'il n'est pas ajouté à la liste, il n'est plus proposé jusqu'au prochain événement. | Aucune ligne n'est ajoutée à une liste en cours à la suite d'un événement. |
-| EF-3.3 | L'écran d'accueil présente les produits dont le stock estimé est probablement bas, chacun confirmable (« fini ») ou ignorable (« il m'en reste »). | Ignorer enregistre un relevé d'une unité d'achat à la date du jour ; aucun autre ajustement. |
+| EF-3.1 | L'utilisateur peut signaler « fini » ou « entamé la dernière réserve » sur un produit en un geste, depuis l'onglet Produits (section « Il t'en reste sûrement peu », ou produit trouvé par la recherche) ou depuis la fiche produit. | L'événement prend la date du jour (corrigeable depuis la fiche, jamais demandée) et recale le stock estimé selon 5.3 ; un message éphémère confirme « proposé pour tes prochaines courses » et permet d'annuler. |
+| EF-3.2 | Un événement ne modifie jamais la liste ; il marque le produit « à racheter », qui entre dans les suggestions (EF-4.13), même sans rythme connu. Un produit proposé à ce seul titre l'est jusqu'à la fin des premières courses commencées après l'événement : s'il n'a pas été ajouté, il n'est plus proposé jusqu'au prochain événement. | Aucune ligne n'est ajoutée à la liste à la suite d'un événement. |
+| EF-3.3 | La section « Il t'en reste sûrement peu », en tête de l'onglet Produits, présente les produits dont le stock estimé est probablement bas, chacun confirmable (« fini ») ou ignorable (« il m'en reste »). | Ignorer enregistre un relevé d'une unité d'achat à la date du jour ; aucun autre ajustement. |
 | EF-3.4 | L'utilisateur peut annuler un événement signalé par erreur depuis la fiche produit. | L'annulation restaure l'estimation antérieure. |
 | EF-3.5 | L'utilisateur peut saisir, depuis la fiche produit, la quantité qu'il constate chez lui (relevé). Le relevé fixe le stock estimé à cette valeur à cette date et sert de nouveau point de départ. Il n'est proposé nulle part ailleurs et jamais demandé ; il est accessible depuis la justification d'une suggestion (EF-4.8) pour corriger une estimation jugée fausse. | Un relevé remplace l'estimation courante ; l'estimation suivante repart du relevé et du rythme. Aucun écran n'incite à faire un relevé. |
 
-### 6.4 Planification de la liste
+### 6.4 Liste de courses
 
 | Id | Exigence | Critères d'acceptation |
 | --- | --- | --- |
-| EF-4.1 | L'utilisateur choisit la période à couvrir, de 1 jour à 31 jours ; la valeur proposée est la dernière utilisée. | La période est enregistrée sur la liste. |
-| EF-4.2 | Le système propose les produits « à rythme » dont la quantité calculée (5.1) est positive, bornée par la durée de conservation (RG-10) et arrondie au pas de l'unité d'achat (RG-2). | Un produit dont le stock estimé couvre la période n'est pas proposé ; une liste de 31 jours ne propose pas plus de deux jours de pain. |
+| EF-4.1 | La période que couvrent les suggestions n'est jamais demandée : 7 jours au départ, puis, dès trois sessions de courses sur des jours distincts, la médiane des cinq derniers intervalles entre sessions, bornée entre 2 et 31 jours. L'utilisateur peut la fixer dans l'onglet Compte, de 1 à 31 jours, ou revenir au réglage automatique (EF-7.2). | Aucun écran de la Liste ne demande de période ; une période fixée prime sur la période apprise. |
+| EF-4.2 | Le système propose les produits « à rythme » dont la quantité calculée (5.1) est positive, bornée par la durée de conservation (RG-10) et arrondie au pas de l'unité d'achat (RG-2). | Un produit dont le stock estimé couvre la période n'est pas proposé ; une période de 31 jours ne propose pas plus de deux jours de pain. |
 | EF-4.3 | Le système propose les produits « à réserve » marqués « à racheter » ou dont la réserve estimée s'épuise avant la fin de la période, à hauteur du stock de sécurité. | Un produit à réserve suggéré propose une quantité égale à son stock de sécurité. |
-| EF-4.4 | Chaque suggestion est acceptée ou refusée en un geste. Le refus distingue « il m'en reste » (recale l'estimation) et « je n'en achète plus » (propose d'archiver le produit ou de le marquer ponctuel). | Un produit refusé n'est pas re-suggéré pour la même liste. |
-| EF-4.5 | L'utilisateur peut ajouter un produit ponctuel, modifier une quantité, retirer une ligne. | Les modifications manuelles priment sur les suggestions. |
-| EF-4.6 | L'utilisateur peut ajouter une ou plusieurs recettes à la liste (voir 6.5). | Les ingrédients résultants sont fusionnés avec les lignes existantes. |
-| EF-4.7 | Une seule liste est active à la fois ; la clôture d'une liste permet d'en créer une nouvelle. | La création d'une seconde liste active est impossible. |
+| EF-4.4 | Chaque suggestion est acceptée ou refusée en un geste. Accepter ajoute la ligne à la liste. Le refus distingue « il m'en reste » (recale l'estimation) et « je n'en achète plus » (archive le produit, EF-1.4). | Un produit refusé n'est pas re-suggéré avant la fin des courses suivantes. |
+| EF-4.5 | Un tap sur le nom d'une ligne ouvre une mini-feuille : quantité −/+, « Retirer », « Reporter », accès à la fiche produit. Un balayage vers la gauche retire la ligne. Retirer n'enregistre aucun achat ; reporter retire la ligne jusqu'à la fin des courses suivantes, où elle revient. La quantité se modifie aussi sur une ligne cochée (promotion, lot) : l'achat prend la nouvelle quantité, prise en compte dans le stock estimé (5.3). | Les modifications manuelles priment sur les suggestions ; un produit retiré n'est pas re-suggéré avant la fin des courses suivantes. |
+| EF-4.6 | L'utilisateur peut ajouter une ou plusieurs recettes à la liste depuis l'onglet Recettes (voir 6.5). | Les ingrédients résultants sont fusionnés avec les lignes existantes. |
+| EF-4.7 | La Liste est l'écran d'accueil de l'application : une liste unique et permanente par foyer, sans création ni clôture, toujours groupée par rayon dans l'ordre défini en EF-1.5 (lignes sans catégorie en tête sous « À classer », catégories frais et surgelés en dernier) et toujours cochable. Aucun geste de la Liste ne demande de confirmation ni n'affiche de message éphémère : décocher annule une coche, ajouter de nouveau annule un retrait. | L'ordre affiché correspond à l'ordre configuré ; aucun écran ne demande de créer ou de terminer une liste. |
 | EF-4.8 | Chaque suggestion affiche sa justification en une ligne : stock estimé, date d'épuisement prévue et source du rythme (déclaré, appris, catalogue). | La justification est visible sans ouvrir la fiche produit. |
 | EF-4.9 | L'ajout d'un produit à la liste se fait par un champ de saisie unique. À la frappe, une liste de résultats mêle les produits de l'utilisateur (en premier, dont les récemment achetés) et les entrées du catalogue ; un tap sur un résultat l'ajoute. Valider la saisie sans choisir ajoute le texte tel quel : s'il correspond exactement à un produit ou une entrée du catalogue, celui-ci est utilisé, sinon un produit est créé à la volée (EF-1.3). Un second tap sur une ligne déjà présente incrémente sa quantité. | Ajouter trois produits connus prend moins de dix secondes ; un nom inconnu ne provoque qu'une question (la catégorie), différable. |
+| EF-4.10 | Une ligne se coche ou se décoche d'un tap. Cocher enregistre l'achat (EF-2.1) ; la ligne reste affichée, barrée, en fin de son groupe. Décocher retire l'achat. | Une ligne cochée par erreur se décoche en un tap, sans laisser d'achat. |
+| EF-4.11 | Les coches espacées de moins de 3 h forment une session de courses, quel que soit le membre qui coche ; la session se termine 3 h après sa dernière coche. Rien n'est à valider en fin de courses. | Deux coches à 2 h 59 d'intervalle appartiennent à la même session ; deux coches à 3 h d'intervalle, à deux sessions. |
+| EF-4.12 | À la fin de la session de courses, les lignes cochées quittent la liste ; leurs achats restent dans l'historique. | En ouvrant l'application après ses courses, l'utilisateur trouve une liste sans ligne cochée ; tant que la session dure, une ligne cochée reste décochable. |
+| EF-4.13 | Les suggestions sont présentées dans un panneau de la Liste, replié par défaut et signalé par une pastille « N suggestions » ; déplié, il montre chaque suggestion avec sa quantité et sa justification (EF-4.8). | Une suggestion n'entre dans la liste que si elle est acceptée ; replié, le panneau n'occupe qu'une ligne. |
+| EF-4.14 | La Liste fonctionne sans connexion réseau ; les modifications sont synchronisées au retour de la connexion. | Cocher, décocher, retirer et reporter sont possibles hors ligne sans perte de données. |
 
 ### 6.5 Recettes
 
@@ -164,27 +186,22 @@ Chaque exigence est identifiée EF-x.y. Les critères d'acceptation en précisen
 | --- | --- | --- |
 | EF-5.1 | L'utilisateur peut créer, modifier et supprimer une recette : nom, nombre de portions de référence, ingrédients (produit du référentiel, quantité dans l'unité d'achat ou en fraction de celle-ci). | Un ingrédient référence obligatoirement un produit existant ou créé à la volée. |
 | EF-5.2 | Chaque ingrédient est qualifié « de base » ou « spécifique ». | Le qualificatif est modifiable à tout moment. |
-| EF-5.3 | À l'ajout d'une recette à la liste, l'utilisateur indique le nombre de portions (taille du foyer par défaut) ; les quantités sont mises à l'échelle. | Les quantités sont proportionnelles au ratio portions demandées / portions de référence. |
+| EF-5.3 | À l'ajout d'une recette à la liste, depuis l'onglet Recettes, l'utilisateur indique le nombre de portions (taille du foyer par défaut) ; les quantités sont mises à l'échelle. | Les quantités sont proportionnelles au ratio portions demandées / portions de référence. |
 | EF-5.4 | Un ingrédient « spécifique » est toujours ajouté ; un ingrédient « de base » n'est ajouté que si le stock estimé est inférieur à la quantité requise, à hauteur du manque. | Une recette dont tous les ingrédients de base sont en stock n'ajoute que ses ingrédients spécifiques. |
-| EF-5.5 | Un ingrédient déjà présent sur la liste voit sa quantité cumulée, sans doublon de ligne. | Deux recettes partageant un ingrédient produisent une seule ligne. |
+| EF-5.5 | Un ingrédient déjà présent sur la liste, sur une ligne non cochée, voit sa quantité cumulée, sans doublon de ligne. | Deux recettes partageant un ingrédient produisent une seule ligne. |
 
-### 6.6 Mode magasin
+### 6.6 Compte
 
-| Id | Exigence | Critères d'acceptation |
-| --- | --- | --- |
-| EF-6.1 | La liste active s'affiche groupée par catégorie dans l'ordre défini en EF-1.5, les lignes sans catégorie en tête sous « À classer », les catégories frais et surgelés en dernier. | L'ordre affiché correspond à l'ordre configuré. |
-| EF-6.2 | Une ligne se coche ou se décoche d'un tap ; les lignes cochées passent en fin de groupe sans disparaître. | Une ligne cochée par erreur est récupérable en un tap. |
-| EF-6.3 | La quantité d'une ligne est modifiable depuis le mode magasin, notamment pour enregistrer un achat en plusieurs exemplaires (promotion, lot) ; l'écart avec la quantité prévue est pris en compte dans le stock estimé (5.3). | La quantité modifiée est celle enregistrée à l'achat. |
-| EF-6.4 | Le mode magasin fonctionne sans connexion réseau ; les modifications sont synchronisées au retour de la connexion. | Cocher, décocher et clôturer sont possibles hors ligne sans perte de données. |
-| EF-6.5 | L'action « Terminer les courses » clôture la liste et déclenche EF-2.1 et EF-2.2, sans confirmation. Un message éphémère permet d'annuler la clôture : la liste redevient active, avec ses lignes cochées, et les achats enregistrés sont retirés. | Une clôture annulée ne laisse aucun achat ; une fois le message disparu, la liste clôturée n'est plus modifiable. |
-
-### 6.7 Profil et paramètres
+Les exigences de l'onglet Compte gardent les identifiants EF-7.x ; les identifiants EF-6.x, ceux du mode magasin de la v1, ne sont pas réattribués.
 
 | Id | Exigence | Critères d'acceptation |
 | --- | --- | --- |
-| EF-7.1 | Au premier lancement, l'application demande la création du compte (e-mail et mot de passe, ou Google) puis la taille du foyer, et ouvre directement la création d'une liste. | Aucune autre étape d'initialisation n'est imposée. |
-| EF-7.2 | L'utilisateur peut modifier la taille du foyer, l'ordre des catégories et la période par défaut. | Les modifications s'appliquent selon 5.4. |
-| EF-7.3 | L'utilisateur peut exporter l'ensemble de ses données (produits, achats, recettes) dans un format ouvert et supprimer son compte. | L'export est complet et lisible sans l'application. |
+| EF-7.1 | Au premier lancement, l'application demande la création du compte (e-mail et mot de passe, ou Google) puis la taille du foyer, et ouvre la Liste. Ouverte depuis une invitation, elle rattache le compte au foyer invitant sans demander la taille du foyer. | Aucune autre étape d'initialisation n'est imposée. |
+| EF-7.2 | L'onglet Compte permet de modifier la taille du foyer, la période de la liste (automatique, ou fixée de 1 à 31 jours, EF-4.1) ainsi que l'ordre et les noms des rayons (EF-1.5, EF-1.7). | Les modifications s'appliquent selon 5.4 et EF-4.1, pour tous les membres du foyer. |
+| EF-7.3 | L'utilisateur peut exporter l'ensemble des données du foyer (produits, achats, recettes) dans un format ouvert et supprimer son compte. Supprimer son compte le retire du foyer ; le foyer et ses données ne sont supprimés qu'avec son dernier membre. | L'export est complet et lisible sans l'application. |
+| EF-7.4 | L'onglet Compte liste les membres du foyer et permet d'en inviter un par un lien à partager, valable 7 jours et utilisable une fois. Un compte n'appartient qu'à un foyer : rejoindre un foyer quitte le précédent, et l'application demande confirmation si celui-ci contient des produits. Un membre peut quitter le foyer ; le créateur du foyer peut retirer un membre. | Un invité qui ouvre le lien rejoint le foyer et voit la même liste ; un membre qui quitte le foyer retrouve un foyer vide. |
+| EF-7.5 | L'onglet Compte affiche l'e-mail du compte et permet de le modifier, de changer le mot de passe et de se déconnecter. | La déconnexion efface les données du foyer de l'appareil ; elles reviennent à la connexion suivante. |
+| EF-7.6 | Le foyer peut autoriser l'agrégation anonyme de ses noms de produits pour enrichir le catalogue (ENF-5) ; l'accord est désactivé par défaut et révocable. | Sans accord, aucun nom de produit du foyer n'entre dans l'agrégation. |
 
 ## 7. Règles de gestion
 
@@ -195,8 +212,8 @@ Chaque exigence est identifiée EF-x.y. Les critères d'acceptation en précisen
 | RG-3 | Un rythme appris requiert au moins trois achats du même produit ; en deçà, la source suivante (5.2) s'applique. |
 | RG-4 | Les achats d'un produit marqué ponctuel n'alimentent aucun apprentissage. Les lignes d'origine « recette » sont également exclues de l'apprentissage. |
 | RG-5 | Aucun ajustement explicite du rythme sur un signal isolé : un « fini » clôt l'intervalle de consommation en cours et entre dans la médiane (5.2) ; un refus « il m'en reste » devient un relevé d'une unité qui recale le stock (5.3). Un « fini » signalé peu après un achat (moins de la moitié de la durée de vie attendue d'une unité) est rattaché à la veille de cet achat, avec message annulable. |
-| RG-6 | Une seule liste est active ; une liste clôturée est immuable, sauf annulation de la clôture depuis le message éphémère qui la suit (EF-6.5). |
-| RG-7 | La suppression d'un produit référencé par une recette ou un achat est interdite ; seul l'archivage est possible. |
+| RG-6 | La liste du foyer est unique et permanente. Une ligne cochée reste modifiable (décochée, quantité) tant que dure la session de courses ; ensuite, son achat ne se corrige que depuis la fiche produit (EF-2.4). |
+| RG-7 | La suppression d'un produit référencé par une recette ou un achat est interdite ; seul l'archivage (« Je n'en achète plus ») est possible. |
 | RG-8 | Les valeurs issues du catalogue sont copiées à la création du produit et ne sont jamais synchronisées ensuite. |
 | RG-9 | Les catégories « frais » et « surgelés » sont des catégories système, renommables mais non supprimables, toujours placées en fin de parcours. |
 | RG-10 | La quantité suggérée d'un produit à rythme ne dépasse jamais rythme × durée de conservation, à l'arrondi près (RG-2) : on ne propose pas moins d'une unité d'achat. Sans durée de conservation renseignée, la période seule s'applique. |
@@ -208,44 +225,44 @@ L'application doit être utile dès la première liste et s'améliorer à chaque
 | Moment | Action de l'utilisateur | État du système |
 | --- | --- | --- |
 | Jour 1 | Crée son compte, saisit la taille du foyer, écrit sa liste ; les produits inconnus sont créés à la volée ou depuis le catalogue | Référentiel initialisé, rythmes par défaut |
-| Jour 1, retour | Coche en magasin, termine les courses | Premiers achats datés |
-| Semaine 1 | Signale « fini » sur quelques produits | Premiers recalages d'estimation |
-| Semaine 2 | Lance une liste pour 7 jours ; une dizaine de produits sont suggérés | Suggestions issues des rythmes par défaut et des événements |
+| Jour 1, en magasin | Coche ce qu'il achète ; les lignes cochées quittent la liste après les courses | Premiers achats datés, première session de courses |
+| Semaine 1 | Signale « fini » sur quelques produits depuis l'onglet Produits ; invite un autre membre du foyer | Premiers recalages d'estimation ; liste partagée |
+| Semaine 2 | Ouvre la Liste ; la pastille annonce une dizaine de suggestions, acceptées en un geste | Suggestions issues des rythmes par défaut et des événements, sur 7 jours |
 | Semaine 3 | Enregistre trois recettes, en ajoute une à la liste | Ingrédients de base soustraits du stock estimé |
-| Mois 1 | Déclare un rythme sur les produits mal estimés | Rythmes appris disponibles sur les produits achetés trois fois ; suggestions fiables sur l'essentiel |
+| Mois 1 | Déclare un rythme sur les produits mal estimés | Rythmes appris disponibles sur les produits achetés trois fois ; période de la liste apprise des sessions de courses ; suggestions fiables sur l'essentiel |
 
 ## 9. Exigences non fonctionnelles
 
 | Id | Exigence |
 | --- | --- |
-| ENF-1 | Cible mobile en priorité ; utilisable d'une main, éléments cliquables d'au moins 44 px en mode magasin. |
-| ENF-2 | Mode magasin et consultation de la liste disponibles hors ligne ; synchronisation transparente au retour du réseau. Plusieurs appareils peuvent être utilisés par le même compte ; en cas de modification concurrente, la dernière écriture l'emporte, les événements et achats étant additifs et jamais perdus. |
+| ENF-1 | Cible mobile en priorité ; utilisable d'une main, éléments cliquables d'au moins 44 px sur la Liste. |
+| ENF-2 | La Liste et toutes les actions courantes disponibles hors ligne ; synchronisation transparente au retour du réseau. Plusieurs appareils et plusieurs membres peuvent modifier le foyer ; en cas de modification concurrente, la dernière écriture l'emporte, les événements et achats étant additifs et jamais perdus. |
 | ENF-3 | Toute action courante (cocher, signaler « fini », accepter une suggestion) s'exécute en un geste et répond en moins de 200 ms. |
-| ENF-4 | Génération d'une liste pour un référentiel de 300 produits et 50 recettes en moins d'une seconde. |
-| ENF-5 | Données personnelles limitées au strict nécessaire (aucune donnée de localisation, aucun prix, aucune analyse d'usage tierce) ; export et suppression conformes au RGPD. Seul usage secondaire : les noms de produits créés par les utilisateurs sont agrégés, sans rattachement à un compte et seulement s'ils apparaissent dans au moins cinq foyers, pour enrichir le catalogue ; déclaré dans la politique de confidentialité. |
+| ENF-4 | Calcul des suggestions pour un référentiel de 300 produits et 50 recettes en moins d'une seconde. |
+| ENF-5 | Données personnelles limitées au strict nécessaire (aucune donnée de localisation, aucun prix, aucune analyse d'usage tierce) ; export et suppression conformes au RGPD. Seul usage secondaire, soumis à l'accord du foyer (EF-7.6, désactivé par défaut) : les noms de produits créés par les utilisateurs sont agrégés, sans rattachement à un compte et seulement s'ils apparaissent dans au moins cinq foyers, pour enrichir le catalogue ; déclaré dans la politique de confidentialité. |
 | ENF-6 | Interface en français ; libellés d'unités et formats de date localisés. |
 | ENF-7 | Le catalogue par défaut est versionné et livré avec l'application ; sa mise à jour ne modifie jamais les produits de l'utilisateur (RG-8). |
-| ENF-8 | Divulgation progressive (2.3) : les écrans de liste et de magasin n'exposent aucune notion de rythme, famille ou stock ; ces paramètres ne sont visibles que sur la fiche produit, dans une section repliée par défaut. Aucun formulaire n'impose d'autre champ que le nom et, pour un produit, la catégorie. |
+| ENF-8 | Divulgation progressive (2.3) : les onglets Liste et Produits n'exposent aucune notion de rythme, famille ou stock ; ces paramètres ne sont visibles que sur la fiche produit, dans une section repliée par défaut. Aucun formulaire n'impose d'autre champ que le nom et, pour un produit, la catégorie. |
 
 ## 10. Risques et points de vigilance
 
 | Risque | Impact | Parade |
 | --- | --- | --- |
 | Estimation imprécise les premières semaines | Suggestions ignorées, perte de confiance | Estimation présentée comme telle, correction en un geste, rythme déclaré disponible dès le MVP |
-| Faible taux de déclaration des événements | Rythmes mal recalés | Geste accessible depuis l'accueil ; l'apprentissage par écart d'achats fonctionne pour les deux familles sans déclaration |
+| Faible taux de déclaration des événements | Rythmes mal recalés | Geste accessible en tête de l'onglet Produits ; l'apprentissage par écart d'achats fonctionne pour les deux familles sans déclaration |
 | Liste gonflée par les recettes | Liste inutilisable | Ingrédients « de base » soustraits du stock estimé, fusion des doublons |
 | Hétérogénéité des unités | Calculs erronés | Une seule unité d'achat par produit (RG-1) |
 | Achats irréguliers (réceptions, invités) | Pollution des rythmes appris | Produits ponctuels sans rythme (RG-4), seuil de trois achats (RG-3) |
 | Sur-ingénierie du moteur d'estimation | Projet non livré | Règles arithmétiques simples (5.3), aucun apprentissage statistique |
+| Coche oubliée ou faite après les courses | Achat daté trop tard, session déplacée | La ligne reste cochable ; « fini » et relevé recalent l'estimation ; la période apprise repose sur une médiane |
 
 ## 11. Évolutions envisagées
 
 Par ordre de valeur estimée ; aucune n'est engagée.
 
 1. Planification des repas par créneau (jour et moment), la période de la liste découlant du planning.
-2. Multi-utilisateur : un foyer, plusieurs comptes, liste partagée en temps réel.
-3. Catalogue de recettes et suggestions selon le stock estimé.
-4. Suivi des prix et budget.
-5. Mise en pause de la consommation lors d'une absence prolongée. Au MVP, le système poursuit la décrémentation et l'utilisateur refuse les suggestions au retour, ce qui recale l'estimation par un relevé (5.3).
-6. Alerte de péremption : notification lorsqu'un produit frais en stock estimé atteint sa durée de conservation sans événement « fini », pour inciter à le consommer. Requiert la durée de conservation (5.5) et les notifications push, tous deux hors MVP pour cette fonction.
-7. Répartition des courses entre membres du foyer : attribuer des rayons (ou des lignes) à chaque membre présent en magasin, chacun voyant sa part en tête et la progression des autres en temps réel. Dépend du multi-utilisateur (2) ; techniquement trivial une fois le partage en place, puisque chaque ligne est déjà synchronisée entre membres en une seconde.
+2. Catalogue de recettes et suggestions selon le stock estimé.
+3. Suivi des prix et budget.
+4. Mise en pause de la consommation lors d'une absence prolongée. Au MVP, le système poursuit la décrémentation et l'utilisateur refuse les suggestions au retour, ce qui recale l'estimation par un relevé (5.3).
+5. Alerte de péremption : notification lorsqu'un produit frais en stock estimé atteint sa durée de conservation sans événement « fini », pour inciter à le consommer. Requiert la durée de conservation (5.5) et les notifications push, tous deux hors MVP pour cette fonction.
+6. Répartition des courses entre membres du foyer : attribuer des rayons (ou des lignes) à chaque membre présent en magasin, chacun voyant sa part en tête et la progression des autres en temps réel. Techniquement simple, le foyer étant déjà partagé et chaque ligne synchronisée entre membres en une seconde.
