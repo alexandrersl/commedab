@@ -82,10 +82,6 @@ export function checkListLines(lines: readonly ListLine[]): void {
     checkDateTime(`${field}.createdAt`, line.createdAt);
     if (line.checkedAt !== null) checkDateTime(`${field}.checkedAt`, line.checkedAt);
     if (line.deletedAt !== null) checkDateTime(`${field}.deletedAt`, line.deletedAt);
-    if (line.postponedAt !== null) checkDateTime(`${field}.postponedAt`, line.postponedAt);
-    else if (line.decision === 'postponed') {
-      throw new InvalidInputError(`${field}.postponedAt`, null, 'est obligatoire pour postponed');
-    }
   }
 }
 
