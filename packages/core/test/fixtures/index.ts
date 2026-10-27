@@ -20,6 +20,16 @@ import T18 from './T18.json';
 import T19 from './T19.json';
 import T20 from './T20.json';
 import T21 from './T21.json';
+import T22 from './T22.json';
+import T23 from './T23.json';
+import T24 from './T24.json';
+import T25 from './T25.json';
+import T26 from './T26.json';
+import T27 from './T27.json';
+import T28 from './T28.json';
+import T29 from './T29.json';
+import T30 from './T30.json';
+import T31 from './T31.json';
 
 export const fixtures: unknown[] = [
   T01,
@@ -43,4 +53,14 @@ export const fixtures: unknown[] = [
   T19,
   T20,
   T21,
+  T22,
+  T23,
+  T24,
+  T25,
+  T26,
+  T27,
+  T28,
+  T29,
+  T30,
+  T31,
 ];

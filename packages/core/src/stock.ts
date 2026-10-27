@@ -1,4 +1,4 @@
-import { addDays, daysBetween } from './date';
+import { addDays, daysBetween, withinCalendar } from './date';
 import { anchorValue, isAnchor, lastIndex, liveEvents } from './events';
 import { EPSILON } from './quantity';
 import type { Rate } from './rate';
@@ -7,7 +7,7 @@ import type { LocalDate, LocalDateTime, Product, StockEvent } from './model';
 export interface StockEstimate {
   stock: number;
   anchorAt: LocalDateTime | null;
-  /** Premier jour où le stock estimé est nul. */
+  /** Premier jour où le stock estimé est nul ; null sans rythme ou au-delà de l'an 9999. */
   depletionDate: LocalDate | null;
   /** Dernière réserve entamée ou produit fini, sans achat depuis (EF-3.2). */
   toRebuy: boolean;
@@ -51,13 +51,14 @@ export function estimateStock(
   const purchased = purchases.reduce((sum, event) => sum + (event.quantity ?? 0), 0);
   const total = (anchor !== undefined ? anchorValue(anchor) : 0) + purchased;
   const elapsed = Math.max(0, daysBetween(start.occurredAt, now));
+  const depletionDays = Math.max(0, Math.ceil(total / rate.perDay - EPSILON));
 
   return {
     stock: Math.max(0, total - rate.perDay * elapsed),
     anchorAt: start.occurredAt,
     depletionDate:
-      rate.perDay > 0
-        ? addDays(start.occurredAt, Math.max(0, Math.ceil(total / rate.perDay - EPSILON)))
+      rate.perDay > 0 && withinCalendar(start.occurredAt, depletionDays)
+        ? addDays(start.occurredAt, depletionDays)
         : null,
     toRebuy:
       product.family !== 'occasional' &&

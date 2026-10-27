@@ -1,0 +1,17 @@
+{
+  "id": "T25",
+  "scenario": "Liste de 0 jour : refusée par une erreur explicite",
+  "products": [
+    {
+      "id": "pain",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    }
+  ],
+  "events": [],
+  "now": "2026-10-01T10:00:00",
+  "periodDays": 0,
+  "expected": {
+    "invalidInput": "periodDays"
+  }
+}

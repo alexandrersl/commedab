@@ -199,7 +199,7 @@ Chaque exigence est identifiée EF-x.y. Les critères d'acceptation en précisen
 | RG-7 | La suppression d'un produit référencé par une recette ou un achat est interdite ; seul l'archivage est possible. |
 | RG-8 | Les valeurs issues du catalogue sont copiées à la création du produit et ne sont jamais synchronisées ensuite. |
 | RG-9 | Les catégories « frais » et « surgelés » sont des catégories système, renommables mais non supprimables, toujours placées en fin de parcours. |
-| RG-10 | La quantité suggérée d'un produit à rythme ne dépasse jamais rythme × durée de conservation. Sans durée de conservation renseignée, la période seule s'applique. |
+| RG-10 | La quantité suggérée d'un produit à rythme ne dépasse jamais rythme × durée de conservation, à l'arrondi près (RG-2) : on ne propose pas moins d'une unité d'achat. Sans durée de conservation renseignée, la période seule s'applique. |
 
 ## 8. Scénario d'usage sur le premier mois
 

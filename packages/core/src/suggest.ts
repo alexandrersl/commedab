@@ -1,3 +1,4 @@
+import { InvalidInputError } from './errors';
 import type { ListLine, LocalDate, Offer, Product, RateSource } from './model';
 import { EPSILON, roundUpToStep } from './quantity';
 import type { ProductState } from './state';
@@ -22,7 +23,8 @@ export interface Suggestion {
  * Suggestions d'une liste couvrant `periodDays` jours (specs techniques 4.5). Un produit
  * ayant une ligne sur la liste active, même retirée ou refusée, n'est pas suggéré. Une
  * suggestion due au seul marqueur « à racheter » n'est faite qu'une fois : déjà proposée sur
- * une liste depuis le marqueur (`previousOffers`), elle ne l'est plus.
+ * une liste depuis le marqueur (`previousOffers`, à la date du marqueur incluse), elle ne
+ * l'est plus. `periodDays` est un nombre entier de jours, au moins 1.
  */
 export function suggestForPeriod(input: {
   products: readonly Product[];
@@ -31,6 +33,9 @@ export function suggestForPeriod(input: {
   listLines: readonly ListLine[];
   previousOffers: readonly Offer[];
 }): Suggestion[] {
+  if (!Number.isInteger(input.periodDays) || input.periodDays < 1) {
+    throw new InvalidInputError('periodDays', input.periodDays, 'doit être un entier ≥ 1');
+  }
   const listed = new Set(input.listLines.map((line) => line.productId));
   const suggestions: Suggestion[] = [];
 
@@ -41,7 +46,7 @@ export function suggestForPeriod(input: {
     const offeredSinceMarker =
       anchorAt !== null &&
       input.previousOffers.some(
-        (offer) => offer.productId === product.id && offer.offeredAt > anchorAt,
+        (offer) => offer.productId === product.id && offer.offeredAt >= anchorAt,
       );
     const suggested = suggestedQuantity(product, state, input.periodDays, offeredSinceMarker);
     if (suggested === null) continue;
@@ -71,7 +76,9 @@ function suggestedQuantity(
   switch (product.family) {
     case 'rhythm': {
       if (perDay > 0) {
-        const horizon = Math.min(periodDays, product.shelfLifeDays ?? periodDays);
+        const shelfLife = product.shelfLifeDays;
+        const horizon =
+          shelfLife !== null && shelfLife > 0 ? Math.min(periodDays, shelfLife) : periodDays;
         const need = perDay * horizon - state.stock;
         return need > EPSILON
           ? { quantity: roundUpToStep(need, product.unitKind), marked: false }

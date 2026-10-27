@@ -1,10 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { applyRecipes, observedIntervals, suggestForPeriod, type Recipe } from '../src/index';
+import {
+  applyRecipes,
+  InvalidInputError,
+  observedIntervals,
+  unitStep,
+  suggestForPeriod,
+  type Product,
+  type Recipe,
+} from '../src/index';
 import { eventsOf, quantity, scenario, statesOf, type Fixture } from './fixture';
 import { fixtures } from './fixtures/index';
 
 const all = (fixtures as Fixture[]).map(scenario);
+const suggestible = all.filter((s) => s.fixture.expected.invalidInput === undefined);
 const PRECISION = 6;
+
+/** Jours couverts par une suggestion « à rythme » (RG-10). */
+function horizonOf(product: Product, periodDays: number): number {
+  const shelfLife = product.shelfLifeDays;
+  return shelfLife !== null && shelfLife > 0 ? Math.min(periodDays, shelfLife) : periodDays;
+}
 
 function suggestionsOf(s: (typeof all)[number]) {
   const periodDays = s.fixture.periodDays;
@@ -80,6 +95,14 @@ describe.each(all)('$fixture.id — $fixture.scenario', (s) => {
     });
   }
 
+  if (expected.invalidInput !== undefined) {
+    const field = expected.invalidInput;
+    it('entrée refusée', () => {
+      expect(() => suggestionsOf(s)).toThrow(InvalidInputError);
+      expect(() => suggestionsOf(s)).toThrow(expect.objectContaining({ field }));
+    });
+  }
+
   if (expected.recipeLines !== undefined) {
     const recipeLines = expected.recipeLines;
     it('recettes', () => {
@@ -100,7 +123,7 @@ describe.each(all)('$fixture.id — $fixture.scenario', (s) => {
 });
 
 describe('propriétés (specs techniques 4.8)', () => {
-  it.each(all)('$fixture.id : deux appels identiques donnent le même résultat', (s) => {
+  it.each(suggestible)('$fixture.id : deux appels identiques donnent le même résultat', (s) => {
     expect(statesOf(s, s.fixture.now)).toEqual(statesOf(s, s.fixture.now));
     expect(suggestionsOf(s)).toEqual(suggestionsOf(s));
   });
@@ -116,7 +139,7 @@ describe('propriétés (specs techniques 4.8)', () => {
     expect(statesOf(s, s.fixture.now)).toEqual(statesOf(kept, s.fixture.now));
   });
 
-  it.each(all)(
+  it.each(suggestible)(
     '$fixture.id : rien n’est suggéré quand le stock couvre la période (rythme connu)',
     (s) => {
       const periodDays = s.fixture.periodDays;
@@ -126,9 +149,28 @@ describe('propriétés (specs techniques 4.8)', () => {
       for (const product of s.products.filter((p) => p.family === 'rhythm')) {
         const state = states.get(product.id);
         if (state === undefined || state.rate.perDay === 0) continue;
-        const horizon = Math.min(periodDays, product.shelfLifeDays ?? periodDays);
-        if (state.stock >= state.rate.perDay * horizon)
+        if (state.stock >= state.rate.perDay * horizonOf(product, periodDays))
           expect(suggested.has(product.id)).toBe(false);
+      }
+    },
+  );
+
+  it.each(suggestible)(
+    '$fixture.id : une suggestion « à rythme » dépasse le besoin de moins d’un pas (RG-2, RG-10)',
+    (s) => {
+      const periodDays = s.fixture.periodDays;
+      if (periodDays === undefined) return;
+      const states = statesOf(s, s.fixture.now);
+      const products = new Map(s.products.map((p) => [p.id, p]));
+      for (const suggestion of suggestionsOf(s) ?? []) {
+        const product = products.get(suggestion.productId);
+        const state = states.get(suggestion.productId);
+        if (product?.family !== 'rhythm' || state === undefined || state.rate.perDay === 0) {
+          continue;
+        }
+        const need = state.rate.perDay * horizonOf(product, periodDays) - state.stock;
+        expect(suggestion.quantity).toBeGreaterThanOrEqual(need - 1e-9);
+        expect(suggestion.quantity).toBeLessThan(need + unitStep(product.unitKind));
       }
     },
   );

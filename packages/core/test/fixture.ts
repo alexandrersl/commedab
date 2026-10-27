@@ -44,6 +44,8 @@ export interface Fixture {
     >;
     finishedAt?: FinishedAt;
     suggestions?: { productId: string; quantity: number }[];
+    /** `suggestForPeriod` refuse l'entrée par une `InvalidInputError` sur ce champ. */
+    invalidInput?: string;
     recipeLines?: { productId: string; quantity: number; existing: boolean }[];
   };
 }

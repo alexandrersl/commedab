@@ -1,0 +1,39 @@
+{
+  "id": "T28",
+  "scenario": "Proposé sur une liste créée à la seconde même du « fini » : compte comme proposé depuis le marqueur",
+  "products": [
+    {
+      "id": "houmous"
+    }
+  ],
+  "events": [
+    {
+      "productId": "houmous",
+      "type": "purchased",
+      "quantity": 2,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "houmous",
+      "type": "finished",
+      "occurredAt": "2026-10-05T20:00:00"
+    }
+  ],
+  "previousOffers": [
+    {
+      "productId": "houmous",
+      "offeredAt": "2026-10-05T20:00:00"
+    }
+  ],
+  "now": "2026-10-13T10:00:00",
+  "periodDays": 7,
+  "expected": {
+    "states": {
+      "houmous": {
+        "toRebuy": true,
+        "anchorAt": "2026-10-05T20:00:00"
+      }
+    },
+    "suggestions": []
+  }
+}

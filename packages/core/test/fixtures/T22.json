@@ -1,0 +1,57 @@
+{
+  "id": "T22",
+  "scenario": "Valeur catalogue nulle ou négative : ignorée, le rythme appris n'est pas borné",
+  "products": [
+    {
+      "id": "lait",
+      "unitKind": "volume",
+      "catalogRateQty": 0,
+      "catalogScaling": "per_person"
+    },
+    {
+      "id": "beurre",
+      "catalogRateQty": -1,
+      "catalogScaling": "per_household"
+    }
+  ],
+  "events": [
+    {
+      "productId": "lait",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "lait",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-08T10:00:00"
+    },
+    {
+      "productId": "lait",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-15T10:00:00"
+    },
+    {
+      "productId": "beurre",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-01T10:00:00"
+    }
+  ],
+  "now": "2026-10-16T10:00:00",
+  "expected": {
+    "rates": {
+      "lait": {
+        "perDay": "1/7",
+        "source": "learned",
+        "intervalCount": 2
+      },
+      "beurre": {
+        "perDay": 0,
+        "source": "none"
+      }
+    }
+  }
+}

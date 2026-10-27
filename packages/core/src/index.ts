@@ -3,8 +3,9 @@
 // Voir docs/specs-techniques.md, sections 3, 4 et 7.
 
 export * from './model';
+export { InvalidInputError } from './errors';
 export { addDays, dayOf, daysBetween } from './date';
-export { roundUpToStep } from './quantity';
+export { roundUpToStep, unitStep } from './quantity';
 export { observedIntervals, resolveRate, type Interval, type Rate } from './rate';
 export { estimateStock, type StockEstimate } from './stock';
 export { resolveFinishedAt, type FinishedAt } from './finished';
