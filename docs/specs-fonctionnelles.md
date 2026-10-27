@@ -14,9 +14,9 @@ Changements de la v2 :
 
 - La Liste est l'écran d'accueil : une liste unique et permanente du foyer, toujours groupée par rayon et toujours cochable. Plus d'écran Accueil ni de mode magasin ; les exigences du mode magasin (EF-6.x) rejoignent 6.4.
 - Cocher une ligne enregistre l'achat, décocher le retire. Plus de clôture de liste ni de « Terminer les courses » : les coches espacées de moins de 3 h forment une session de courses, à la fin de laquelle les lignes cochées quittent la liste.
-- Une ligne se retire sans achat ou se reporte aux courses suivantes, depuis une mini-feuille ou par balayage.
+- Un tap sur une ligne la coche ; un appui long ouvre une mini-feuille (quantité, fiche, « Retirer de la liste ») ; un balayage vers la gauche retire la ligne. Retirer n'enregistre aucun achat ; une ligne non cochée reste simplement sur la liste.
 - La période de la liste n'est plus demandée : 7 jours, puis l'intervalle habituel entre deux sessions de courses ; elle se fixe dans l'onglet Compte.
-- Les suggestions sont rangées dans un panneau replié, signalé par une pastille.
+- Les suggestions sont regroupées sur une ligne « N suggestions » en fin de liste, qui se déplie en place.
 - « Archiver » devient « Je n'en achète plus ».
 - « Fini » et « il m'en reste » passent dans l'onglet Produits, sous « Il t'en reste sûrement peu ».
 - Nouvel onglet Compte, avec les membres du foyer et l'invitation : un foyer se partage entre plusieurs comptes dès le MVP. L'agrégation anonyme des noms de produits devient un accord explicite, désactivé par défaut.
@@ -146,8 +146,8 @@ Chaque exigence est identifiée EF-x.y. Les critères d'acceptation en précisen
 
 | Id | Exigence | Critères d'acceptation |
 | --- | --- | --- |
-| EF-2.1 | Cocher une ligne enregistre un événement « acheté », daté de l'instant de la coche, avec la quantité de la ligne ; décocher la ligne retire cet achat (EF-4.10). | Chaque ligne cochée produit exactement un achat ; une ligne décochée, retirée ou reportée n'en laisse aucun. |
-| EF-2.2 | Une ligne non cochée reste sur la liste d'une session de courses à l'autre ; une ligne reportée (EF-4.5) revient à la fin des courses suivantes, signalée comme reportée. | Une ligne reportée revient avec sa quantité. |
+| EF-2.1 | Cocher une ligne enregistre un événement « acheté », daté de l'instant de la coche, avec la quantité de la ligne ; décocher la ligne retire cet achat (EF-4.10). | Chaque ligne cochée produit exactement un achat ; une ligne décochée ou retirée n'en laisse aucun. |
+| EF-2.2 | Une ligne non cochée reste sur la liste d'une session de courses à l'autre, jusqu'à ce qu'elle soit cochée ou retirée. | Après les courses, une ligne non cochée est toujours sur la liste, avec sa quantité. |
 | EF-2.3 | L'historique des achats d'un produit (date, quantité) est consultable depuis sa fiche. | Les achats s'affichent du plus récent au plus ancien. |
 | EF-2.4 | L'utilisateur peut corriger ou supprimer un achat enregistré par erreur : depuis la Liste tant que dure la session de courses (EF-4.5, EF-4.10), puis depuis la fiche produit. | La correction recalcule le stock estimé et le rythme appris. |
 
@@ -169,16 +169,16 @@ Chaque exigence est identifiée EF-x.y. Les critères d'acceptation en précisen
 | EF-4.2 | Le système propose les produits « à rythme » dont la quantité calculée (5.1) est positive, bornée par la durée de conservation (RG-10) et arrondie au pas de l'unité d'achat (RG-2). | Un produit dont le stock estimé couvre la période n'est pas proposé ; une période de 31 jours ne propose pas plus de deux jours de pain. |
 | EF-4.3 | Le système propose les produits « à réserve » marqués « à racheter » ou dont la réserve estimée s'épuise avant la fin de la période, à hauteur du stock de sécurité. | Un produit à réserve suggéré propose une quantité égale à son stock de sécurité. |
 | EF-4.4 | Chaque suggestion est acceptée ou refusée en un geste. Accepter ajoute la ligne à la liste. Le refus distingue « il m'en reste » (recale l'estimation) et « je n'en achète plus » (archive le produit, EF-1.4). | Un produit refusé n'est pas re-suggéré avant la fin des courses suivantes. |
-| EF-4.5 | Un tap sur le nom d'une ligne ouvre une mini-feuille : quantité −/+, « Retirer », « Reporter », accès à la fiche produit. Un balayage vers la gauche retire la ligne. Retirer n'enregistre aucun achat ; reporter retire la ligne jusqu'à la fin des courses suivantes, où elle revient. La quantité se modifie aussi sur une ligne cochée (promotion, lot) : l'achat prend la nouvelle quantité, prise en compte dans le stock estimé (5.3). | Les modifications manuelles priment sur les suggestions ; un produit retiré n'est pas re-suggéré avant la fin des courses suivantes. |
+| EF-4.5 | Un appui long sur une ligne ouvre une mini-feuille : quantité −/+, accès à la fiche produit, « Retirer de la liste ». Un balayage vers la gauche retire la ligne, sans autre choix. Retirer n'enregistre aucun achat. La quantité se modifie aussi sur une ligne cochée (promotion, lot) : l'achat prend la nouvelle quantité, prise en compte dans le stock estimé (5.3). | Les modifications manuelles priment sur les suggestions ; un produit retiré n'est pas re-suggéré avant la fin des courses suivantes. |
 | EF-4.6 | L'utilisateur peut ajouter une ou plusieurs recettes à la liste depuis l'onglet Recettes (voir 6.5). | Les ingrédients résultants sont fusionnés avec les lignes existantes. |
 | EF-4.7 | La Liste est l'écran d'accueil de l'application : une liste unique et permanente par foyer, sans création ni clôture, toujours groupée par rayon dans l'ordre défini en EF-1.5 (lignes sans catégorie en tête sous « À classer », catégories frais et surgelés en dernier) et toujours cochable. Aucun geste de la Liste ne demande de confirmation ni n'affiche de message éphémère : décocher annule une coche, ajouter de nouveau annule un retrait. | L'ordre affiché correspond à l'ordre configuré ; aucun écran ne demande de créer ou de terminer une liste. |
 | EF-4.8 | Chaque suggestion affiche sa justification en une ligne : stock estimé, date d'épuisement prévue et source du rythme (déclaré, appris, catalogue). | La justification est visible sans ouvrir la fiche produit. |
 | EF-4.9 | L'ajout d'un produit à la liste se fait par un champ de saisie unique. À la frappe, une liste de résultats mêle les produits de l'utilisateur (en premier, dont les récemment achetés) et les entrées du catalogue ; un tap sur un résultat l'ajoute. Valider la saisie sans choisir ajoute le texte tel quel : s'il correspond exactement à un produit ou une entrée du catalogue, celui-ci est utilisé, sinon un produit est créé à la volée (EF-1.3). Un second tap sur une ligne déjà présente incrémente sa quantité. | Ajouter trois produits connus prend moins de dix secondes ; un nom inconnu ne provoque qu'une question (la catégorie), différable. |
-| EF-4.10 | Une ligne se coche ou se décoche d'un tap. Cocher enregistre l'achat (EF-2.1) ; la ligne reste affichée, barrée, en fin de son groupe. Décocher retire l'achat. | Une ligne cochée par erreur se décoche en un tap, sans laisser d'achat. |
+| EF-4.10 | Un tap sur une ligne la coche ou la décoche. Cocher enregistre l'achat (EF-2.1) ; la ligne reste affichée, barrée, en fin de son groupe. Décocher retire l'achat. | Une ligne cochée par erreur se décoche en un tap, sans laisser d'achat. |
 | EF-4.11 | Les coches espacées de moins de 3 h forment une session de courses, quel que soit le membre qui coche ; la session se termine 3 h après sa dernière coche. Rien n'est à valider en fin de courses. | Deux coches à 2 h 59 d'intervalle appartiennent à la même session ; deux coches à 3 h d'intervalle, à deux sessions. |
 | EF-4.12 | À la fin de la session de courses, les lignes cochées quittent la liste ; leurs achats restent dans l'historique. | En ouvrant l'application après ses courses, l'utilisateur trouve une liste sans ligne cochée ; tant que la session dure, une ligne cochée reste décochable. |
-| EF-4.13 | Les suggestions sont présentées dans un panneau de la Liste, replié par défaut et signalé par une pastille « N suggestions » ; déplié, il montre chaque suggestion avec sa quantité et sa justification (EF-4.8). | Une suggestion n'entre dans la liste que si elle est acceptée ; replié, le panneau n'occupe qu'une ligne. |
-| EF-4.14 | La Liste fonctionne sans connexion réseau ; les modifications sont synchronisées au retour de la connexion. | Cocher, décocher, retirer et reporter sont possibles hors ligne sans perte de données. |
+| EF-4.13 | Les suggestions sont regroupées sur une ligne « N suggestions » placée en fin de liste, de même gabarit que les autres lignes et repliée par défaut ; un tap la déplie en place et montre chaque suggestion avec sa quantité et sa justification (EF-4.8). | Une suggestion n'entre dans la liste que si elle est acceptée ; repliées, les suggestions n'occupent qu'une ligne. |
+| EF-4.14 | La Liste fonctionne sans connexion réseau ; les modifications sont synchronisées au retour de la connexion. | Cocher, décocher, modifier une quantité et retirer sont possibles hors ligne sans perte de données. |
 
 ### 6.5 Recettes
 
@@ -227,7 +227,7 @@ L'application doit être utile dès la première liste et s'améliorer à chaque
 | Jour 1 | Crée son compte, saisit la taille du foyer, écrit sa liste ; les produits inconnus sont créés à la volée ou depuis le catalogue | Référentiel initialisé, rythmes par défaut |
 | Jour 1, en magasin | Coche ce qu'il achète ; les lignes cochées quittent la liste après les courses | Premiers achats datés, première session de courses |
 | Semaine 1 | Signale « fini » sur quelques produits depuis l'onglet Produits ; invite un autre membre du foyer | Premiers recalages d'estimation ; liste partagée |
-| Semaine 2 | Ouvre la Liste ; la pastille annonce une dizaine de suggestions, acceptées en un geste | Suggestions issues des rythmes par défaut et des événements, sur 7 jours |
+| Semaine 2 | Ouvre la Liste ; la ligne « N suggestions », en fin de liste, en annonce une dizaine, acceptées en un geste | Suggestions issues des rythmes par défaut et des événements, sur 7 jours |
 | Semaine 3 | Enregistre trois recettes, en ajoute une à la liste | Ingrédients de base soustraits du stock estimé |
 | Mois 1 | Déclare un rythme sur les produits mal estimés | Rythmes appris disponibles sur les produits achetés trois fois ; période de la liste apprise des sessions de courses ; suggestions fiables sur l'essentiel |
 
