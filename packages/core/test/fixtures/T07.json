@@ -1,0 +1,29 @@
+{
+  "id": "T07",
+  "scenario": "`counted` 3 à J0, r = 1/jour, t = J2",
+  "products": [
+    {
+      "id": "jus",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    }
+  ],
+  "events": [
+    {
+      "productId": "jus",
+      "type": "counted",
+      "occurredAt": "2026-10-01T09:00:00",
+      "quantity": 3
+    }
+  ],
+  "now": "2026-10-03T09:00:00",
+  "expected": {
+    "states": {
+      "jus": {
+        "stock": 1,
+        "anchorAt": "2026-10-01T09:00:00",
+        "depletionDate": "2026-10-04"
+      }
+    }
+  }
+}

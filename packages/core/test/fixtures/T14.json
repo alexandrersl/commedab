@@ -1,0 +1,73 @@
+{
+  "id": "T14",
+  "scenario": "Recette 4 portions demandée pour 2, ingrédient de base en stock suffisant",
+  "products": [
+    {
+      "id": "tomates"
+    },
+    {
+      "id": "lardons",
+      "unitKind": "weight"
+    },
+    {
+      "id": "beurre"
+    }
+  ],
+  "events": [
+    {
+      "productId": "beurre",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-01T10:00:00"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "quiche",
+      "servings": 4,
+      "ingredients": [
+        {
+          "productId": "tomates",
+          "quantity": 4,
+          "kind": "specific"
+        },
+        {
+          "productId": "lardons",
+          "quantity": 0.4,
+          "kind": "specific"
+        },
+        {
+          "productId": "beurre",
+          "quantity": 0.5,
+          "kind": "base"
+        }
+      ]
+    }
+  ],
+  "recipeRequests": [
+    {
+      "recipeId": "quiche",
+      "servings": 2
+    }
+  ],
+  "now": "2026-10-02T10:00:00",
+  "expected": {
+    "states": {
+      "beurre": {
+        "stock": 1
+      }
+    },
+    "recipeLines": [
+      {
+        "productId": "tomates",
+        "quantity": 2,
+        "existing": false
+      },
+      {
+        "productId": "lardons",
+        "quantity": 0.2,
+        "existing": false
+      }
+    ]
+  }
+}

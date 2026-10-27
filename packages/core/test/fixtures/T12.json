@@ -1,0 +1,43 @@
+{
+  "id": "T12",
+  "scenario": "Suggestion refusée « il m'en reste » sur la liste active, avec le `counted` 1 qui en résulte",
+  "products": [
+    {
+      "id": "compote",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    }
+  ],
+  "events": [
+    {
+      "productId": "compote",
+      "type": "purchased",
+      "quantity": 4,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "compote",
+      "type": "counted",
+      "occurredAt": "2026-10-03T19:00:00",
+      "quantity": 1
+    }
+  ],
+  "listLines": [
+    {
+      "productId": "compote",
+      "quantity": 2,
+      "decision": "refused_have"
+    }
+  ],
+  "now": "2026-10-03T19:00:00",
+  "periodDays": 7,
+  "expected": {
+    "states": {
+      "compote": {
+        "stock": 1,
+        "anchorAt": "2026-10-03T19:00:00"
+      }
+    },
+    "suggestions": []
+  }
+}

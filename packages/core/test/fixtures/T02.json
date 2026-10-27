@@ -1,0 +1,38 @@
+{
+  "id": "T02",
+  "scenario": "2 achats seulement, pas de rythme déclaré, catalogue 0,5/pers/jour, foyer de 2",
+  "household": {
+    "size": 2
+  },
+  "products": [
+    {
+      "id": "oeufs",
+      "catalogRateQty": 0.5,
+      "catalogScaling": "per_person"
+    }
+  ],
+  "events": [
+    {
+      "productId": "oeufs",
+      "type": "purchased",
+      "quantity": 6,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "oeufs",
+      "type": "purchased",
+      "quantity": 6,
+      "occurredAt": "2026-10-08T10:00:00"
+    }
+  ],
+  "now": "2026-10-10T10:00:00",
+  "expected": {
+    "rates": {
+      "oeufs": {
+        "perDay": 1,
+        "source": "catalog",
+        "intervalCount": 0
+      }
+    }
+  }
+}

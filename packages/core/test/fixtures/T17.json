@@ -1,0 +1,44 @@
+{
+  "id": "T17",
+  "scenario": "Rythme appris sur 2 intervalles, 4 × la valeur catalogue",
+  "products": [
+    {
+      "id": "noix",
+      "catalogRateQty": 0.1,
+      "catalogScaling": "per_person"
+    }
+  ],
+  "events": [
+    {
+      "productId": "noix",
+      "type": "purchased",
+      "quantity": 2,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "noix",
+      "type": "purchased",
+      "quantity": 2,
+      "occurredAt": "2026-10-06T10:00:00"
+    },
+    {
+      "productId": "noix",
+      "type": "purchased",
+      "quantity": 2,
+      "occurredAt": "2026-10-11T10:00:00"
+    }
+  ],
+  "now": "2026-10-12T10:00:00",
+  "expected": {
+    "rates": {
+      "noix": {
+        "perDay": 0.2,
+        "source": "learned",
+        "intervalCount": 2
+      }
+    },
+    "intervals": {
+      "noix": [5, 5]
+    }
+  }
+}

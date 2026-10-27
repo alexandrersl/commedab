@@ -1,0 +1,35 @@
+{
+  "id": "T13",
+  "scenario": "15 jours sans ouverture de l'app",
+  "products": [
+    {
+      "id": "yaourts",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    }
+  ],
+  "events": [
+    {
+      "productId": "yaourts",
+      "type": "purchased",
+      "quantity": 10,
+      "occurredAt": "2026-10-01T10:00:00"
+    }
+  ],
+  "now": "2026-10-16T10:00:00",
+  "periodDays": 7,
+  "expected": {
+    "states": {
+      "yaourts": {
+        "stock": 0,
+        "depletionDate": "2026-10-11"
+      }
+    },
+    "suggestions": [
+      {
+        "productId": "yaourts",
+        "quantity": 7
+      }
+    ]
+  }
+}

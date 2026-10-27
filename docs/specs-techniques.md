@@ -348,9 +348,11 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 
 | Fonction | Entrées | Sortie |
 | --- | --- | --- |
-| `resolveRate` | produit, achats et événements « fini » du produit, taille du foyer, entrée catalogue éventuelle | rythme en unités par jour, source (`declared`, `learned`, `catalog`, `none`), nombre d'intervalles utilisés |
+| `resolveRate` | produit (avec les valeurs catalogue copiées), achats et événements « fini » du produit, taille du foyer | rythme en unités par jour, source (`declared`, `learned`, `catalog`, `none`), nombre d'intervalles utilisés |
 | `estimateStock` | produit, événements du produit, rythme, date courante | stock estimé, date d'ancrage, date d'épuisement prévue, marqueur « à racheter » |
-| `suggestForPeriod` | états de tous les produits, période en jours, date courante | lignes suggérées : produit, quantité, justification textuelle |
+| `observedIntervals` | événements du produit | intervalles de consommation observés (fiche produit, tests) |
+| `productState` | produit, événements du produit, foyer, date courante | `ProductState` : rythme et stock estimé |
+| `suggestForPeriod` | produits, leurs états, période en jours, lignes de la liste active, suggestions des listes précédentes | lignes suggérées : produit, quantité, éléments de justification |
 | `applyRecipes` | recettes choisies avec portions, états des produits, lignes existantes | lignes ajoutées ou cumulées |
 | `resolveFinishedAt` | produit, événements du produit, rythme, date du signalement | date à enregistrer pour le « fini », et si elle a été avancée (4.4) |
 
@@ -367,12 +369,12 @@ Le rythme `r` s'exprime en unités d'achat par jour. Sources par priorité (5.2 
 
 **Rythme appris.** Soient les achats éligibles du produit, triés par date : `P1 … Pn` avec leurs quantités `q1 … qn`. Un achat est éligible s'il ne provient pas d'une ligne d'origine recette (RG-4).
 
-- Pour chaque achat `Pk` (sauf le dernier), l'intervalle de consommation `dk` est le nombre de jours entre `Pk` et le premier des deux événements suivants : l'achat `Pk+1`, ou un « fini » postérieur à `Pk`. Les deux sont des bornes supérieures : l'utilisateur peut signaler « fini » quelques jours après l'épuisement réel, mais ce signal reste plus proche de la vérité que l'achat suivant, et la médiane absorbe les retards ponctuels. Un « fini » se signale en un seul geste et prend la date du jour ; la date reste corrigeable depuis la fiche produit mais n'est jamais demandée (ENF-8).
+- Pour chaque achat `Pk`, l'intervalle de consommation `dk` est le nombre de jours entre `Pk` et le premier des deux événements suivants : l'achat `Pk+1`, ou un « fini » postérieur à `Pk`. Le dernier achat n'a donc d'intervalle que si un « fini » le suit (T19) ; un intervalle de zéro jour (« fini » le jour même de l'achat) est ignoré. Les deux sont des bornes supérieures : l'utilisateur peut signaler « fini » quelques jours après l'épuisement réel, mais ce signal reste plus proche de la vérité que l'achat suivant, et la médiane absorbe les retards ponctuels. Un « fini » se signale en un seul geste et prend la date du jour ; la date reste corrigeable depuis la fiche produit mais n'est jamais demandée (ENF-8).
 - Taux observé sur l'intervalle : `rk = qk / dk`.
 - Le rythme appris est la **médiane des cinq derniers `rk`** (ou de tous s'il y en a moins de cinq, minimum deux, soit trois achats). La médiane ignore un achat exceptionnel (promotion, réception) sans qu'il faille le détecter.
 - Deux achats du même jour civil comptent comme un seul, quantités cumulées : un intervalle dure toujours au moins un jour.
 
-**Borne de sécurité.** Tant que moins de cinq intervalles sont disponibles, le rythme appris est borné entre 0,5 × et 2 × la valeur de référence (déclarée, sinon catalogue, sinon pas de borne). Au-delà de cinq intervalles, la médiane seule fait foi.
+**Borne de sécurité.** Tant que moins de cinq intervalles sont disponibles, le rythme appris est borné entre 0,5 × et 2 × la valeur du catalogue (sans valeur catalogue, pas de borne ; un rythme déclaré n'entre pas en jeu, puisqu'il passe avant le rythme appris). Au-delà de cinq intervalles, la médiane seule fait foi.
 
 ### 4.4 Stock estimé
 
@@ -383,13 +385,13 @@ stock(t) = max(0, A + Σ achats après l'ancre − r × jours(ancre → t))
 ```
 
 - `A` : valeur de l'ancre, `r` : rythme retenu (0 si aucun).
-- Date d'épuisement prévue : `ancre + (A + Σ achats) / r` si `r > 0`.
-- Marqueur « à racheter » (famille réserve) : vrai si le dernier événement non-achat est `opened_last` ou `finished` et qu'aucun achat ne lui est postérieur.
+- Date d'épuisement prévue : `ancre + (A + Σ achats) / r` si `r > 0`, arrondie au jour supérieur : c'est le premier jour où le stock estimé est nul.
+- Marqueur « à racheter » (toute famille sauf ponctuel, EF-3.2) : vrai si le dernier événement non-achat est `opened_last` ou `finished` et qu'aucun achat ne lui est postérieur.
 - Un événement avec `deleted_at` est ignoré (EF-2.4, EF-3.4) ; `occurred_at` fait foi, pas `created_at`.
 
 Un « il m'en reste » (EF-3.3, EF-4.4) est enregistré comme un `counted` d'une unité d'achat à la date du jour : il recale l'estimation sans règle spéciale.
 
-**« Fini » signalé peu après un achat.** Un « fini » daté d'aujourd'hui alors que le produit vient d'être racheté désigne presque toujours l'ancienne unité, pas la nouvelle. Règle silencieuse, sans question : si, à la date du « fini », le stock estimé comprend un achat de moins de `L / 2` jours (`L` = durée de vie attendue d'une unité, soit `1 / r`), l'événement est daté de la veille de cet achat. L'app affiche un message annulable (« marqué fini avant tes courses du 12 ») ; l'utilisateur peut corriger la date depuis la fiche. Au-delà de `L / 2`, le « fini » s'applique tel quel. Test T18 : achat à J0, « fini » à J1 avec `L` = 14 → événement daté J−1, stock = quantité achetée, intervalle précédent clos à J−1. Test T19 : achat à J0, « fini » à J10 avec `L` = 14 → stock 0, intervalle de 10 jours. Cette règle est la fonction `resolveFinishedAt` du moteur : la commande `markFinished` de `data` l'appelle, enregistre l'événement à la date rendue et affiche le message si la date a été avancée.
+**« Fini » signalé peu après un achat.** Un « fini » daté d'aujourd'hui alors que le produit vient d'être racheté désigne presque toujours l'ancienne unité, pas la nouvelle. Règle silencieuse, sans question : si le dernier achat date de moins de `L / 2` jours (`L` = durée de vie attendue d'une unité, soit `1 / r`) et qu'il restait du stock avant lui (ancre de valeur positive, ou achat antérieur depuis l'ancre), l'événement est daté de la veille de cet achat, à 23:59:59. Sans stock antérieur, c'est bien l'achat récent qui est fini, et le « fini » s'applique tel quel. L'app affiche un message annulable (« marqué fini avant tes courses du 12 ») ; l'utilisateur peut corriger la date depuis la fiche. Au-delà de `L / 2`, le « fini » s'applique tel quel. Test T18 : achat à J0, « fini » à J1 avec `L` = 14 → événement daté J−1, l'achat de J0 reste en stock, intervalle précédent clos à J−1. Test T19 : achat à J0, « fini » à J10 avec `L` = 14 → stock 0, intervalle de 10 jours. Cette règle est la fonction `resolveFinishedAt` du moteur : la commande `markFinished` de `data` l'appelle, enregistre l'événement à la date rendue et affiche le message si la date a été avancée.
 
 ### 4.5 Quantité suggérée
 
@@ -398,16 +400,19 @@ Pour une liste couvrant `P` jours à la date `t` :
 | Famille | Condition de suggestion | Quantité |
 | --- | --- | --- |
 | À rythme | `besoin = r × min(P, shelf_life_days ou P) − stock(t)` positif | `besoin` arrondi au pas supérieur de l'unité : 1 pour `piece`, 0,1 pour `weight` (kg), 0,5 pour `volume` (L) (RG-2, RG-10) |
-| À réserve | marqueur « à racheter », ou date d'épuisement prévue avant `t + P` | `safety_stock` unités |
-| Ponctuel, archivé, sans rythme | jamais |  |
+| À réserve | marqueur « à racheter » (même sans rythme), ou épuisement prévu avant `t + P`, soit `stock(t) < r × P` | `safety_stock` unités |
+| À rythme, sans rythme connu | marqueur « à racheter », une seule fois (voir ci-dessous) | quantité du dernier achat (1 unité sans achat), arrondie au pas de l'unité |
+| Ponctuel, archivé | jamais |  |
 
-Un produit déjà présent sur la liste active n'est pas re-suggéré ; une suggestion refusée pour cette liste (ligne avec `decision` de refus) non plus.
+Un produit ayant une ligne sur la liste active, même retirée (`deleted_at`) ou refusée (`decision` de refus), n'est pas suggéré : `data` transmet ces lignes au moteur.
 
-**Justification** (EF-4.8), construite par le moteur à partir de `ProductState` : stock estimé arrondi, date d'épuisement prévue, source du rythme. Exemple : « Il t'en reste environ 2, épuisé vers le 24 oct. · rythme appris sur 4 achats ».
+Une suggestion due au seul marqueur « à racheter » (produit sans rythme connu, ou réserve dont l'épuisement n'est pas prévu dans la période) n'est faite qu'une fois : si une liste créée depuis le marqueur l'a déjà proposée et que l'utilisateur ne l'a pas ajoutée, elle n'est plus proposée. Un nouvel événement (« fini », « entamé ») la rend de nouveau possible ; un achat lève le marqueur. `data` transmet les lignes d'origine `suggestion` des listes clôturées, avec leur date de création. Tests T20 et T21.
+
+**Justification** (EF-4.8) : le moteur en rend les éléments (stock estimé, date d'épuisement prévue, source du rythme, nombre d'intervalles) ; l'écran les met en mots sans les termes « rythme », « famille » ni « stock » (ENF-8). Exemple : « Il t'en reste environ 2, épuisé vers le 24 oct. · d'après tes 4 derniers achats ».
 
 ### 4.6 Recettes
 
-Pour une recette de `S` portions de référence, demandée pour `S'` portions : chaque ingrédient de quantité `qi` donne `qi × S' / S`, converti en unité d'achat via la contenance si l'ingrédient est exprimé en grammes ou millilitres. Un ingrédient `specific` est ajouté intégralement ; un ingrédient `base` n'est ajouté qu'à hauteur de `max(0, quantité requise − stock(t))`. Les quantités sont cumulées sur une ligne existante du même produit (EF-5.5) et arrondies au pas de l'unité après cumul.
+Pour une recette de `S` portions de référence, demandée pour `S'` portions : chaque ingrédient de quantité `qi` donne `qi × S' / S`. Les quantités d'ingrédients sont enregistrées en unités d'achat (3.3) : la conversion depuis des grammes ou des millilitres, par la contenance, se fait à la saisie et non dans le moteur. Un ingrédient `specific` est ajouté intégralement ; un ingrédient `base` n'est ajouté qu'à hauteur de `max(0, quantité requise − stock(t))`, la quantité requise étant le total des recettes ajoutées ensemble. Les quantités sont cumulées sur une ligne existante du même produit (EF-5.5) et arrondies au pas de l'unité après cumul.
 
 ### 4.7 Écart assumé avec les spécifications fonctionnelles
 
@@ -436,8 +441,10 @@ Les tests sont écrits avant le moteur, sous forme de fixtures JSON (produit, fo
 | T15 | Deux recettes partageant un ingrédient | une seule ligne, quantités cumulées |
 | T16 | Événement avec `deleted_at` | ignoré ; même résultat que s'il n'avait jamais existé |
 | T17 | Rythme appris sur 2 intervalles, 4 × la valeur catalogue | borné à 2 × catalogue |
-| T18 | Achat à J0, « fini » signalé à J1, `L` = 14 (4.4) | « fini » daté J−1, stock = quantité achetée, intervalle précédent clos à J−1 |
+| T18 | Achat à J0, « fini » signalé à J1, `L` = 14 (4.4) | « fini » daté J−1 à 23:59:59, l'achat de J0 reste en stock, intervalle précédent clos à J−1 |
 | T19 | Achat à J0, « fini » signalé à J10, `L` = 14 (4.4) | « fini » daté J10, stock 0, intervalle de 10 jours |
+| T20 | Produit créé à la volée, sans rythme, acheté une fois (2 unités) puis « fini » | « à racheter » vrai, suggestion 2 |
+| T21 | Même produit, déjà proposé sur une liste créée depuis le « fini » et pas ajouté | non suggéré ; un produit proposé seulement avant son « fini » l'est |
 
 Propriétés vérifiées en complément : le moteur est idempotent (deux appels identiques donnent le même résultat), le stock n'est jamais négatif, et la quantité suggérée est nulle dès que le stock couvre la période.
 
