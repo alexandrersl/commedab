@@ -1,0 +1,43 @@
+{
+  "id": "T03",
+  "scenario": "3 achats de 1 L à J0, J7, J14",
+  "products": [
+    {
+      "id": "lait",
+      "unitKind": "volume"
+    }
+  ],
+  "events": [
+    {
+      "productId": "lait",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "lait",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-08T10:00:00"
+    },
+    {
+      "productId": "lait",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-15T10:00:00"
+    }
+  ],
+  "now": "2026-10-16T10:00:00",
+  "expected": {
+    "rates": {
+      "lait": {
+        "perDay": "1/7",
+        "source": "learned",
+        "intervalCount": 2
+      }
+    },
+    "intervals": {
+      "lait": [7, 7]
+    }
+  }
+}

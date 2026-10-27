@@ -1,0 +1,74 @@
+{
+  "id": "T15",
+  "scenario": "Deux recettes partageant un ingrédient",
+  "products": [
+    {
+      "id": "oignons"
+    },
+    {
+      "id": "creme"
+    }
+  ],
+  "events": [],
+  "recipes": [
+    {
+      "id": "soupe",
+      "servings": 2,
+      "ingredients": [
+        {
+          "productId": "oignons",
+          "quantity": 2,
+          "kind": "specific"
+        }
+      ]
+    },
+    {
+      "id": "gratin",
+      "servings": 4,
+      "ingredients": [
+        {
+          "productId": "oignons",
+          "quantity": 1,
+          "kind": "specific"
+        },
+        {
+          "productId": "creme",
+          "quantity": 1,
+          "kind": "specific"
+        }
+      ]
+    }
+  ],
+  "recipeRequests": [
+    {
+      "recipeId": "soupe",
+      "servings": 2
+    },
+    {
+      "recipeId": "gratin",
+      "servings": 4
+    }
+  ],
+  "listLines": [
+    {
+      "productId": "creme",
+      "quantity": 1,
+      "decision": "accepted"
+    }
+  ],
+  "now": "2026-10-02T10:00:00",
+  "expected": {
+    "recipeLines": [
+      {
+        "productId": "oignons",
+        "quantity": 3,
+        "existing": false
+      },
+      {
+        "productId": "creme",
+        "quantity": 2,
+        "existing": true
+      }
+    ]
+  }
+}

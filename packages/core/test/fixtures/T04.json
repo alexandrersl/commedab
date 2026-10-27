@@ -1,0 +1,60 @@
+{
+  "id": "T04",
+  "scenario": "6 achats hebdomadaires dont un achat de 6 unités en promotion",
+  "products": [
+    {
+      "id": "yaourts"
+    }
+  ],
+  "events": [
+    {
+      "productId": "yaourts",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "yaourts",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-08T10:00:00"
+    },
+    {
+      "productId": "yaourts",
+      "type": "purchased",
+      "quantity": 6,
+      "occurredAt": "2026-10-15T10:00:00"
+    },
+    {
+      "productId": "yaourts",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-22T10:00:00"
+    },
+    {
+      "productId": "yaourts",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-29T10:00:00"
+    },
+    {
+      "productId": "yaourts",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-11-05T10:00:00"
+    }
+  ],
+  "now": "2026-11-06T10:00:00",
+  "expected": {
+    "rates": {
+      "yaourts": {
+        "perDay": "1/7",
+        "source": "learned",
+        "intervalCount": 5
+      }
+    },
+    "intervals": {
+      "yaourts": [7, 7, 7, 7, 7]
+    }
+  }
+}

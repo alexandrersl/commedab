@@ -1,0 +1,64 @@
+{
+  "id": "T21",
+  "scenario": "Produit sans rythme connu marqué « fini », déjà proposé sur une liste créée depuis et pas ajouté ; un second produit n'a été proposé qu'avant son « fini »",
+  "products": [
+    {
+      "id": "houmous"
+    },
+    {
+      "id": "tahin"
+    }
+  ],
+  "events": [
+    {
+      "productId": "houmous",
+      "type": "purchased",
+      "quantity": 2,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "houmous",
+      "type": "finished",
+      "occurredAt": "2026-10-05T20:00:00"
+    },
+    {
+      "productId": "tahin",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-09-20T10:00:00"
+    },
+    {
+      "productId": "tahin",
+      "type": "finished",
+      "occurredAt": "2026-10-08T20:00:00"
+    }
+  ],
+  "previousOffers": [
+    {
+      "productId": "houmous",
+      "offeredAt": "2026-10-06T10:00:00"
+    },
+    {
+      "productId": "tahin",
+      "offeredAt": "2026-09-27T10:00:00"
+    }
+  ],
+  "now": "2026-10-13T10:00:00",
+  "periodDays": 7,
+  "expected": {
+    "states": {
+      "houmous": {
+        "toRebuy": true
+      },
+      "tahin": {
+        "toRebuy": true
+      }
+    },
+    "suggestions": [
+      {
+        "productId": "tahin",
+        "quantity": 1
+      }
+    ]
+  }
+}

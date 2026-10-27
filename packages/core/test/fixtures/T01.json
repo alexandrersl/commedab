@@ -1,0 +1,42 @@
+{
+  "id": "T01",
+  "scenario": "Rythme déclaré 1 yaourt/jour, pack de 12 acheté il y a 8 jours, liste de 7 jours : le rythme est saisi en unités d'achat, 1 pack tous les 12 jours",
+  "products": [
+    {
+      "id": "yaourts",
+      "declaredQty": 1,
+      "declaredPerDays": 12
+    }
+  ],
+  "events": [
+    {
+      "productId": "yaourts",
+      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-18T10:00:00"
+    }
+  ],
+  "now": "2026-10-26T18:00:00",
+  "periodDays": 7,
+  "expected": {
+    "rates": {
+      "yaourts": {
+        "perDay": "1/12",
+        "source": "declared"
+      }
+    },
+    "states": {
+      "yaourts": {
+        "stock": "1/3",
+        "anchorAt": "2026-10-18T10:00:00",
+        "depletionDate": "2026-10-30"
+      }
+    },
+    "suggestions": [
+      {
+        "productId": "yaourts",
+        "quantity": 1
+      }
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "T11",
+  "scenario": "Produit ponctuel",
+  "products": [
+    {
+      "id": "champagne",
+      "family": "occasional"
+    }
+  ],
+  "events": [
+    {
+      "productId": "champagne",
+      "type": "purchased",
+      "quantity": 2,
+      "occurredAt": "2026-09-01T10:00:00"
+    },
+    {
+      "productId": "champagne",
+      "type": "purchased",
+      "quantity": 2,
+      "occurredAt": "2026-09-15T10:00:00"
+    },
+    {
+      "productId": "champagne",
+      "type": "purchased",
+      "quantity": 2,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "champagne",
+      "type": "finished",
+      "occurredAt": "2026-10-05T22:00:00"
+    }
+  ],
+  "now": "2026-10-10T10:00:00",
+  "periodDays": 31,
+  "expected": {
+    "rates": {
+      "champagne": {
+        "perDay": 0,
+        "source": "none"
+      }
+    },
+    "suggestions": []
+  }
+}
