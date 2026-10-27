@@ -14,7 +14,7 @@ Changements de la v2 :
 
 - Plus de table `shopping_list` : `list_line` appartient au foyer, la liste est permanente. Cocher crée l'achat (UUID v5 de la ligne), décocher pose son `deleted_at` ; plus de clôture, de `reopenList` ni d'index de liste active (3.3, 5.5).
 - Sessions de courses, état des lignes et période de la liste calculés par `core` (`listView`, `resolvePeriod`, 4.9), jamais stockés. `household.default_period_days` devient `period_days`, nul en réglage automatique.
-- La suggestion due au seul marqueur « à racheter » vaut jusqu'à la fin de la première session de courses commencée après le marqueur ; les lignes retirées, refusées ou reportées bloquent la suggestion jusqu'à la fin de la session suivante (4.5, 4.9).
+- La suggestion due au seul marqueur « à racheter » vaut jusqu'à la fin de la première session de courses commencée après le marqueur ; les lignes retirées ou refusées bloquent la suggestion jusqu'à la fin de la session suivante (4.5, 4.9). Pas de report : une ligne non cochée reste sur la liste.
 - Écrans : quatre onglets Liste, Produits, Recettes, Compte ; plus d'Accueil ni de mode magasin (6.3).
 - Foyer partagé dès le MVP : invitation par lien, `household_invitation` hors synchro, fonctions `create_invitation`, `accept_invitation`, `leave_household`, `remove_member` (5.6).
 - Agrégation anonyme des noms de produits soumise à l'accord du foyer, `household.catalog_contribution` (7.3, 8.1).
@@ -208,7 +208,7 @@ household ──▶ product ◀╌╌ catalog_entry (fichier, copié jamais lié
 category ◀──────┤
                 ├── stock_event (acheté, entamé, fini, relevé ; daté)
                 │        ▲ achat à la coche
-                └── list_line (quantité, origine, décision, cochée, reportée)
+                └── list_line (quantité, origine, décision, cochée)
 Chaque table porte household_id ; les flèches vont de l'enfant vers la référence.
 ```
 
@@ -313,9 +313,8 @@ Index : `(household_id, product_id, occurred_at desc)`.
 | suggested\_qty | numeric, nullable | quantité proposée à l'origine, pour mesurer les modifications |
 | origin | text | `suggestion`, `manual`, `recipe` |
 | recipe\_id | uuid, nullable |  |
-| decision | text, nullable | `accepted`, `modified`, `refused_have`, `refused_stop`, `postponed` ; nul pour une ligne manuelle. Une suggestion refusée est enregistrée comme une ligne de décision de refus, jamais affichée |
+| decision | text, nullable | `accepted`, `modified`, `refused_have`, `refused_stop` ; nul pour une ligne manuelle. Une suggestion refusée est enregistrée comme une ligne de décision de refus, jamais affichée |
 | checked\_at | timestamptz, nullable | coché ; nul une fois décoché |
-| postponed\_at | timestamptz, nullable | reporté (`decision = postponed`, EF-4.5) |
 | deleted\_at | timestamptz, nullable | retiré (EF-4.5) |
 | created\_at, updated\_at | timestamptz |  |
 
@@ -375,7 +374,7 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 | `observedIntervals` | événements du produit | intervalles de consommation observés (fiche produit, tests) |
 | `productState` | produit, événements du produit, foyer, date courante | `ProductState` : rythme et stock estimé |
 | `suggestForPeriod` | produits, leurs états, période en jours, vue de la liste (`listView`) | lignes suggérées : produit, quantité, éléments de justification |
-| `applyRecipes` | recettes choisies avec portions, états des produits, lignes non cochées de la liste (états `pending` et `returned`, 4.9) | lignes ajoutées ou cumulées |
+| `applyRecipes` | recettes choisies avec portions, états des produits, lignes non cochées de la liste (état `pending`, 4.9) | lignes ajoutées ou cumulées |
 | `shoppingSessions` | dates des coches du foyer | sessions de courses : début, dernière coche, fermeture (4.9) |
 | `listView` | lignes de la liste, date courante | sessions, session en cours, état de chaque ligne (4.9) |
 | `resolvePeriod` | foyer, sessions de courses | période de la liste en jours, source (`declared`, `learned`, `default`), nombre d'intervalles utilisés (4.9) |
@@ -383,7 +382,7 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 
 Un type `ProductState` regroupe les sorties des deux premières fonctions ; c'est lui que les écrans affichent (fiche produit, onglet Produits, justification EF-4.8).
 
-Chaque fonction vérifie ses entrées et lève une `InvalidInputError`, qui nomme le champ fautif, pour ce que `data` ne doit jamais transmettre : date qui n'est pas au format exact `AAAA-MM-JJTHH:MM:SS` ou qui n'existe pas (les dates sont comparées comme des textes, leur format doit être unique), quantité négative ou non finie, achat ou relevé sans quantité, événement d'un autre produit, foyer de moins d'une personne ou de période fixée hors de 1 à 31 jours, période qui n'est pas un entier d'au moins un jour, ligne reportée sans date de report, recette sans portion. Une valeur de rythme, de durée de vie ou de conservation nulle ou négative n'est pas une erreur : elle vaut absence (4.3, 4.5).
+Chaque fonction vérifie ses entrées et lève une `InvalidInputError`, qui nomme le champ fautif, pour ce que `data` ne doit jamais transmettre : date qui n'est pas au format exact `AAAA-MM-JJTHH:MM:SS` ou qui n'existe pas (les dates sont comparées comme des textes, leur format doit être unique), quantité négative ou non finie, achat ou relevé sans quantité, événement d'un autre produit, foyer de moins d'une personne ou de période fixée hors de 1 à 31 jours, période qui n'est pas un entier d'au moins un jour, recette sans portion. Une valeur de rythme, de durée de vie ou de conservation nulle ou négative n'est pas une erreur : elle vaut absence (4.3, 4.5).
 
 ### 4.3 Rythme de consommation
 
@@ -438,7 +437,7 @@ Pour une période de `P` jours (4.9) à la date `t` :
 
 **Arrondi et conservation.** L'arrondi au pas supérieur (RG-2) prime sur la borne de conservation (RG-10) : la quantité suggérée est au moins le besoin et le dépasse de moins d'un pas. Un pain de mie consommé à raison de 0,4 par jour et conservé 2 jours donne un besoin de 0,8 et une suggestion de 1 (T29). Arrondir vers le bas ne proposerait rien.
 
-Un produit dont une ligne bloque la suggestion n'est pas suggéré : ligne non cochée, cochée pendant la session en cours, reportée, ou retirée ou refusée depuis la fin de la dernière session (4.9, T12, T35).
+Un produit dont une ligne bloque la suggestion n'est pas suggéré : ligne non cochée, cochée pendant la session en cours, ou retirée ou refusée depuis la fin de la dernière session (4.9, T12, T35).
 
 Une suggestion due au seul marqueur « à racheter » (produit sans rythme connu, ou réserve dont l'épuisement n'est pas prévu dans la période) ne vaut que jusqu'aux courses suivantes : dès qu'une session de courses commencée après le marqueur, ou à la même seconde (T28), s'est terminée sans que le produit soit acheté, elle n'est plus proposée. Une session déjà commencée au moment du marqueur ne compte pas : le produit marqué « fini » en magasin est encore proposé aux courses d'après (T42). Un nouvel événement (« fini », « entamé ») la rend de nouveau possible ; un achat lève le marqueur. Tests T20, T21, T28, T42.
 
@@ -492,7 +491,7 @@ Les tests sont écrits avant le moteur, sous forme de fixtures JSON (produit, fo
 | T32 | Rythme catalogue sans `catalog_scaling`, foyer de 3 (4.3) | traité comme `per_person` : × 3 ; `per_household` inchangé |
 | T33 | Produit sans rythme, « fini » après un achat recette (4.5) | suggestion de la quantité du dernier achat hors recette, 1 sans achat hors recette |
 | T34 | Coches à 10:00, 10:20, 12:59, 16:00 et 19:00 (4.9) | trois sessions : moins de 3 h d'écart regroupe, 3 h tout juste sépare ; la dernière est en cours |
-| T35 | Lignes non cochée, cochée, retirée, refusée, reportée, avant et après la fin de la dernière session (4.9) | état de chaque ligne ; seules les lignes passées laissent suggérer leur produit |
+| T35 | Lignes non cochée, cochée, retirée, refusée, avant et après la fin de la dernière session (4.9) | état de chaque ligne ; seules les lignes passées laissent suggérer leur produit |
 | T36 | Deux sessions seulement (4.9) | période par défaut : 7 jours |
 | T37 | Quatre sessions dont deux le même jour (4.9) | sessions du même jour comptées une fois ; médiane 5,5 arrondie à 6 jours |
 | T38 | Sessions espacées de 40 et 45 jours (4.9) | période bornée à 31 jours |
@@ -507,18 +506,16 @@ Propriétés vérifiées en complément : le moteur est idempotent (deux appels 
 
 **Sessions.** Une coche est le `checked_at` d'une ligne cochée et non retirée. Les coches du foyer, tous membres confondus, triées par date, forment des sessions : deux coches consécutives espacées de moins de 3 h appartiennent à la même session (T34). Une session commence à sa première coche, se termine à sa dernière, et se ferme 3 h après la dernière ; elle est en cours tant que sa fermeture n'est pas atteinte. Les heures se lisent sur les dates locales (4.1) : un changement d'heure peut décaler une fermeture d'une heure, sans conséquence. `shoppingSessions` rend les sessions ; `listView` y ajoute la session en cours et l'état de chaque ligne. Rien n'est stocké.
 
-**État des lignes.** Une ligne retirée l'est à son `deleted_at`, une ligne refusée à sa création, une ligne reportée à son `postponed_at` ; « la dernière fermeture » est celle de la dernière session fermée à la date courante.
+**État des lignes.** Une ligne retirée l'est à son `deleted_at`, une ligne refusée à sa création ; « la dernière fermeture » est celle de la dernière session fermée à la date courante.
 
 | État | Ligne | Affichée | Bloque la suggestion |
 | --- | --- | --- | --- |
-| `pending` | ni cochée, ni retirée, ni refusée, ni reportée | oui | oui |
+| `pending` | ni cochée, ni retirée, ni refusée : elle reste sur la liste d'une session à l'autre | oui | oui |
 | `checked` | cochée pendant la session en cours | oui, barrée en fin de groupe | oui |
-| `postponed` | reportée, aucune session fermée depuis le report | non | oui |
-| `returned` | reportée, une session s'est fermée depuis le report | oui, signalée comme reportée | oui |
 | `withdrawn` | retirée ou refusée après la dernière fermeture | non | oui |
 | `past` | cochée lors d'une session fermée, ou retirée ou refusée avant la dernière fermeture | non | non |
 
-Une ligne cochée quitte donc la liste à la fermeture de sa session (EF-4.12). Les maquettes la retiraient aussi à l'ouverture suivante de l'app ; la règle est ramenée à la seule fermeture, parce que l'ouverture est propre à chaque appareil (deux membres verraient deux listes) et qu'iOS recharge une PWA restée en arrière-plan, ce qui viderait les lignes cochées en plein magasin. Une ligne reportée revient à la fermeture de la première session postérieure au report : reportée en magasin, après ces courses ; reportée à la maison, après les suivantes (EF-4.5).
+Une ligne cochée quitte donc la liste à la fermeture de sa session (EF-4.12). Les maquettes la retiraient aussi à l'ouverture suivante de l'app ; la règle est ramenée à la seule fermeture, parce que l'ouverture est propre à chaque appareil (deux membres verraient deux listes) et qu'iOS recharge une PWA restée en arrière-plan, ce qui viderait les lignes cochées en plein magasin.
 
 **Période de la liste.** `resolvePeriod` retient, dans l'ordre :
 
@@ -646,7 +643,7 @@ repo/
 `packages/data` expose des **dépôts par entité** (`products`, `events`, `list`, `recipes`, `household`) avec deux faces :
 
 - des **requêtes réactives** (`watchProducts()`, `watchList()`) qui renvoient un flux mis à jour à chaque écriture locale ou synchronisation ;
-- des **commandes** (`checkLine`, `uncheckLine`, `setLineQuantity`, `removeLine`, `postponeLine`, `acceptSuggestion`, `refuseSuggestion`, `stopBuying`, `markFinished`) qui écrivent dans SQLite dans une transaction et appliquent les règles de 4.4 et 5.5 : date du « fini » calculée par `resolveFinishedAt` de `core`, `counted` sur « il m'en reste », achat créé, retiré ou mis à jour avec la coche d'une ligne. Une commande ne contient aucune formule : tout calcul vient de `core`.
+- des **commandes** (`checkLine`, `uncheckLine`, `setLineQuantity`, `removeLine`, `acceptSuggestion`, `refuseSuggestion`, `stopBuying`, `markFinished`) qui écrivent dans SQLite dans une transaction et appliquent les règles de 4.4 et 5.5 : date du « fini » calculée par `resolveFinishedAt` de `core`, `counted` sur « il m'en reste », achat créé, retiré ou mis à jour avec la coche d'une ligne. Une commande ne contient aucune formule : tout calcul vient de `core`.
 
 La Liste passe les lignes du foyer à `listView` (4.9) : seules les lignes affichées sont rendues, `resolvePeriod` donne la période et `suggestForPeriod` reçoit la vue entière.
 
@@ -658,7 +655,7 @@ Quatre onglets, Liste · Produits · Recettes · Compte, une fiche produit et l'
 
 | Écran | Contenu | Gestes clés |
 | --- | --- | --- |
-| **Liste** | Lignes groupées par rayon dans l'ordre configuré (« À classer » en tête, frais et surgelés en dernier) ; lignes cochées barrées en fin de groupe jusqu'à la fin de la session (4.9), lignes revenues d'un report signalées ; panneau des suggestions replié, pastille « N suggestions », justification en une ligne une fois déplié (EF-4.8, EF-4.13) ; champ de saisie unique en bas (EF-4.9) | Tap sur la case : cocher, décocher. Tap sur le nom : mini-feuille (quantité −/+, « Retirer », « Reporter », fiche produit). Balayage vers la gauche : retirer. Dans le panneau : accepter, refuser « il m'en reste » ou « je n'en achète plus », tap sur la justification pour le relevé (EF-3.5). Ni confirmation ni message éphémère |
+| **Liste** | Lignes groupées par rayon dans l'ordre configuré (« À classer » en tête, frais et surgelés en dernier) ; lignes cochées barrées en fin de groupe jusqu'à la fin de la session (4.9) ; en fin de liste, une ligne « N suggestions » de même gabarit, repliée, qui se déplie en place avec la justification de chaque suggestion en une ligne (EF-4.8, EF-4.13) ; champ de saisie unique en bas (EF-4.9) | Tap sur une ligne : cocher, décocher. Appui long : mini-feuille (quantité −/+, fiche produit, « Retirer de la liste »). Balayage vers la gauche : retirer, seul. Tap sur « N suggestions » : déplier, replier ; sur une suggestion : accepter, refuser « il m'en reste » ou « je n'en achète plus », tap sur la justification pour le relevé (EF-3.5). Ni confirmation ni message éphémère |
 | **Produits** | Section « Il t'en reste sûrement peu » en tête (EF-3.3), puis le référentiel groupé par rayon, « il t'en reste environ 2 » et dernier achat en sous-titre (EF-1.8) ; recherche instantanée, qui sert aussi à marquer fini | Un tap « fini », un tap « il m'en reste », annulation par message éphémère ; tap sur un produit pour sa fiche |
 | **Recettes** | Liste des recettes, création avec nom, portions, ingrédients par le même champ de saisie unique | Tap « ajouter à la liste » avec choix des portions |
 | **Compte** | Taille du foyer, période de la liste (automatique, ou fixée de 1 à 31 jours), membres et invitation, ordre et noms des rayons, e-mail, mot de passe, déconnexion, agrégation anonyme (désactivée par défaut), export, suppression du compte, diagnostic (6.5) | Chaque réglage s'applique au foyer dès qu'il change ; seuls rejoindre ou quitter un foyer et supprimer le compte demandent confirmation |
