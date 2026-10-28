@@ -2,22 +2,7 @@
 
 ## Objet et statut
 
-Ce document fixe les choix techniques de l'application décrite dans les spécifications fonctionnelles v2 (MVP d'un foyer partagé entre ses membres, stock estimé sans inventaire) et éclairée par l'étude de marché. Il est rédigé décision par décision, dans l'ordre où elles se contraignent ; chaque section porte un statut.
-
-| Version | Date | Changements |
-| --- | --- | --- |
-| 1.0 | 26/10/2026 | Toutes les sections décidées |
-| 1.1 | 27/10/2026 | Revue du moteur : cas limites, gardes d'entrée, quantité habituelle hors recette (T22 à T33) |
-| 2.0 | 27/10/2026 | Spécifications fonctionnelles v2, résumées ci-dessous |
-
-Changements de la v2 :
-
-- Plus de table `shopping_list` : `list_line` appartient au foyer, la liste est permanente. Cocher crée l'achat (UUID v5 de la ligne), décocher pose son `deleted_at` ; plus de clôture, de `reopenList` ni d'index de liste active (3.3, 5.5).
-- Sessions de courses, état des lignes et période de la liste calculés par `core` (`listView`, `resolvePeriod`, 4.9), jamais stockés. `household.default_period_days` devient `period_days`, nul en réglage automatique.
-- La suggestion due au seul marqueur « à racheter » vaut jusqu'à la fin de la première session de courses commencée après le marqueur ; les lignes retirées ou refusées bloquent la suggestion jusqu'à la fin de la session suivante (4.5, 4.9). Pas de report : une ligne non cochée reste sur la liste.
-- Écrans : quatre onglets Liste, Produits, Recettes, Compte ; plus d'Accueil ni de mode magasin (6.3).
-- Foyer partagé dès le MVP : invitation par lien, `household_invitation` hors synchro, fonctions `create_invitation`, `accept_invitation`, `leave_household`, `remove_member` (5.6).
-- Agrégation anonyme des noms de produits soumise à l'accord du foyer, `household.catalog_contribution` (7.3, 8.1).
+Ce document fixe les choix techniques de l'application décrite dans les spécifications fonctionnelles v1 (MVP d'un foyer partagé entre ses membres, stock estimé sans inventaire) et éclairée par l'étude de marché. Il est rédigé décision par décision, dans l'ordre où elles se contraignent ; chaque section porte un statut.
 
 Contraintes de départ, indépendantes des choix :
 
@@ -195,7 +180,7 @@ Coût estimé d'un remplacement dans ces conditions : réécriture de la couche 
 
 ## 3. Modèle de données
 
-**Statut : validé le 19/10/2026, révisé le 27/10/2026 (v2).**
+**Statut : validé le 19/10/2026, révisé le 27/10/2026.**
 
 ### 3.1 Vue d'ensemble
 
@@ -355,7 +340,7 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 
 ## 4. Moteur d'estimation
 
-**Statut : décidé le 19/10/2026, révisé le 27/10/2026 (v2)** (rythme appris par médiane des cinq derniers intervalles ; une simplification de RG-5 signalée en 4.7 ; sessions de courses et période de la liste en 4.9).
+**Statut : décidé le 19/10/2026, révisé le 27/10/2026** (rythme appris par médiane des cinq derniers intervalles ; une simplification de RG-5 signalée en 4.7 ; sessions de courses et période de la liste en 4.9).
 
 ### 4.1 Principes
 
@@ -515,7 +500,7 @@ Propriétés vérifiées en complément : le moteur est idempotent (deux appels 
 | `withdrawn` | retirée ou refusée après la dernière fermeture | non | oui |
 | `past` | cochée lors d'une session fermée, ou retirée ou refusée avant la dernière fermeture | non | non |
 
-Une ligne cochée quitte donc la liste à la fermeture de sa session (EF-4.12). Les maquettes la retiraient aussi à l'ouverture suivante de l'app ; la règle est ramenée à la seule fermeture, parce que l'ouverture est propre à chaque appareil (deux membres verraient deux listes) et qu'iOS recharge une PWA restée en arrière-plan, ce qui viderait les lignes cochées en plein magasin.
+Une ligne cochée quitte donc la liste à la fermeture de sa session (EF-4.12). Elle ne la quitte pas à l'ouverture suivante de l'app, parce que l'ouverture est propre à chaque appareil (deux membres verraient deux listes) et qu'iOS recharge une PWA restée en arrière-plan, ce qui viderait les lignes cochées en plein magasin.
 
 **Période de la liste.** `resolvePeriod` retient, dans l'ordre :
 
@@ -525,7 +510,7 @@ Une ligne cochée quitte donc la liste à la fermeture de sa session (EF-4.12). 
 
 ## 5. API et synchronisation
 
-**Statut : décidé le 19/10/2026, révisé le 27/10/2026 (v2).**
+**Statut : décidé le 19/10/2026, révisé le 27/10/2026.**
 
 ### 5.1 Principe
 
@@ -609,7 +594,7 @@ Pas d'Edge Function au MVP. Elles n'arriveront qu'avec les notifications et l'im
 
 ## 6. Frontend
 
-**Statut : décidé le 26/10/2026, révisé le 27/10/2026 (v2).**
+**Statut : décidé le 26/10/2026, révisé le 27/10/2026.**
 
 ### 6.1 Structure du projet
 
@@ -777,7 +762,7 @@ La recherche du champ unique (EF-4.9) est implémentée dans `core`, sans dépen
 
 ## 8. Sécurité et données personnelles
 
-**Statut : décidé le 26/10/2026, révisé le 27/10/2026 (v2).**
+**Statut : décidé le 26/10/2026, révisé le 27/10/2026.**
 
 ### 8.1 Données traitées
 
