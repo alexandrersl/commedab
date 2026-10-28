@@ -1,4 +1,4 @@
-# Commedab — Spécifications fonctionnelles v2
+# Commedab — Spécifications fonctionnelles v1
 
 ## 1. Objet du document
 
@@ -8,19 +8,6 @@ Le présent document définit les spécifications fonctionnelles de la version m
 | --- | --- | --- |
 | 1.0 | 15/10/2026 | Validée pour cadrage technique |
 | 1.1 | 20/10/2026 | Alignée avec les spécifications techniques (compte, rythme appris, règle RG-5, produits créés à la volée, catégorie différable) |
-| 2.0 | 27/10/2026 | Maquettes v2, résumées ci-dessous |
-
-Changements de la v2 :
-
-- La Liste est l'écran d'accueil : une liste unique et permanente du foyer, toujours groupée par rayon et toujours cochable. Plus d'écran Accueil ni de mode magasin ; les exigences du mode magasin (EF-6.x) rejoignent 6.4.
-- Cocher une ligne enregistre l'achat, décocher le retire. Plus de clôture de liste ni de « Terminer les courses » : les coches espacées de moins de 3 h forment une session de courses, à la fin de laquelle les lignes cochées quittent la liste.
-- Un tap sur une ligne la coche ; un appui long ouvre une mini-feuille (quantité, fiche, « Retirer de la liste ») ; un balayage vers la gauche retire la ligne. Retirer n'enregistre aucun achat ; une ligne non cochée reste simplement sur la liste.
-- La période de la liste n'est plus demandée : 7 jours, puis l'intervalle habituel entre deux sessions de courses ; elle se fixe dans l'onglet Compte.
-- Les suggestions sont regroupées sur une ligne « N suggestions » en fin de liste, qui se déplie en place.
-- « Archiver » devient « Je n'en achète plus ».
-- « Fini » et « il m'en reste » passent dans l'onglet Produits, sous « Il t'en reste sûrement peu ».
-- Nouvel onglet Compte, avec les membres du foyer et l'invitation : un foyer se partage entre plusieurs comptes dès le MVP. L'agrégation anonyme des noms de produits devient un accord explicite, désactivé par défaut.
-- Navigation en quatre onglets : Liste, Produits, Recettes, Compte.
 
 ## 2. Contexte et objectifs
 
@@ -191,8 +178,6 @@ Chaque exigence est identifiée EF-x.y. Les critères d'acceptation en précisen
 | EF-5.5 | Un ingrédient déjà présent sur la liste, sur une ligne non cochée, voit sa quantité cumulée, sans doublon de ligne. | Deux recettes partageant un ingrédient produisent une seule ligne. |
 
 ### 6.6 Compte
-
-Les exigences de l'onglet Compte gardent les identifiants EF-7.x ; les identifiants EF-6.x, ceux du mode magasin de la v1, ne sont pas réattribués.
 
 | Id | Exigence | Critères d'acceptation |
 | --- | --- | --- |
