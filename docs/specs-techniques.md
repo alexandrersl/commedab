@@ -235,6 +235,7 @@ Chaque table porte household_id ; les flèches vont de l'enfant vers la référe
 | id, household\_id | uuid |  |
 | name | text |  |
 | position | integer | ordre de parcours (EF-5.1) |
+| key | text | clé du rayon (7.4), que référence `category_key` dans le catalogue ; unique par household |
 | system\_key | text, nullable | `fresh`, `frozen` pour les rayons système (RG-9), sinon nul |
 
 Le jeu par défaut (7.4) est créé avec le household (5.6).
@@ -554,7 +555,7 @@ Les identifiants étant générés côté client (UUID v7) et les écritures ét
 
 Réduite au strict minimum :
 
-- **Création du household** : trigger Postgres sur `auth.users` à l'inscription, qui crée `household` (`catalog_contribution` vrai), `household_member` et le jeu de rayons par défaut avec leurs `system_key` (7.4). Aucun écran d'initialisation (EF-5.3).
+- **Création du household** : trigger Postgres sur `auth.users` à l'inscription, qui crée `household` (`catalog_contribution` vrai), `household_member` et le jeu de rayons par défaut avec leurs `key` et `system_key` (7.4). Aucun écran d'initialisation (EF-5.3).
 - **Export des données** (EF-5.5) : réalisé côté client depuis SQLite, en JSON, sans fonction serveur ; tout l'historique étant synchronisé (5.3), l'export local est complet. Le fichier contient les produits, les achats, les recettes avec leurs ingrédients et leurs notes, la liste (`list_line` et `list_recipe`, lignes passées comprises) et les rayons dans leur ordre.
 - **Suppression du compte** (EF-5.6) : fonction Postgres `delete_account()` appelée par l'app, qui supprime physiquement le household et toutes ses données, puis l'utilisateur ; l'app vide ensuite sa base locale. Les agrégats anonymes déjà constitués pour le catalogue (7.3) ne contiennent aucune donnée du compte et ne sont pas concernés.
 
@@ -655,7 +656,7 @@ Le catalogue est un **fichier de données livré avec l'application**, dans `pac
 
 ### 7.2 Format
 
-JSON, un fichier par catégorie pour rester relisible, assemblés au build. Schéma vérifié dans `core` par une fonction de validation écrite à la main (aucune dépendance, 6.1) ; une entrée :
+JSON, un fichier par rayon pour rester relisible (`packages/core/catalog/<category_key>.json`), assemblés par `core` au chargement ; les champs facultatifs sont absents plutôt que nuls. Schéma vérifié dans `core` par une fonction de validation écrite à la main (aucune dépendance, 6.1) ; une entrée :
 
 ```json
 {
@@ -688,7 +689,7 @@ Un champ `catalog_version` (entier) est porté par le fichier assemblé et copi�
 
 1. **Génération assistée** : Claude produit un premier jet de 250 à 300 entrées à partir de la liste des catégories, par lots de catégorie, avec consigne de rester générique et de donner des rythmes plausibles pour un adulte en France.
 2. **Relecture manuelle** complète par l'auteur, qui corrige noms, alias et rythmes ; cette relecture est le vrai contrôle de qualité, l'étape 1 ne fait que gagner du temps.
-3. **Tests automatiques** sur le fichier assemblé : identifiants uniques, `category_key` existant, `pack_size` strictement positif, champs de rythme présents ensemble ou absents ensemble, rythmes dans une plage plausible (0,003 à 5 unités/jour, soit d'une unité par an à cinq par jour), aucun doublon de nom normalisé.
+3. **Tests automatiques** sur le fichier assemblé : identifiants uniques, `category_key` existant, `pack_size` strictement positif, champs de rythme présents ensemble ou absents ensemble, rythmes dans une plage plausible (0,003 à 5 unités/jour, soit d'une unité par an à cinq par jour), contenance en g, kg, ml, cl ou l, aucun nom ni alias normalisé porté par deux entrées (un mot tapé désigne au plus une entrée).
 4. **Enrichissement par l'usage** : les produits créés par les utilisateurs sans correspondance catalogue (EF-2.8) sont agrégés côté serveur par une requête sur `product.name_normalized`, exécutée à la main par l'auteur, limitée aux comptes qui ne l'ont pas désactivée (`household.catalog_contribution`, EF-5.4, activée par défaut), ne retenant que les noms présents dans au moins 5 comptes distincts et sans aucun rattachement à un compte. Les plus fréquents sont ajoutés au catalogue, relus comme en 2. Cet usage agrégé est déclaré dans la politique de confidentialité (section 8).
 
 Taille visée au MVP : 250 à 300 entrées, soit l'essentiel des courses courantes en France ; un catalogue trop grand nuit à la recherche plus qu'il n'aide.
@@ -697,17 +698,19 @@ Taille visée au MVP : 250 à 300 entrées, soit l'essentiel des courses courant
 
 Créées pour chaque nouveau compte (5.6) dans l'ordre de parcours d'un hypermarché courant, réordonnables ensuite (EF-5.1) :
 
-1. Hygiène et beauté
-2. Bébé et animaux
-3. Entretien et maison
-4. Fruits et légumes
-5. Boulangerie
-6. Épicerie salée (pâtes, riz, conserves, sauces)
-7. Épicerie sucrée (petit-déjeuner, biscuits, chocolat)
-8. Boissons
-9. Crémerie (lait, yaourts, fromage, œufs) — `system_key: fresh`
-10. Viande, poisson, traiteur — `system_key: fresh`
-11. Surgelés — `system_key: frozen`
+1. Hygiène et beauté — `hygiene-beaute`
+2. Bébé et animaux — `bebe-animaux`
+3. Entretien et maison — `entretien-maison`
+4. Fruits et légumes — `fruits-legumes`
+5. Boulangerie — `boulangerie`
+6. Épicerie salée (pâtes, riz, conserves, sauces) — `epicerie-salee`
+7. Épicerie sucrée (petit-déjeuner, biscuits, chocolat) — `epicerie-sucree`
+8. Boissons — `boissons`
+9. Crémerie (lait, yaourts, fromage, œufs) — `cremerie`, `system_key: fresh`
+10. Viande, poisson, traiteur — `viande-poisson-traiteur`, `system_key: fresh`
+11. Surgelés — `surgeles`, `system_key: frozen`
+
+Le rayon est nommé sans sa parenthèse (« Épicerie salée »). La clé (`category.key`) rattache une entrée du catalogue au rayon du compte. Le jeu est défini par `DEFAULT_CATEGORIES` dans `core` ; le trigger d'inscription (5.6) en garde une copie identique.
 
 Les deux clés système garantissent RG-9 : quel que soit l'ordre choisi par l'utilisateur, les rayons frais et surgelés restent en fin de parcours.
 
@@ -718,7 +721,7 @@ La recherche du panneau Ajouter (EF-2.7), reprise pour les ingrédients d'une re
 - Normalisation commune (minuscules, sans accents, sans ponctuation) des requêtes, des noms de recettes et de produits, des noms et alias du catalogue ; `product.name_normalized` est calculé à l'écriture.
 - Résultats par groupes, dans cet ordre : recettes, produits de l'utilisateur (archivés compris), entrées du catalogue, puis « Créer « … » ». Dans chaque groupe, les noms dont un mot commence par la requête précèdent ceux qui la contiennent ; à égalité, les produits les plus achetés remontent (nombre d'achats).
 - Une entrée du catalogue dont l'utilisateur a déjà tiré un produit (même `catalog_entry_id` ou même nom normalisé) n'est pas proposée une seconde fois.
-- « Créer « … » » est toujours proposé en dernier, sauf si la requête normalisée est exactement le nom d'un produit de l'utilisateur ; si elle est exactement le nom ou un alias d'une entrée du catalogue, le produit est créé depuis cette entrée (EF-2.8).
+- « Créer « … » » est toujours proposé en dernier, sauf si la requête normalisée est exactement le nom d'un produit de l'utilisateur ; si elle est exactement le nom ou un alias d'une entrée du catalogue, le produit est créé depuis cette entrée et prend son nom (EF-2.8), sauf si un produit en est déjà tiré : il est alors créé sans entrée.
 - Avant toute saisie, « Tous tes produits » liste les produits non archivés du plus acheté au moins acheté (EF-2.2).
 - Pas de recherche floue au MVP ; les alias couvrent les variantes courantes. Une tolérance aux fautes (distance de Levenshtein sur les mots courts) est prévue si l'usage montre des échecs de recherche fréquents.
 - Volume : 300 entrées de catalogue et quelques centaines de produits, recherche en mémoire à chaque frappe sans index, sous la milliseconde.
