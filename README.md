@@ -50,8 +50,8 @@ Prérequis : Node 22, pnpm 12.
 
 ```sh
 pnpm install
-cp .env.example .env     # puis renseigner les valeurs publiques
-pnpm check               # formatage, typage, lint, tests — doit passer avant chaque commit
+cp apps/mobile/.env.example apps/mobile/.env  # puis renseigner les valeurs publiques
+pnpm check                                   # formatage, typage, lint, tests — doit passer avant chaque commit
 ```
 
 Lancer l'application en local (web) :
