@@ -1,0 +1,17 @@
+# Règles de synchronisation PowerSync (specs techniques 5.3) : un bucket par household,
+# résolu par household_member, avec tout l'historique du compte.
+bucket_definitions:
+  household:
+    parameters: >
+      select household_id from household_member
+      where user_id = request.user_id()
+    data:
+      - select * from household where id = bucket.household_id
+      - select * from household_member where household_id = bucket.household_id
+      - select * from category where household_id = bucket.household_id
+      - select * from product where household_id = bucket.household_id
+      - select * from recipe where household_id = bucket.household_id
+      - select * from recipe_ingredient where household_id = bucket.household_id
+      - select * from list_line where household_id = bucket.household_id
+      - select * from list_recipe where household_id = bucket.household_id
+      - select * from stock_event where household_id = bucket.household_id
