@@ -3,62 +3,73 @@ export type LocalDateTime = string;
 /** Jour civil local : `2026-10-26`. */
 export type LocalDate = string;
 
-export type UnitKind = 'piece' | 'weight' | 'volume';
-export type Family = 'rhythm' | 'reserve' | 'occasional';
-export type CatalogScaling = 'per_person' | 'per_household';
-export type StockEventType = 'purchased' | 'opened_last' | 'finished' | 'counted';
 export type RateSource = 'declared' | 'learned' | 'catalog' | 'none';
-export type LineDecision = 'accepted' | 'modified' | 'refused_have' | 'refused_stop';
-export type IngredientKind = 'base' | 'specific';
+export type LineOrigin = 'suggestion' | 'manual' | 'recipe';
 
-export interface Household {
-  size: number;
-  /** Période de la liste fixée par l'utilisateur, de 1 à 31 jours ; null = apprise (4.9). */
-  periodDays: number | null;
-}
-
-/** Produit tel que le moteur le lit ; toutes les quantités sont en unités d'achat (RG-1). */
+/**
+ * Produit tel que le moteur le lit. Rythmes, stocks et achats sont en unités du produit, les
+ * lignes de liste et les suggestions en packs de `packSize` unités (RG-1).
+ */
 export interface Product {
   id: string;
-  unitKind: UnitKind;
-  family: Family;
+  /** Unité comptée : « pièce », « bouteille », « kg »… */
+  unitLabel: string;
+  packSize: number;
   declaredQty: number | null;
   declaredPerDays: number | null;
-  safetyStock: number;
-  shelfLifeDays: number | null;
-  catalogRateQty: number | null;
-  catalogLifetimeDays: number | null;
-  catalogScaling: CatalogScaling | null;
+  /** Contenance d'une unité, pour convertir les ingrédients des recettes (4.6). */
+  contentsQty: number | null;
+  contentsUnit: string | null;
+  /** Rythme du catalogue pour une personne : `catalogQty` unités par `catalogPerDays` jours. */
+  catalogQty: number | null;
+  catalogPerDays: number | null;
   archivedAt: LocalDateTime | null;
 }
 
-export interface StockEvent {
+/** Achat : seul événement de stock (`stock_event` de type `purchased`). */
+export interface Purchase {
   id: string;
   productId: string;
-  type: StockEventType;
-  /** Obligatoire pour `purchased` et `counted`. */
-  quantity: number | null;
+  /** Unités achetées. */
+  quantity: number;
   occurredAt: LocalDateTime;
   /** Achat issu d'une ligne d'origine recette, exclu de l'apprentissage (RG-4). */
   fromRecipe: boolean;
-  deletedAt: LocalDateTime | null;
 }
 
-/** Ligne de la liste du foyer, y compris cochée, retirée ou refusée (4.9). */
+/** Ligne de la liste, y compris cochée puis sortie de la liste, ou retirée (4.7). */
 export interface ListLine {
   id: string;
   productId: string;
+  /** Packs. */
   quantity: number;
-  decision: LineDecision | null;
-  /** Date du refus pour une suggestion refusée. */
+  origin: LineOrigin;
+  recipeId: string | null;
+  /** Date de l'ancre d'un ajout manuel (4.4). */
   createdAt: LocalDateTime;
   checkedAt: LocalDateTime | null;
   /** Date du retrait. */
   deletedAt: LocalDateTime | null;
 }
 
+export interface Ingredient {
+  productId: string;
+  /** Nulle pour un ingrédient sans quantité (sel, huile). */
+  quantity: number | null;
+  /** Nulle : unité du produit. */
+  unit: string | null;
+}
+
 export interface Recipe {
   id: string;
-  servings: number;
-  ingredients: readonly { productId: string; quantity: number; kind: IngredientKind }[];
+  ingredients: readonly Ingredient[];
+}
+
+/** Recette ajoutée à la liste, affichée en pastille (4.7). */
+export interface ListRecipe {
+  id: string;
+  recipeId: string;
+  times: number;
+  createdAt: LocalDateTime;
+  deletedAt: LocalDateTime | null;
 }

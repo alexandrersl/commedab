@@ -6,28 +6,24 @@
       "id": "oeufs"
     }
   ],
-  "events": [
+  "purchases": [
     {
       "productId": "oeufs",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-01T08:00:00"
     },
     {
       "productId": "oeufs",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-01T18:00:00"
     },
     {
       "productId": "oeufs",
-      "type": "purchased",
       "quantity": 2,
       "occurredAt": "2026-10-08T10:00:00"
     },
     {
       "productId": "oeufs",
-      "type": "purchased",
       "quantity": 2,
       "occurredAt": "2026-10-15T10:00:00"
     }

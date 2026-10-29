@@ -1,46 +1,54 @@
 import { describe, expect, it } from 'vitest';
 import {
-  applyRecipes,
+  applyRecipe,
   estimateStock,
   InvalidInputError,
   listView,
+  missingIngredients,
   observedIntervals,
+  packUnits,
   productState,
-  resolveFinishedAt,
-  resolvePeriod,
   shoppingSessions,
   suggestForPeriod,
   type ListLine,
   type Product,
+  type Purchase,
   type Rate,
-  type StockEvent,
+  type Recipe,
 } from '../src/index';
 
 const product: Product = {
   id: 'lait',
-  unitKind: 'volume',
-  family: 'rhythm',
+  unitLabel: 'bouteille',
+  packSize: 6,
   declaredQty: null,
   declaredPerDays: null,
-  safetyStock: 1,
-  shelfLifeDays: null,
-  catalogRateQty: null,
-  catalogLifetimeDays: null,
-  catalogScaling: null,
+  contentsQty: 1,
+  contentsUnit: 'l',
+  catalogQty: null,
+  catalogPerDays: null,
   archivedAt: null,
 };
-const purchase: StockEvent = {
-  id: 'e1',
+const purchase: Purchase = {
+  id: 'p1',
   productId: 'lait',
-  type: 'purchased',
-  quantity: 1,
+  quantity: 6,
   occurredAt: '2026-10-01T10:00:00',
   fromRecipe: false,
+};
+const line: ListLine = {
+  id: 'l1',
+  productId: 'lait',
+  quantity: 1,
+  origin: 'manual',
+  recipeId: null,
+  createdAt: '2026-10-01T09:00:00',
+  checkedAt: null,
   deletedAt: null,
 };
 const rate: Rate = { perDay: 1 / 7, source: 'learned', intervalCount: 2 };
-const household = { size: 1, periodDays: null };
 const now = '2026-10-05T10:00:00';
+const products = new Map([[product.id, product]]);
 
 function rejects(run: () => unknown, field: string): void {
   expect(run).toThrow(InvalidInputError);
@@ -49,7 +57,7 @@ function rejects(run: () => unknown, field: string): void {
 
 describe('gardes des fonctions publiques', () => {
   it('accepte une entrée valide', () => {
-    expect(() => productState(product, [purchase], household, now)).not.toThrow();
+    expect(() => productState(product, [purchase], [line], now)).not.toThrow();
   });
 
   it.each([
@@ -61,84 +69,108 @@ describe('gardes des fonctions publiques', () => {
     ['2026-13-01T10:00:00', 'mois inexistant'],
     ['2026-10-05T24:00:00', 'heure 24'],
   ])('refuse la date %s (%s)', (at) => {
-    rejects(() => productState(product, [purchase], household, at), 'now');
-    rejects(() => observedIntervals([{ ...purchase, occurredAt: at }]), 'event[e1].occurredAt');
+    rejects(() => productState(product, [purchase], [], at), 'now');
+    rejects(() => observedIntervals([{ ...purchase, occurredAt: at }]), 'purchase[p1].occurredAt');
+    rejects(
+      () => productState(product, [], [{ ...line, createdAt: at }], now),
+      'listLine[l1].createdAt',
+    );
+    rejects(() => listView({ lines: [], purchases: [], openedAt: at }), 'openedAt');
   });
 
   it.each([-1, Number.NaN, Number.POSITIVE_INFINITY])('refuse la quantité achetée %s', (q) => {
     rejects(
-      () => productState(product, [{ ...purchase, quantity: q }], household, now),
-      'event[e1].quantity',
+      () => productState(product, [{ ...purchase, quantity: q }], [], now),
+      'purchase[p1].quantity',
     );
   });
 
-  it('exige une quantité pour un achat et un relevé', () => {
-    rejects(() => observedIntervals([{ ...purchase, quantity: null }]), 'event[e1].quantity');
+  it('refuse un achat ou une ligne d’un autre produit', () => {
     rejects(
-      () => observedIntervals([{ ...purchase, type: 'counted', quantity: null }]),
-      'event[e1].quantity',
+      () => estimateStock(product, [{ ...purchase, productId: 'pain' }], [], rate, now),
+      'purchase[p1].productId',
     );
-    expect(() =>
-      observedIntervals([{ ...purchase, type: 'finished', quantity: null }]),
-    ).not.toThrow();
-  });
-
-  it('refuse un événement d’un autre produit', () => {
     rejects(
-      () => estimateStock(product, [{ ...purchase, productId: 'pain' }], rate, now),
-      'event[e1].productId',
+      () => estimateStock(product, [], [{ ...line, productId: 'pain' }], rate, now),
+      'listLine[l1].productId',
     );
   });
 
-  it('refuse un produit aux valeurs non finies ou un stock de sécurité négatif', () => {
-    rejects(
-      () => productState({ ...product, shelfLifeDays: Number.NaN }, [], household, now),
-      'product[lait].shelfLifeDays',
-    );
-    rejects(
-      () => productState({ ...product, safetyStock: -1 }, [], household, now),
-      'product[lait].safetyStock',
-    );
+  it.each([0, -6, Number.NaN])('refuse une taille de pack de %s', (packSize) => {
+    rejects(() => productState({ ...product, packSize }, [], [], now), 'product[lait].packSize');
+    rejects(() => packUnits({ ...product, packSize }, 1), 'product[lait].packSize');
   });
 
-  it('refuse un foyer vide, une période fixée hors de 1 à 31 jours et un rythme négatif', () => {
-    rejects(() => productState(product, [], { size: 0, periodDays: null }, now), 'household.size');
-    rejects(() => resolvePeriod({ size: 2, periodDays: 0 }, []), 'household.periodDays');
-    rejects(() => resolvePeriod({ size: 2, periodDays: 32 }, []), 'household.periodDays');
-    rejects(() => resolveFinishedAt([purchase], { ...rate, perDay: -1 }, now), 'rate.perDay');
+  it('refuse un produit aux valeurs non finies et un rythme négatif', () => {
+    rejects(
+      () => productState({ ...product, catalogQty: Number.NaN }, [], [], now),
+      'product[lait].catalogQty',
+    );
+    rejects(
+      () => productState({ ...product, contentsQty: Number.POSITIVE_INFINITY }, [], [], now),
+      'product[lait].contentsQty',
+    );
+    rejects(() => estimateStock(product, [], [], { ...rate, perDay: -1 }, now), 'rate.perDay');
   });
 
   it('refuse une période non entière, une ligne négative ou mal datée', () => {
-    const line: ListLine = {
-      id: 'l1',
-      productId: 'lait',
-      quantity: 1,
-      decision: null,
-      createdAt: now,
-      checkedAt: null,
-      deletedAt: null,
-    };
-    const list = listView([], now);
+    const list = listView({ lines: [], purchases: [], openedAt: now });
     rejects(
       () => suggestForPeriod({ products: [], states: new Map(), periodDays: 1.5, list }),
       'periodDays',
     );
-    rejects(() => listView([{ ...line, quantity: -1 }], now), 'listLine[l1].quantity');
-    rejects(() => listView([{ ...line, checkedAt: '2026-10-05' }], now), 'listLine[l1].checkedAt');
-    rejects(() => shoppingSessions(['2026-10-05T25:00:00']), 'checks[0]');
-  });
-
-  it('refuse une recette sans portion', () => {
-    const recipe = { id: 'curry', servings: 0, ingredients: [] };
+    rejects(
+      () => listView({ lines: [{ ...line, quantity: -1 }], purchases: [], openedAt: now }),
+      'listLine[l1].quantity',
+    );
     rejects(
       () =>
-        applyRecipes({
-          requests: [{ recipe, servings: 2 }],
-          products: new Map(),
-          states: new Map(),
-          listLines: [],
-        }),
-      'recipe[curry].servings',
+        listView({ lines: [{ ...line, checkedAt: '2026-10-05' }], purchases: [], openedAt: now }),
+      'listLine[l1].checkedAt',
     );
+    rejects(() => shoppingSessions(['2026-10-05T25:00:00']), 'purchasedAt[0]');
+    rejects(() => packUnits(product, -1), 'packs');
+  });
+
+  it('refuse une recette comptée un nombre de fois non entier ou nul, ou un ingrédient en double', () => {
+    const recipe: Recipe = {
+      id: 'flan',
+      ingredients: [{ productId: 'lait', quantity: 50, unit: 'cl' }],
+    };
+    const input = { recipe, products, states: new Map() };
+    rejects(() => missingIngredients({ ...input, times: 0 }), 'times');
+    rejects(() => missingIngredients({ ...input, times: 1.5 }), 'times');
+    rejects(() => applyRecipe({ ...input, from: -1, to: 1, listLines: [] }), 'from');
+    rejects(
+      () =>
+        listView({
+          lines: [],
+          listRecipes: [{ id: 'r1', recipeId: 'flan', times: 0, createdAt: now, deletedAt: null }],
+          purchases: [],
+          openedAt: now,
+        }),
+      'listRecipe[r1].times',
+    );
+    const twice = { ...recipe, ingredients: [...recipe.ingredients, ...recipe.ingredients] };
+    rejects(
+      () => missingIngredients({ ...input, recipe: twice, times: 1 }),
+      'recipe[flan].ingredient[lait]',
+    );
+    rejects(
+      () =>
+        missingIngredients({
+          ...input,
+          recipe: { ...recipe, ingredients: [{ productId: 'lait', quantity: -1, unit: null }] },
+          times: 1,
+        }),
+      'recipe[flan].ingredient[lait].quantity',
+    );
+  });
+});
+
+describe('quantité de l’achat créé à la coche (5.3 FS)', () => {
+  it('vaut les packs de la ligne × la taille du pack', () => {
+    expect(packUnits(product, 2)).toBe(12);
+    expect(packUnits({ ...product, packSize: 0.25 }, 3)).toBe(0.75);
   });
 });

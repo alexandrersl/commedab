@@ -1,42 +1,36 @@
 {
   "id": "T10",
-  "scenario": "Achats provenant de lignes recette",
+  "scenario": "Achats provenant de lignes recette : exclus du rythme, comptés dans le stock",
   "products": [
     {
-      "id": "lait",
-      "unitKind": "volume"
+      "id": "lait"
     }
   ],
-  "events": [
+  "purchases": [
     {
       "productId": "lait",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-01T10:00:00"
     },
     {
       "productId": "lait",
-      "type": "purchased",
       "quantity": 2,
       "occurredAt": "2026-10-04T10:00:00",
       "fromRecipe": true
     },
     {
       "productId": "lait",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-08T10:00:00"
     },
     {
       "productId": "lait",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-11T10:00:00",
       "fromRecipe": true
     },
     {
       "productId": "lait",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-15T10:00:00"
     }
@@ -52,6 +46,12 @@
     },
     "intervals": {
       "lait": [7, 7]
+    },
+    "states": {
+      "lait": {
+        "stock": "27/7",
+        "anchorAt": "2026-10-01T10:00:00"
+      }
     }
   }
 }

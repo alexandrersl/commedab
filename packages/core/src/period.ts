@@ -1,7 +1,6 @@
 import { dayNumber } from './date';
-import { checkDateTime, checkHousehold } from './guard';
+import { checkDateTime } from './guard';
 import { median } from './median';
-import type { Household } from './model';
 import type { ShoppingSession } from './session';
 
 export const DEFAULT_PERIOD_DAYS = 7;
@@ -12,23 +11,18 @@ const MAX_PERIOD_DAYS = 31;
 
 export interface Period {
   days: number;
-  source: 'declared' | 'learned' | 'default';
+  source: 'learned' | 'default';
   /** Intervalles entre jours de courses entrés dans la médiane, pour une période apprise. */
   intervalCount: number;
 }
 
 /**
- * Période de la liste (specs techniques 4.9) : fixée par l'utilisateur, sinon médiane des
- * cinq derniers intervalles entre jours de courses, sinon 7 jours. Deux sessions du même jour
- * comptent pour un seul jour de courses.
+ * Période de la liste (specs techniques 4.7) : médiane des cinq derniers intervalles entre
+ * jours de courses, sinon 7 jours. Deux sessions du même jour comptent pour un seul jour de
+ * courses.
  */
-export function resolvePeriod(household: Household, sessions: readonly ShoppingSession[]): Period {
-  checkHousehold(household);
+export function resolvePeriod(sessions: readonly ShoppingSession[]): Period {
   sessions.forEach((session, i) => checkDateTime(`sessions[${i}].startedAt`, session.startedAt));
-  if (household.periodDays !== null) {
-    return { days: household.periodDays, source: 'declared', intervalCount: 0 };
-  }
-
   const days = [...new Set(sessions.map((session) => dayNumber(session.startedAt)))].sort(
     (a, b) => a - b,
   );

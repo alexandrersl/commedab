@@ -1,35 +1,31 @@
 {
   "id": "T02",
-  "scenario": "2 achats seulement, pas de rythme déclaré, catalogue 0,5/pers/jour, foyer de 2",
-  "household": {
-    "size": 2
-  },
+  "scenario": "2 achats seulement, pas de rythme déclaré, catalogue 1 bouteille pour 7 jours",
   "products": [
     {
-      "id": "oeufs",
-      "catalogRateQty": 0.5,
-      "catalogScaling": "per_person"
+      "id": "lait",
+      "unitLabel": "bouteille",
+      "catalogQty": 1,
+      "catalogPerDays": 7
     }
   ],
-  "events": [
+  "purchases": [
     {
-      "productId": "oeufs",
-      "type": "purchased",
-      "quantity": 6,
+      "productId": "lait",
+      "quantity": 1,
       "occurredAt": "2026-10-01T10:00:00"
     },
     {
-      "productId": "oeufs",
-      "type": "purchased",
-      "quantity": 6,
+      "productId": "lait",
+      "quantity": 1,
       "occurredAt": "2026-10-08T10:00:00"
     }
   ],
   "now": "2026-10-10T10:00:00",
   "expected": {
     "rates": {
-      "oeufs": {
-        "perDay": 1,
+      "lait": {
+        "perDay": "1/7",
         "source": "catalog",
         "intervalCount": 0
       }

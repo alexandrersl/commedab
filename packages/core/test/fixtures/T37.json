@@ -2,27 +2,26 @@
   "id": "T37",
   "scenario": "Quatre sessions dont deux le même jour : jours de courses 1er, 6 et 12 octobre",
   "products": [],
-  "events": [],
-  "listLines": [
+  "purchases": [
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-10-01T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-10-01T10:00:00"
     },
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-10-01T20:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-10-01T20:00:00"
     },
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-10-06T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-10-06T10:00:00"
     },
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-10-12T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-10-12T10:00:00"
     }
   ],
   "now": "2026-10-13T10:00:00",

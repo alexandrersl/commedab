@@ -1,0 +1,60 @@
+{
+  "id": "T43",
+  "scenario": "Trois achats hebdomadaires, ajout manuel du produit le 18, nouvel achat le 19 : le stock repart de zéro à l'ajout, le rythme ne voit que les achats",
+  "products": [
+    {
+      "id": "lait"
+    }
+  ],
+  "purchases": [
+    {
+      "productId": "lait",
+      "quantity": 2,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "lait",
+      "quantity": 2,
+      "occurredAt": "2026-10-08T10:00:00"
+    },
+    {
+      "productId": "lait",
+      "quantity": 2,
+      "occurredAt": "2026-10-15T10:00:00"
+    },
+    {
+      "productId": "lait",
+      "quantity": 2,
+      "occurredAt": "2026-10-19T10:00:00"
+    }
+  ],
+  "listLines": [
+    {
+      "productId": "lait",
+      "quantity": 2,
+      "origin": "manual",
+      "createdAt": "2026-10-18T10:00:00",
+      "checkedAt": "2026-10-19T10:00:00"
+    }
+  ],
+  "now": "2026-10-20T10:00:00",
+  "expected": {
+    "intervals": {
+      "lait": [7, 7, 4]
+    },
+    "rates": {
+      "lait": {
+        "perDay": "2/7",
+        "source": "learned",
+        "intervalCount": 3
+      }
+    },
+    "states": {
+      "lait": {
+        "stock": "10/7",
+        "anchorAt": "2026-10-18T10:00:00",
+        "depletionDate": "2026-10-25"
+      }
+    }
+  }
+}

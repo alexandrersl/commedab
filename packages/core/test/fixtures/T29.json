@@ -1,47 +1,43 @@
 {
   "id": "T29",
-  "scenario": "Arrondi au pas de l'unité au-delà de rythme × conservation (RG-2 prime sur RG-10)",
+  "scenario": "Arrondi au pack supérieur : besoin de 0,8 unité en pack de 1, de 7 et de 6 bouteilles en pack de 6",
   "products": [
     {
       "id": "pain-de-mie",
-      "declaredQty": 2,
-      "declaredPerDays": 5,
-      "shelfLifeDays": 2
+      "declaredQty": 0.8,
+      "declaredPerDays": 7
     },
     {
-      "id": "jambon",
-      "unitKind": "weight",
-      "declaredQty": 0.21,
-      "declaredPerDays": 3,
-      "shelfLifeDays": 3
+      "id": "eau",
+      "unitLabel": "bouteille",
+      "packSize": 6,
+      "declaredQty": 1,
+      "declaredPerDays": 1
     },
     {
       "id": "lait",
-      "unitKind": "volume",
-      "declaredQty": 1,
-      "declaredPerDays": 5,
-      "shelfLifeDays": 4
+      "unitLabel": "bouteille",
+      "packSize": 6,
+      "declaredQty": 6,
+      "declaredPerDays": 7
     }
   ],
-  "events": [],
+  "purchases": [],
   "now": "2026-10-01T10:00:00",
   "periodDays": 7,
   "expected": {
     "suggestions": [
       {
         "productId": "pain-de-mie",
-        "quantity": 1,
-        "marked": false
+        "quantity": 1
       },
       {
-        "productId": "jambon",
-        "quantity": 0.3,
-        "marked": false
+        "productId": "eau",
+        "quantity": 2
       },
       {
         "productId": "lait",
-        "quantity": 1,
-        "marked": false
+        "quantity": 1
       }
     ]
   }

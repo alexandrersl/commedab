@@ -1,14 +1,14 @@
 import {
+  listView,
   productState,
-  resolveFinishedAt,
-  resolveRate,
-  type FinishedAt,
-  type Household,
   type ListLine,
+  type ListRecipe,
+  type ListView,
   type LocalDateTime,
   type Product,
   type ProductState,
-  type StockEvent,
+  type Purchase,
+  type Recipe,
 } from '../src/index';
 import type { Fixture, Quantity } from './fixtures/schema';
 
@@ -16,11 +16,11 @@ export type { Fixture, Quantity };
 
 export interface Scenario {
   fixture: Fixture;
-  household: Household;
   products: Product[];
-  events: StockEvent[];
+  purchases: Purchase[];
   listLines: ListLine[];
-  finishedAt: FinishedAt | null;
+  listRecipes: ListRecipe[];
+  recipes: Recipe[];
 }
 
 export function quantity(value: Quantity): number {
@@ -32,66 +32,82 @@ export function quantity(value: Quantity): number {
 
 /** Complète la fixture avec les valeurs par défaut du modèle (specs techniques 3.3). */
 export function scenario(fixture: Fixture): Scenario {
-  const household: Household = { size: 1, periodDays: null, ...fixture.household };
   const products: Product[] = fixture.products.map((product) => ({
-    unitKind: 'piece',
-    family: 'rhythm',
+    unitLabel: 'pièce',
+    packSize: 1,
     declaredQty: null,
     declaredPerDays: null,
-    safetyStock: 1,
-    shelfLifeDays: null,
-    catalogRateQty: null,
-    catalogLifetimeDays: null,
-    catalogScaling: null,
+    contentsQty: null,
+    contentsUnit: null,
+    catalogQty: null,
+    catalogPerDays: null,
     archivedAt: null,
     ...product,
   }));
-  const events: StockEvent[] = fixture.events.map((event, i) => ({
-    id: `e${i + 1}`,
-    quantity: null,
+  const purchases: Purchase[] = fixture.purchases.map((purchase, i) => ({
+    id: `p${i + 1}`,
     fromRecipe: false,
-    deletedAt: null,
-    ...event,
+    ...purchase,
   }));
   const listLines: ListLine[] = (fixture.listLines ?? []).map((line, i) => ({
     id: `l${i + 1}`,
     quantity: 1,
-    decision: null,
+    origin: 'suggestion',
+    recipeId: null,
     createdAt: fixture.now,
     checkedAt: null,
     deletedAt: null,
     ...line,
   }));
-
-  let finishedAt: FinishedAt | null = null;
-  const report = fixture.finishedReport;
-  if (report !== undefined) {
-    const product = products.find((p) => p.id === report.productId);
-    if (product === undefined) throw new Error(`Produit inconnu : ${report.productId}`);
-    const own = events.filter((event) => event.productId === product.id);
-    finishedAt = resolveFinishedAt(own, resolveRate(product, own, household), report.at);
-    events.push({
-      id: `e${events.length + 1}`,
-      productId: product.id,
-      type: 'finished',
+  const listRecipes: ListRecipe[] = (fixture.listRecipes ?? []).map((listRecipe, i) => ({
+    id: `r${i + 1}`,
+    times: 1,
+    createdAt: fixture.now,
+    deletedAt: null,
+    ...listRecipe,
+  }));
+  const recipes: Recipe[] = (fixture.recipes ?? []).map((recipe) => ({
+    id: recipe.id,
+    ingredients: recipe.ingredients.map((ingredient) => ({
       quantity: null,
-      occurredAt: finishedAt.at,
-      fromRecipe: false,
-      deletedAt: null,
-    });
-  }
-  return { fixture, household, products, events, listLines, finishedAt };
+      unit: null,
+      ...ingredient,
+    })),
+  }));
+  return { fixture, products, purchases, listLines, listRecipes, recipes };
 }
 
-export function eventsOf(events: readonly StockEvent[], productId: string): StockEvent[] {
-  return events.filter((event) => event.productId === productId);
+export function ofProduct<T extends { productId: string }>(
+  items: readonly T[],
+  productId: string,
+): T[] {
+  return items.filter((item) => item.productId === productId);
 }
 
 export function statesOf(
-  s: Pick<Scenario, 'products' | 'events' | 'household'>,
+  s: Pick<Scenario, 'products' | 'purchases' | 'listLines'>,
   now: LocalDateTime,
 ): Map<string, ProductState> {
   return new Map(
-    s.products.map((p) => [p.id, productState(p, eventsOf(s.events, p.id), s.household, now)]),
+    s.products.map((p) => [
+      p.id,
+      productState(p, ofProduct(s.purchases, p.id), ofProduct(s.listLines, p.id), now),
+    ]),
   );
+}
+
+export function viewOf(s: Scenario): ListView {
+  return listView({
+    lines: s.listLines,
+    listRecipes: s.listRecipes,
+    recipes: s.recipes,
+    purchases: s.purchases,
+    openedAt: s.fixture.openedAt ?? s.fixture.now,
+  });
+}
+
+export function recipeOf(s: Scenario, recipeId: string): Recipe {
+  const recipe = s.recipes.find((r) => r.id === recipeId);
+  if (recipe === undefined) throw new Error(`Recette inconnue : ${recipeId}`);
+  return recipe;
 }
