@@ -455,7 +455,7 @@ Les tests sont écrits avant le moteur, sous forme de fixtures JSON (produits, a
 | T11 | Produit archivé (« Je n'en achète plus ») | jamais suggéré |
 | T13 | 15 jours sans ouverture de l'app | stock décroît normalement, suggestions au retour (évolution « pause » hors MVP) |
 | T14 | Recette dont un ingrédient est en stock suffisant | seuls les manquants sont ajoutés, arrondis au pack |
-| T15 | Recette dont un ingrédient manquant est déjà sur la liste | une seule ligne, quantité cumulée, `recipe_id` posé |
+| T15 | Recette dont des ingrédients manquants sont déjà sur la liste, dont un pour une autre recette | une seule ligne par produit, quantités cumulées |
 | T17 | Rythme appris sur 2 intervalles, 4 × la valeur catalogue | borné à 2 × catalogue |
 | T22 | Valeur catalogue 0 ou négative (4.3) | ignorée : rythme appris sans borne, ou aucun rythme |
 | T23 | Rythme déclaré de 0 unité (4.3) | ignoré : rythme catalogue ou appris |
