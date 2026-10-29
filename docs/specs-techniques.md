@@ -547,7 +547,7 @@ Les identifiants étant générés côté client (UUID v7) et les écritures ét
 
 | Règle | Mise en œuvre |
 | --- | --- |
-| Achat à la coche idempotent (EF-1.3) | L'`id` de l'achat créé en cochant une ligne est l'UUID v5 de `list_line.id`. Cocher crée l'achat (`upsert`), avec `occurred_at` = `checked_at` et `quantity` = `packUnits` de la ligne ; décocher le supprime (`delete`) ; recocher le recrée sous le même `id` ; modifier la quantité d'une ligne cochée met à jour l'achat. Deux appareils qui cochent la même ligne produisent le même achat, conservé une seule fois ; la dernière écriture fixe l'état |
+| Achat à la coche idempotent (EF-1.3) | L'`id` de l'achat créé en cochant une ligne est l'UUID v5 de `list_line.id`, dans l'espace de noms fixe `23413ee3-7a41-418c-a1b0-0f22dda93851`. Cocher crée l'achat (`upsert`), avec `occurred_at` = `checked_at` et `quantity` = `packUnits` de la ligne ; décocher le supprime (`delete`) ; recocher le recrée sous le même `id` ; modifier la quantité d'une ligne cochée met à jour l'achat. Deux appareils qui cochent la même ligne produisent le même achat, conservé une seule fois ; la dernière écriture fixe l'état |
 | Suppressions | Privilège `delete` accordé sur `stock_event` seulement (3.2), la politique RLS de chaque table couvrant lecture et écriture ; les autres tables n'ont que des suppressions logiques, et les produits que l'archivage (`archived_at`, RG-7) |
 | Rattachement au household | RLS : `household_id in (select household_id from household_member where user_id = auth.uid())`, lecture et écriture ; `household_member` lisible par son compte, écrit uniquement par le trigger d'inscription (5.6) ; `household` et `category` créés par ce même trigger, le client ne faisant que les mettre à jour (`catalog_contribution`, ordre des rayons) |
 | Un compte, un household | Index unique sur `household_member.user_id` |
@@ -595,15 +595,28 @@ repo/
 | Styles | NativeWind (Tailwind pour React Native) | Même syntaxe sur les trois cibles, bien connue des modèles de génération de code |
 | Listes | FlashList | Longues listes de produits sans saccade (ENF-3) |
 | Icônes | Lucide (`lucide-react-native`) | Jeu cohérent, fonctionne sur web |
-| État | Requêtes réactives PowerSync (`useQuery`) pour les données ; Zustand pour l'état d'interface seulement (filtre, onglet, brouillon de saisie) | Pas de store global des données : SQLite est la source, les écrans s'abonnent |
+| État | Requêtes réactives de `data` (`watch`, 6.2), consommées par des hooks de `mobile` ; Zustand pour l'état d'interface seulement (filtre, onglet, brouillon de saisie) | Pas de store global des données : SQLite est la source, les écrans s'abonnent |
 | Formulaires | Aucune bibliothèque : champs contrôlés, validation dans `core` | Un seul champ obligatoire par formulaire (ENF-8) |
 
 ### 6.2 Couche d'accès aux données
 
-`packages/data` expose des **dépôts par entité** (`products`, `purchases`, `list`, `recipes`, `categories`, `account`) avec deux faces :
+`packages/data` expose, par `createData`, des **dépôts par entité** (`list`, `products`, `purchases`, `recipes`, `categories`, `account`) avec deux faces :
 
-- des **requêtes réactives** (`watchProducts()`, `watchList()`) qui renvoient un flux mis à jour à chaque écriture locale ou synchronisation ;
-- des **commandes** (`checkLine`, `uncheckLine`, `setLineQuantity`, `removeLine`, `addProduct`, `createProduct`, `acceptSuggestion`, `stopBuying`, `setRecipeTimes`, `deleteRecipe`, `editPurchase`, `deletePurchase`, `moveCategory`, `setCatalogContribution`) qui écrivent dans SQLite dans une transaction et appliquent les règles de 3.3 et 5.5 : achat créé, supprimé ou mis à jour avec la coche d'une ligne, pour la quantité rendue par `packUnits` ; ajout d'un produit déjà présent qui incrémente sa ligne, et d'un produit archivé qui le réactive (EF-2.9, EF-2.10) ; lignes d'une recette rendues par `applyRecipe`. Une commande ne contient aucune formule : tout calcul vient de `core`.
+- une **requête réactive** par dépôt (`watch`), qui rend les données dans le modèle de `core` à l'abonnement puis à chaque écriture locale ou synchronisation, et rend son désabonnement ; `mobile` en fait des hooks, sans dépendre de PowerSync ;
+- des **commandes** qui écrivent dans SQLite dans une transaction et appliquent les règles de 3.3 et 5.5 :
+
+| Dépôt | Commandes |
+| --- | --- |
+| `list` | `addProduct`, `acceptSuggestion`, `checkLine`, `uncheckLine`, `setLineQuantity`, `removeLine`, `setRecipeTimes` |
+| `products` | `createProduct`, `updateProduct`, `stopBuying` |
+| `purchases` | `editPurchase`, `deletePurchase`, `restorePurchase` |
+| `recipes` | `saveRecipe`, `deleteRecipe`, `restoreRecipe` |
+| `categories` | `moveCategory` |
+| `account` | `setCatalogContribution`, `exportData` |
+
+Cocher, décocher, changer la quantité d'une ligne cochée ou la retirer crée, supprime ou met à jour son achat, pour la quantité rendue par `packUnits`. Ajouter un produit déjà présent incrémente sa ligne, et un produit archivé le réactive (EF-2.9, EF-2.10). Décocher une ligne dont le produit a été remis sur la liste entre-temps la fond dans la nouvelle ligne, pour qu'un produit n'ait jamais deux lignes non cochées. Les lignes d'une recette sont celles que rend `applyRecipe`. Supprimer un achat ou une recette rend de quoi l'annuler (`restorePurchase`, `restoreRecipe`) le temps du message éphémère. Une commande ne contient aucune formule : tout calcul vient de `core`.
+
+`openAppDatabase` ouvre la base de l'application, la connecte au compte de la session Supabase par le connecteur (5.4), la vide à la déconnexion et publie l'état de synchro de l'en-tête (6.5).
 
 La Liste passe à `listView` (4.7) les lignes, les recettes de la liste avec leurs ingrédients, les achats et la date d'ouverture de l'application, que `mobile` relève au démarrage et à chaque retour au premier plan ; seules les lignes affichées sont rendues, `resolvePeriod` donne la période et `suggestForPeriod` reçoit la vue entière.
 
