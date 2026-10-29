@@ -1,0 +1,167 @@
+[
+  {
+    "id": "couches",
+    "name": "Couches",
+    "aliases": ["couches bebe"],
+    "category_key": "bebe-animaux",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 6
+  },
+  {
+    "id": "lingettes-bebe",
+    "name": "Lingettes bébé",
+    "category_key": "bebe-animaux",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "lait-infantile",
+    "name": "Lait infantile",
+    "aliases": ["lait bebe", "lait en poudre"],
+    "category_key": "bebe-animaux",
+    "unit_label": "boîte",
+    "pack_size": 1,
+    "contents_qty": 800,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "petits-pots",
+    "name": "Petits pots",
+    "aliases": ["pots bebe"],
+    "category_key": "bebe-animaux",
+    "unit_label": "pot",
+    "pack_size": 2,
+    "contents_qty": 200,
+    "contents_unit": "g",
+    "rate_qty": 2,
+    "rate_per_days": 1
+  },
+  {
+    "id": "cereales-bebe",
+    "name": "Céréales bébé",
+    "category_key": "bebe-animaux",
+    "unit_label": "boîte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "gourdes-de-compote",
+    "name": "Gourdes de compote",
+    "aliases": ["compotes a boire"],
+    "category_key": "bebe-animaux",
+    "unit_label": "pièce",
+    "pack_size": 4,
+    "rate_qty": 1,
+    "rate_per_days": 1
+  },
+  {
+    "id": "liniment",
+    "name": "Liniment",
+    "category_key": "bebe-animaux",
+    "unit_label": "flacon",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "gel-lavant-bebe",
+    "name": "Gel lavant bébé",
+    "category_key": "bebe-animaux",
+    "unit_label": "flacon",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "serum-physiologique",
+    "name": "Sérum physiologique",
+    "aliases": ["dosettes"],
+    "category_key": "bebe-animaux",
+    "unit_label": "boîte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "croquettes-chat",
+    "name": "Croquettes pour chat",
+    "aliases": ["croquettes"],
+    "category_key": "bebe-animaux",
+    "unit_label": "sac",
+    "pack_size": 1,
+    "contents_qty": 2,
+    "contents_unit": "kg",
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "croquettes-chien",
+    "name": "Croquettes pour chien",
+    "category_key": "bebe-animaux",
+    "unit_label": "sac",
+    "pack_size": 1,
+    "contents_qty": 4,
+    "contents_unit": "kg",
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "patee-chat",
+    "name": "Pâtée pour chat",
+    "aliases": ["sachets chat"],
+    "category_key": "bebe-animaux",
+    "unit_label": "sachet",
+    "pack_size": 12,
+    "contents_qty": 85,
+    "contents_unit": "g",
+    "rate_qty": 2,
+    "rate_per_days": 1
+  },
+  {
+    "id": "patee-chien",
+    "name": "Pâtée pour chien",
+    "category_key": "bebe-animaux",
+    "unit_label": "boîte",
+    "pack_size": 6,
+    "contents_qty": 400,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 1
+  },
+  {
+    "id": "litiere",
+    "name": "Litière",
+    "aliases": ["litiere chat"],
+    "category_key": "bebe-animaux",
+    "unit_label": "sac",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "friandises-animaux",
+    "name": "Friandises pour animaux",
+    "category_key": "bebe-animaux",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "sacs-dejections",
+    "name": "Sacs à déjections",
+    "aliases": ["sacs a crottes"],
+    "category_key": "bebe-animaux",
+    "unit_label": "rouleau",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 20
+  }
+]

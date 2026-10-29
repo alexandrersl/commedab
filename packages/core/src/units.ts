@@ -1,4 +1,5 @@
 import type { Product } from './model';
+import { normalizeName as normalize } from './normalize';
 
 type Dimension = 'mass' | 'volume';
 
@@ -11,8 +12,9 @@ const MEASURES: Readonly<Record<string, { dimension: Dimension; factor: number }
   l: { dimension: 'volume', factor: 1000 },
 };
 
-function normalize(unit: string): string {
-  return unit.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+/** Unité de masse ou de volume reconnue par les conversions. */
+export function isMeasure(unit: string): boolean {
+  return MEASURES[normalize(unit)] !== undefined;
 }
 
 /** Mesure d'une unité du produit : sa contenance, ou son unité quand c'est une masse ou un volume. */

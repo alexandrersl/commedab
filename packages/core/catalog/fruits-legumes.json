@@ -1,0 +1,435 @@
+[
+  {
+    "id": "pommes",
+    "name": "Pommes",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "bananes",
+    "name": "Bananes",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "oranges",
+    "name": "Oranges",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "clementines",
+    "name": "Clémentines",
+    "aliases": ["mandarines"],
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "citrons",
+    "name": "Citrons",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "poires",
+    "name": "Poires",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "raisin",
+    "name": "Raisin",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "fraises",
+    "name": "Fraises",
+    "category_key": "fruits-legumes",
+    "unit_label": "barquette",
+    "pack_size": 1,
+    "contents_qty": 500,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "kiwis",
+    "name": "Kiwis",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 2,
+    "rate_per_days": 7
+  },
+  {
+    "id": "avocats",
+    "name": "Avocats",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "peches",
+    "name": "Pêches",
+    "aliases": ["nectarines"],
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "abricots",
+    "name": "Abricots",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "melon",
+    "name": "Melon",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "ananas",
+    "name": "Ananas",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "mangue",
+    "name": "Mangue",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "tomates",
+    "name": "Tomates",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "tomates-cerises",
+    "name": "Tomates cerises",
+    "category_key": "fruits-legumes",
+    "unit_label": "barquette",
+    "pack_size": 1,
+    "contents_qty": 250,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "carottes",
+    "name": "Carottes",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "pommes-de-terre",
+    "name": "Pommes de terre",
+    "aliases": ["patates"],
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 2.5,
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "patates-douces",
+    "name": "Patates douces",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "oignons",
+    "name": "Oignons",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "oignons-rouges",
+    "name": "Oignons rouges",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "ail",
+    "name": "Ail",
+    "aliases": ["tete d ail"],
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "echalotes",
+    "name": "Échalotes",
+    "category_key": "fruits-legumes",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "contents_qty": 500,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "courgettes",
+    "name": "Courgettes",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "aubergines",
+    "name": "Aubergines",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "poivrons",
+    "name": "Poivrons",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "concombre",
+    "name": "Concombre",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "salade",
+    "name": "Salade",
+    "aliases": ["laitue", "batavia"],
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "mache",
+    "name": "Mâche",
+    "aliases": ["salade en sachet"],
+    "category_key": "fruits-legumes",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "epinards",
+    "name": "Épinards",
+    "aliases": ["pousses d epinard"],
+    "category_key": "fruits-legumes",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "champignons",
+    "name": "Champignons",
+    "aliases": ["champignons de paris"],
+    "category_key": "fruits-legumes",
+    "unit_label": "barquette",
+    "pack_size": 1,
+    "contents_qty": 250,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "brocoli",
+    "name": "Brocoli",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "chou-fleur",
+    "name": "Chou-fleur",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "haricots-verts",
+    "name": "Haricots verts",
+    "category_key": "fruits-legumes",
+    "unit_label": "kg",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "poireaux",
+    "name": "Poireaux",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "celeri",
+    "name": "Céleri",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "courge",
+    "name": "Courge",
+    "aliases": ["butternut", "potiron"],
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "betteraves-cuites",
+    "name": "Betteraves cuites",
+    "category_key": "fruits-legumes",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "contents_qty": 500,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "radis",
+    "name": "Radis",
+    "category_key": "fruits-legumes",
+    "unit_label": "botte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "persil",
+    "name": "Persil",
+    "category_key": "fruits-legumes",
+    "unit_label": "botte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "coriandre",
+    "name": "Coriandre",
+    "category_key": "fruits-legumes",
+    "unit_label": "botte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "ciboulette",
+    "name": "Ciboulette",
+    "category_key": "fruits-legumes",
+    "unit_label": "botte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "basilic",
+    "name": "Basilic",
+    "category_key": "fruits-legumes",
+    "unit_label": "pot",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "menthe",
+    "name": "Menthe",
+    "category_key": "fruits-legumes",
+    "unit_label": "botte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "gingembre",
+    "name": "Gingembre",
+    "category_key": "fruits-legumes",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  }
+]

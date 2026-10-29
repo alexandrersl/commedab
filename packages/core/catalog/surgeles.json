@@ -1,0 +1,129 @@
+[
+  {
+    "id": "frites-surgelees",
+    "name": "Frites surgelées",
+    "aliases": ["frites"],
+    "category_key": "surgeles",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "contents_qty": 1,
+    "contents_unit": "kg",
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "legumes-surgeles",
+    "name": "Poêlée de légumes",
+    "aliases": ["legumes surgeles", "poelee"],
+    "category_key": "surgeles",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "haricots-verts-surgeles",
+    "name": "Haricots verts surgelés",
+    "category_key": "surgeles",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "contents_qty": 1,
+    "contents_unit": "kg",
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "epinards-surgeles",
+    "name": "Épinards surgelés",
+    "category_key": "surgeles",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "herbes-surgelees",
+    "name": "Herbes surgelées",
+    "aliases": ["persil surgele"],
+    "category_key": "surgeles",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "fruits-rouges-surgeles",
+    "name": "Fruits rouges surgelés",
+    "aliases": ["framboises surgelees"],
+    "category_key": "surgeles",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "pizza-surgelee",
+    "name": "Pizza surgelée",
+    "aliases": ["pizza"],
+    "category_key": "surgeles",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "plats-cuisines-surgeles",
+    "name": "Plat cuisiné surgelé",
+    "aliases": ["plat surgele"],
+    "category_key": "surgeles",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "poisson-pane",
+    "name": "Poisson pané",
+    "category_key": "surgeles",
+    "unit_label": "boîte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "nuggets",
+    "name": "Nuggets de poulet",
+    "aliases": ["nuggets"],
+    "category_key": "surgeles",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "steaks-haches-surgeles",
+    "name": "Steaks hachés surgelés",
+    "category_key": "surgeles",
+    "unit_label": "boîte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "glace",
+    "name": "Glace",
+    "aliases": ["creme glacee", "sorbet"],
+    "category_key": "surgeles",
+    "unit_label": "pot",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "glacons",
+    "name": "Glaçons",
+    "category_key": "surgeles",
+    "unit_label": "sachet",
+    "pack_size": 1
+  }
+]
