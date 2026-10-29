@@ -1,0 +1,245 @@
+[
+  {
+    "id": "dentifrice",
+    "name": "Dentifrice",
+    "category_key": "hygiene-beaute",
+    "unit_label": "tube",
+    "pack_size": 1,
+    "contents_qty": 75,
+    "contents_unit": "ml",
+    "rate_qty": 1,
+    "rate_per_days": 42
+  },
+  {
+    "id": "brosse-a-dents",
+    "name": "Brosse à dents",
+    "category_key": "hygiene-beaute",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 90
+  },
+  {
+    "id": "fil-dentaire",
+    "name": "Fil dentaire",
+    "category_key": "hygiene-beaute",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 90
+  },
+  {
+    "id": "bain-de-bouche",
+    "name": "Bain de bouche",
+    "category_key": "hygiene-beaute",
+    "unit_label": "flacon",
+    "pack_size": 1,
+    "contents_qty": 500,
+    "contents_unit": "ml",
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "gel-douche",
+    "name": "Gel douche",
+    "category_key": "hygiene-beaute",
+    "unit_label": "flacon",
+    "pack_size": 1,
+    "contents_qty": 250,
+    "contents_unit": "ml",
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "savon",
+    "name": "Savon",
+    "aliases": ["savonnette"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "savon-liquide",
+    "name": "Savon liquide",
+    "aliases": ["savon mains"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "flacon",
+    "pack_size": 1,
+    "contents_qty": 300,
+    "contents_unit": "ml",
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "shampoing",
+    "name": "Shampoing",
+    "aliases": ["shampooing"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "flacon",
+    "pack_size": 1,
+    "contents_qty": 250,
+    "contents_unit": "ml",
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "apres-shampoing",
+    "name": "Après-shampoing",
+    "aliases": ["apres shampooing"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "flacon",
+    "pack_size": 1,
+    "contents_qty": 200,
+    "contents_unit": "ml",
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "deodorant",
+    "name": "Déodorant",
+    "aliases": ["deo"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "papier-toilette",
+    "name": "Papier toilette",
+    "aliases": ["pq", "papier wc", "papier hygienique"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "rouleau",
+    "pack_size": 12,
+    "rate_qty": 1,
+    "rate_per_days": 4
+  },
+  {
+    "id": "mouchoirs",
+    "name": "Mouchoirs",
+    "aliases": ["kleenex", "mouchoirs en papier"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "boîte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "coton-tiges",
+    "name": "Coton-tiges",
+    "aliases": ["cotons tiges"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "boîte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "cotons-demaquillants",
+    "name": "Cotons démaquillants",
+    "aliases": ["coton"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "lingettes-demaquillantes",
+    "name": "Lingettes démaquillantes",
+    "category_key": "hygiene-beaute",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "rasoirs-jetables",
+    "name": "Rasoirs jetables",
+    "aliases": ["rasoir"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "lames-de-rasoir",
+    "name": "Lames de rasoir",
+    "category_key": "hygiene-beaute",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "mousse-a-raser",
+    "name": "Mousse à raser",
+    "aliases": ["gel a raser"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "creme-hydratante",
+    "name": "Crème hydratante",
+    "aliases": ["creme visage", "creme pour le corps"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "pot",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "protections-periodiques",
+    "name": "Protections périodiques",
+    "aliases": ["serviettes hygieniques", "tampons"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "gel-coiffant",
+    "name": "Gel coiffant",
+    "aliases": ["cire coiffante"],
+    "category_key": "hygiene-beaute",
+    "unit_label": "pot",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "creme-solaire",
+    "name": "Crème solaire",
+    "category_key": "hygiene-beaute",
+    "unit_label": "tube",
+    "pack_size": 1
+  },
+  {
+    "id": "pansements",
+    "name": "Pansements",
+    "category_key": "hygiene-beaute",
+    "unit_label": "boîte",
+    "pack_size": 1
+  },
+  {
+    "id": "gel-hydroalcoolique",
+    "name": "Gel hydroalcoolique",
+    "category_key": "hygiene-beaute",
+    "unit_label": "flacon",
+    "pack_size": 1
+  },
+  {
+    "id": "dissolvant",
+    "name": "Dissolvant",
+    "category_key": "hygiene-beaute",
+    "unit_label": "flacon",
+    "pack_size": 1
+  }
+]

@@ -1,0 +1,241 @@
+[
+  {
+    "id": "jambon-blanc",
+    "name": "Jambon blanc",
+    "aliases": ["jambon"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "tranche",
+    "pack_size": 4,
+    "rate_qty": 4,
+    "rate_per_days": 7
+  },
+  {
+    "id": "jambon-cru",
+    "name": "Jambon cru",
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "barquette",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "blanc-de-dinde",
+    "name": "Blanc de dinde",
+    "aliases": ["dinde"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "tranche",
+    "pack_size": 4,
+    "rate_qty": 2,
+    "rate_per_days": 7
+  },
+  {
+    "id": "lardons",
+    "name": "Lardons",
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "barquette",
+    "pack_size": 1,
+    "contents_qty": 200,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "filets-de-poulet",
+    "name": "Filets de poulet",
+    "aliases": ["blanc de poulet", "poulet"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "barquette",
+    "pack_size": 1,
+    "contents_qty": 400,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "poulet-entier",
+    "name": "Poulet entier",
+    "aliases": ["poulet roti"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "steaks-haches",
+    "name": "Steaks hachés",
+    "aliases": ["steak hache"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "pièce",
+    "pack_size": 2,
+    "contents_qty": 100,
+    "contents_unit": "g",
+    "rate_qty": 2,
+    "rate_per_days": 7
+  },
+  {
+    "id": "viande-hachee",
+    "name": "Viande hachée",
+    "aliases": ["boeuf hache"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "barquette",
+    "pack_size": 1,
+    "contents_qty": 500,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "saucisses",
+    "name": "Saucisses",
+    "aliases": ["merguez", "chipolatas"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "pièce",
+    "pack_size": 6,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "saucisses-strasbourg",
+    "name": "Saucisses de Strasbourg",
+    "aliases": ["knacks"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "cotes-de-porc",
+    "name": "Côtes de porc",
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "pièce",
+    "pack_size": 2,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "paves-de-saumon",
+    "name": "Pavés de saumon",
+    "aliases": ["saumon"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "pièce",
+    "pack_size": 2,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "saumon-fume",
+    "name": "Saumon fumé",
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "cabillaud",
+    "name": "Filets de cabillaud",
+    "aliases": ["cabillaud", "poisson blanc"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "pièce",
+    "pack_size": 2,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "crevettes",
+    "name": "Crevettes",
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "barquette",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "surimi",
+    "name": "Surimi",
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "saucisson",
+    "name": "Saucisson",
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "chorizo",
+    "name": "Chorizo",
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "pate",
+    "name": "Pâté",
+    "aliases": ["terrine"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "pot",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "rillettes",
+    "name": "Rillettes",
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "pot",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "houmous",
+    "name": "Houmous",
+    "aliases": ["hummus"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "pot",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "taboule",
+    "name": "Taboulé",
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "barquette",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "tofu",
+    "name": "Tofu",
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "contents_qty": 400,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "raviolis-frais",
+    "name": "Raviolis frais",
+    "aliases": ["raviolis", "gnocchis"],
+    "category_key": "viande-poisson-traiteur",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  }
+]

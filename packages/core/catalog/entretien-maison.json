@@ -1,0 +1,245 @@
+[
+  {
+    "id": "liquide-vaisselle",
+    "name": "Liquide vaisselle",
+    "aliases": ["produit vaisselle"],
+    "category_key": "entretien-maison",
+    "unit_label": "flacon",
+    "pack_size": 1,
+    "contents_qty": 500,
+    "contents_unit": "ml",
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "tablettes-lave-vaisselle",
+    "name": "Tablettes lave-vaisselle",
+    "aliases": ["pastilles lave vaisselle"],
+    "category_key": "entretien-maison",
+    "unit_label": "boîte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "sel-lave-vaisselle",
+    "name": "Sel lave-vaisselle",
+    "category_key": "entretien-maison",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "contents_qty": 2,
+    "contents_unit": "kg",
+    "rate_qty": 1,
+    "rate_per_days": 120
+  },
+  {
+    "id": "liquide-de-rincage",
+    "name": "Liquide de rinçage",
+    "category_key": "entretien-maison",
+    "unit_label": "flacon",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 90
+  },
+  {
+    "id": "lessive",
+    "name": "Lessive",
+    "aliases": ["lessive liquide"],
+    "category_key": "entretien-maison",
+    "unit_label": "bidon",
+    "pack_size": 1,
+    "contents_qty": 2,
+    "contents_unit": "l",
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "adoucissant",
+    "name": "Adoucissant",
+    "category_key": "entretien-maison",
+    "unit_label": "bidon",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "detachant",
+    "name": "Détachant",
+    "category_key": "entretien-maison",
+    "unit_label": "flacon",
+    "pack_size": 1
+  },
+  {
+    "id": "essuie-tout",
+    "name": "Essuie-tout",
+    "aliases": ["sopalin", "papier absorbant"],
+    "category_key": "entretien-maison",
+    "unit_label": "rouleau",
+    "pack_size": 4,
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "eponges",
+    "name": "Éponges",
+    "aliases": ["eponge"],
+    "category_key": "entretien-maison",
+    "unit_label": "pièce",
+    "pack_size": 3,
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "sacs-poubelle",
+    "name": "Sacs poubelle",
+    "aliases": ["sacs a dechets"],
+    "category_key": "entretien-maison",
+    "unit_label": "rouleau",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "nettoyant-multi-usages",
+    "name": "Nettoyant multi-usages",
+    "aliases": ["spray menager", "nettoyant"],
+    "category_key": "entretien-maison",
+    "unit_label": "flacon",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "eau-de-javel",
+    "name": "Eau de Javel",
+    "aliases": ["javel"],
+    "category_key": "entretien-maison",
+    "unit_label": "bouteille",
+    "pack_size": 1,
+    "contents_qty": 1,
+    "contents_unit": "l",
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "gel-wc",
+    "name": "Gel WC",
+    "aliases": ["nettoyant toilettes"],
+    "category_key": "entretien-maison",
+    "unit_label": "flacon",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "nettoyant-vitres",
+    "name": "Nettoyant vitres",
+    "category_key": "entretien-maison",
+    "unit_label": "flacon",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 120
+  },
+  {
+    "id": "lingettes-menageres",
+    "name": "Lingettes ménagères",
+    "category_key": "entretien-maison",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "vinaigre-menager",
+    "name": "Vinaigre ménager",
+    "aliases": ["vinaigre blanc"],
+    "category_key": "entretien-maison",
+    "unit_label": "bouteille",
+    "pack_size": 1,
+    "contents_qty": 1,
+    "contents_unit": "l",
+    "rate_qty": 1,
+    "rate_per_days": 90
+  },
+  {
+    "id": "bicarbonate",
+    "name": "Bicarbonate de soude",
+    "aliases": ["bicarbonate"],
+    "category_key": "entretien-maison",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "contents_qty": 500,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 120
+  },
+  {
+    "id": "gants-de-menage",
+    "name": "Gants de ménage",
+    "category_key": "entretien-maison",
+    "unit_label": "paire",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "papier-aluminium",
+    "name": "Papier aluminium",
+    "aliases": ["papier alu", "alu"],
+    "category_key": "entretien-maison",
+    "unit_label": "rouleau",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 90
+  },
+  {
+    "id": "film-alimentaire",
+    "name": "Film alimentaire",
+    "aliases": ["film etirable"],
+    "category_key": "entretien-maison",
+    "unit_label": "rouleau",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 90
+  },
+  {
+    "id": "papier-cuisson",
+    "name": "Papier cuisson",
+    "aliases": ["papier sulfurise"],
+    "category_key": "entretien-maison",
+    "unit_label": "rouleau",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 90
+  },
+  {
+    "id": "sacs-congelation",
+    "name": "Sacs congélation",
+    "category_key": "entretien-maison",
+    "unit_label": "boîte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 90
+  },
+  {
+    "id": "piles",
+    "name": "Piles",
+    "category_key": "entretien-maison",
+    "unit_label": "paquet",
+    "pack_size": 1
+  },
+  {
+    "id": "ampoules",
+    "name": "Ampoules",
+    "category_key": "entretien-maison",
+    "unit_label": "pièce",
+    "pack_size": 1
+  },
+  {
+    "id": "allumettes",
+    "name": "Allumettes",
+    "category_key": "entretien-maison",
+    "unit_label": "boîte",
+    "pack_size": 1
+  }
+]

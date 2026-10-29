@@ -1,0 +1,249 @@
+[
+  {
+    "id": "cafe-moulu",
+    "name": "Café moulu",
+    "aliases": ["cafe"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "contents_qty": 250,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "cafe-en-grains",
+    "name": "Café en grains",
+    "category_key": "epicerie-sucree",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "contents_qty": 1,
+    "contents_unit": "kg",
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "capsules-cafe",
+    "name": "Capsules de café",
+    "aliases": ["dosettes cafe"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "capsule",
+    "pack_size": 10,
+    "rate_qty": 2,
+    "rate_per_days": 1
+  },
+  {
+    "id": "the",
+    "name": "Thé",
+    "aliases": ["sachets de the"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "boîte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "infusion",
+    "name": "Infusion",
+    "aliases": ["tisane"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "boîte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "chocolat-en-poudre",
+    "name": "Chocolat en poudre",
+    "aliases": ["cacao"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "boîte",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "cereales",
+    "name": "Céréales",
+    "aliases": ["cereales petit dejeuner"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "contents_qty": 375,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "muesli",
+    "name": "Muesli",
+    "aliases": ["granola"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "flocons-avoine",
+    "name": "Flocons d'avoine",
+    "aliases": ["avoine"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "contents_qty": 500,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "sucre",
+    "name": "Sucre",
+    "aliases": ["sucre en poudre"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "contents_qty": 1,
+    "contents_unit": "kg",
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "sucre-vanille",
+    "name": "Sucre vanillé",
+    "category_key": "epicerie-sucree",
+    "unit_label": "sachet",
+    "pack_size": 10
+  },
+  {
+    "id": "levure-chimique",
+    "name": "Levure chimique",
+    "aliases": ["levure"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "sachet",
+    "pack_size": 6
+  },
+  {
+    "id": "chocolat-patissier",
+    "name": "Chocolat pâtissier",
+    "aliases": ["chocolat noir dessert"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "tablette",
+    "pack_size": 1,
+    "contents_qty": 200,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 60
+  },
+  {
+    "id": "amandes-en-poudre",
+    "name": "Amandes en poudre",
+    "aliases": ["poudre d amande"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "contents_qty": 125,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 90
+  },
+  {
+    "id": "confiture",
+    "name": "Confiture",
+    "category_key": "epicerie-sucree",
+    "unit_label": "pot",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "miel",
+    "name": "Miel",
+    "category_key": "epicerie-sucree",
+    "unit_label": "pot",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 45
+  },
+  {
+    "id": "pate-a-tartiner",
+    "name": "Pâte à tartiner",
+    "aliases": ["nutella"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "pot",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "biscuits",
+    "name": "Biscuits",
+    "aliases": ["gateaux secs", "gateaux"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "madeleines",
+    "name": "Madeleines",
+    "category_key": "epicerie-sucree",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "chocolat-noir",
+    "name": "Chocolat noir",
+    "aliases": ["chocolat"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "tablette",
+    "pack_size": 1,
+    "contents_qty": 100,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "chocolat-au-lait",
+    "name": "Chocolat au lait",
+    "category_key": "epicerie-sucree",
+    "unit_label": "tablette",
+    "pack_size": 1,
+    "contents_qty": 100,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "compote",
+    "name": "Compote",
+    "aliases": ["compotes"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "pot",
+    "pack_size": 4,
+    "rate_qty": 2,
+    "rate_per_days": 7
+  },
+  {
+    "id": "fruits-secs",
+    "name": "Fruits secs",
+    "aliases": ["amandes", "noix", "noisettes", "raisins secs"],
+    "category_key": "epicerie-sucree",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "bonbons",
+    "name": "Bonbons",
+    "category_key": "epicerie-sucree",
+    "unit_label": "sachet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  }
+]

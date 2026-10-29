@@ -1,0 +1,116 @@
+[
+  {
+    "id": "baguette",
+    "name": "Baguette",
+    "aliases": ["pain"],
+    "category_key": "boulangerie",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 2
+  },
+  {
+    "id": "pain-de-campagne",
+    "name": "Pain de campagne",
+    "category_key": "boulangerie",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "pain-complet",
+    "name": "Pain complet",
+    "category_key": "boulangerie",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "pain-aux-cereales",
+    "name": "Pain aux céréales",
+    "category_key": "boulangerie",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "pain-de-mie",
+    "name": "Pain de mie",
+    "category_key": "boulangerie",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "contents_qty": 500,
+    "contents_unit": "g",
+    "rate_qty": 1,
+    "rate_per_days": 10
+  },
+  {
+    "id": "pains-burger",
+    "name": "Pains à burger",
+    "aliases": ["pains hamburger", "buns"],
+    "category_key": "boulangerie",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "tortillas",
+    "name": "Tortillas",
+    "aliases": ["wraps"],
+    "category_key": "boulangerie",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 30
+  },
+  {
+    "id": "biscottes",
+    "name": "Biscottes",
+    "category_key": "boulangerie",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 21
+  },
+  {
+    "id": "croissants",
+    "name": "Croissants",
+    "category_key": "boulangerie",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "pains-au-chocolat",
+    "name": "Pains au chocolat",
+    "aliases": ["chocolatines"],
+    "category_key": "boulangerie",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 7
+  },
+  {
+    "id": "pains-au-lait",
+    "name": "Pains au lait",
+    "category_key": "boulangerie",
+    "unit_label": "paquet",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  },
+  {
+    "id": "brioche",
+    "name": "Brioche",
+    "category_key": "boulangerie",
+    "unit_label": "pièce",
+    "pack_size": 1,
+    "rate_qty": 1,
+    "rate_per_days": 14
+  }
+]

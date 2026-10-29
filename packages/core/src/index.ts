@@ -26,3 +26,21 @@ export {
   type ShoppingSession,
 } from './session';
 export { DEFAULT_PERIOD_DAYS, resolvePeriod, type Period } from './period';
+export { normalizeName } from './normalize';
+export { DEFAULT_CATEGORIES, type DefaultCategory, type SystemKey } from './categories';
+export {
+  CATALOG,
+  CATALOG_VERSION,
+  DEFAULT_UNIT_LABEL,
+  parseCatalog,
+  productDraft,
+  type CatalogEntry,
+  type ProductDraft,
+} from './catalog';
+export {
+  productsByPurchases,
+  search,
+  type SearchableProduct,
+  type SearchableRecipe,
+  type SearchResult,
+} from './search';
