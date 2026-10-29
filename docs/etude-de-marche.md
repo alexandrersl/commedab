@@ -80,7 +80,7 @@ E.Leclerc Drive propose une rubrique « Mes produits habituels » ; Carrefour a 
 
 Les éditeurs eux-mêmes le documentent dans leurs comparatifs : la saisie manuelle est faite avec enthousiasme une semaine, puis une fois, puis plus jamais ; au bout de deux ou trois semaines l'inventaire ne correspond plus à la réalité et chaque suggestion repose sur des produits que l'utilisateur n'a plus. Un inventaire à moitié à jour est pire qu'aucun parce qu'on cesse de lui faire confiance. Les deux parades observées sont le scan de ticket pour l'entrée, et un geste unique pour la sortie. Aucun acteur grand public n'a tenté la troisième voie du projet : ne pas tenir d'inventaire et estimer.
 
-Le second mécanisme d'abandon est l'absence de récompense immédiate : marquer un produit « fini » n'a d'intérêt que si cela produit quelque chose tout de suite. Les apps qui survivent sont celles où l'action a un effet visible. Le choix du projet de suggérer à la planification plutôt que d'ajouter automatiquement doit être compensé par un retour immédiat (« sera proposé à la prochaine liste »), sinon le geste sera abandonné.
+Le second mécanisme d'abandon est l'absence de récompense immédiate : marquer un produit « fini » n'a d'intérêt que si cela produit quelque chose tout de suite. Les apps qui survivent sont celles où l'action a un effet visible. Le projet n'a pas de geste « fini » : son seul signal, ajouter un produit à la liste, a un effet visible immédiat. Le choix de suggérer plutôt que d'ajouter automatiquement doit, lui, être compensé par des suggestions visibles dès l'ouverture du panneau d'ajout, sinon elles seront ignorées.
 
 ### 5.2 Ce que les utilisateurs valorisent
 
@@ -95,7 +95,7 @@ Dans les avis et comparatifs, les critères qui reviennent sont, par ordre : le 
 
 ### 5.4 Contexte démographique français
 
-Selon l'Insee, 33 % des ménages étaient composés d'une seule personne en 2018 et cette part atteindrait 41 % en 2050 ; la taille moyenne des ménages, autour de 2,2 personnes, continue de baisser. Un MVP mono-utilisateur adresse donc un tiers des foyers, et la cible solo ne se résume pas à un cas de test personnel. Les foyers de deux personnes et plus restent majoritaires et attendent le partage : c'est l'évolution n° 2 du cahier des charges, à ne pas repousser trop loin.
+Selon l'Insee, 33 % des ménages étaient composés d'une seule personne en 2018 et cette part atteindrait 41 % en 2050 ; la taille moyenne des ménages, autour de 2,2 personnes, continue de baisser. Un MVP mono-utilisateur adresse donc un tiers des foyers, et la cible solo ne se résume pas à un cas de test personnel. Les foyers de deux personnes et plus restent majoritaires et attendent le partage : c'est l'évolution n° 6 du cahier des charges, à ne pas repousser trop loin.
 
 ## 6. Positionnement du projet
 
@@ -103,14 +103,14 @@ Selon l'Insee, 33 % des ménages étaient composés d'une seule personne en 2018
 
 | Capacité | Bring! / Listonic | Apple Rappels | Jow | KitchenPal / NoWaste | Fango / Expireless | Grocy | L1st.ai | Projet (MVP) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Liste partagée temps réel | Oui | Oui | Non | Oui | Oui | Oui | Oui | Non (évolution 2) |
+| Liste partagée temps réel | Oui | Oui | Non | Oui | Oui | Oui | Oui | Non (évolution 6) |
 | Tri par rayon | Oui | Oui, automatique | Oui | Oui | Oui | Oui | Oui | Oui |
 | Hors ligne en magasin | Partiel | Oui | Non | Partiel | Oui | Non | ? | Oui |
 | Sans inventaire initial | Oui | Oui | Oui | Non | Non, ticket | Non | Oui | Oui |
 | Stock connu | Non | Non | Non | Déclaré | Déclaré par ticket | Déclaré par transactions | Non | Estimé |
 | Rythme de consommation appris | Non | Non | Non | Non | Non | Non | Oui, fréquence | Oui, déclaré ou appris |
 | Suggestions « va manquer » | Génériques | Non | Non | Sur stock déclaré | Sur stock déclaré | Sur minimum déclaré | Oui | Oui, avec justification |
-| Période de couverture | Non | Non | Semaine | Non | Non | Non | Non | 1 à 31 jours |
+| Période de couverture | Non | Non | Semaine | Non | Non | Non | Non | Apprise, 2 à 31 jours |
 | Recettes nettes du stock | Non | Non | Non | Oui, sur stock déclaré | Partiel | Oui | Non | Oui, sur stock estimé |
 | Correction en un geste | s.o. | s.o. | s.o. | Non | Oui | Non | ? | Oui |
 | Gratuit, sans pub, sans compte obligatoire | Pub | Oui | Enseignes | Freemium | Freemium | Oui, auto-hébergé | Abonnement | À décider |
@@ -119,15 +119,15 @@ Selon l'Insee, 33 % des ménages étaient composés d'une seule personne en 2018
 
 Trois éléments ne se trouvent réunis nulle part et constituent la proposition de valeur :
 
-1. **Stock estimé sans saisie**, à partir des achats validés et d'un rythme appris, corrigé par des événements discrets. C'est l'inverse exact du modèle dominant (inventaire déclaré), et la réponse directe à la cause d'abandon n° 1.
-2. **Période de couverture** : la question « pour combien de jours ? » n'existe dans aucune app étudiée, alors qu'elle change tout entre une course quotidienne et un plein mensuel.
-3. **Recettes nettes du stock estimé**, avec distinction ingrédients de base et spécifiques, sans exiger d'inventaire. Grocy et KitchenPal le font, mais sur un stock déclaré.
+1. **Stock estimé sans saisie**, à partir des achats et d'un rythme appris, recalé par les ajouts manuels à la liste. C'est l'inverse exact du modèle dominant (inventaire déclaré), et la réponse directe à la cause d'abandon n° 1.
+2. **Période de couverture** : la question « pour combien de jours ? » n'existe dans aucune app étudiée, alors qu'elle change tout entre une course quotidienne et un plein mensuel. Le projet y répond sans la poser, en l'apprenant du rythme des courses.
+3. **Recettes nettes du stock estimé** : seuls les ingrédients qui manquent partent sur la liste, sans exiger d'inventaire. Grocy et KitchenPal le font, mais sur un stock déclaré.
 
 S'y ajoutent deux choix de conception qui sont des différenciateurs d'usage plutôt que de fonction : la divulgation progressive (l'app reste une liste simple tant que l'utilisateur ne veut pas plus) et la justification de chaque suggestion, absente de toutes les apps « intelligentes » observées.
 
 ### 6.3 Ce qui n'est pas différenciant
 
-Tri par rayon, catalogue de produits, saisie rapide, mode magasin, recettes personnelles : ce sont des prérequis que Bring!, Listonic et Apple Rappels font gratuitement et bien. Le projet doit les faire au niveau, mais aucun utilisateur ne changera d'app pour cela. La famille « à réserve » avec stock de sécurité existe chez Grocy (quantité minimale) et Panzy (stock bas) ; elle est nécessaire, pas distinctive.
+Tri par rayon, catalogue de produits, saisie rapide, liste utilisable en magasin, recettes personnelles : ce sont des prérequis que Bring!, Listonic et Apple Rappels font gratuitement et bien. Le projet doit les faire au niveau, mais aucun utilisateur ne changera d'app pour cela.
 
 ## 7. Menaces et risques de marché
 
@@ -137,7 +137,7 @@ Tri par rayon, catalogue de produits, saisie rapide, mode magasin, recettes pers
 | Apple ou Google intègrent la suggestion de réassort dans Rappels ou Keep | Moyenne | Fort | Apple a déjà pris le tri par rayon. Une suggestion « vous achetez du lait chaque semaine » est à leur portée. |
 | Jow étend ses « produits du quotidien » à un vrai modèle de consommation | Moyenne | Moyen | Jow a le foyer, l'historique de commande drive et les quantités ; mais son modèle dépend des enseignes partenaires et du drive, pas du magasin physique. |
 | Les apps à scan de ticket ajoutent l'estimation de consommation | Moyenne | Moyen | Fango suggère déjà ce qui va manquer sur stock déclaré ; coupler ticket et rythme serait naturel. Elles restent dépendantes de l'OCR et d'un compte. |
-| Le marché ne veut pas d'une app de plus : la liste simple suffit | Élevée | Fort | C'est le risque principal. Il ne se lève que par la preuve que les suggestions font gagner du temps : d'où le critère de 80 % de suggestions acceptées. |
+| Le marché ne veut pas d'une app de plus : la liste simple suffit | Élevée | Fort | C'est le risque principal. Il ne se lève que par la preuve, à l'usage, que les suggestions font gagner du temps. |
 | Faible fiabilité perçue des suggestions le premier mois | Élevée | Fort | Documenté chez Ocado Regulars : une prédiction médiocre est pire qu'aucune. Le démarrage à froid doit être géré par le catalogue et la justification des suggestions. |
 
 Aucune de ces menaces n'invalide le projet en tant que projet personnel ou d'apprentissage ; elles bornent son potentiel en tant que produit : la fenêtre existe, elle n'est pas défendable par la fonction seule.
@@ -154,23 +154,21 @@ Aucune de ces menaces n'invalide le projet en tant que projet personnel ou d'app
 
 | Sujet | Proposition | Origine |
 | --- | --- | --- |
-| Retour immédiat sur un événement | Afficher, à la validation d'un « fini », une confirmation « proposé à la prochaine liste », avec la date prévue de la prochaine course si connue. | Cause d'abandon n° 2 (5.1) |
 | Apprentissage de l'ordre des rayons | Mémoriser l'ordre dans lequel l'utilisateur coche en magasin et proposer de réordonner les catégories en conséquence. Peu coûteux, différenciant au quotidien. | Grocery (iOS), Capitan |
-| Produits ponctuels | Remplacer le marquage explicite « ponctuel » par une détection : un produit acheté moins de trois fois ou avec un écart d'achat très irrégulier n'est jamais suggéré. L'utilisateur ne doit pas avoir à classer. | ENF-8, retours sur la charge de paramétrage |
-| Partage | Garder hors MVP, mais concevoir le modèle de données avec un « foyer » dès le départ (toute donnée rattachée au foyer, pas à l'utilisateur) pour que l'évolution 2 ne soit pas une migration. | 5.2, 5.4 |
+| Partage | Garder hors MVP, mais concevoir le modèle de données avec un « foyer » dès le départ (toute donnée rattachée au foyer, pas à l'utilisateur) pour que l'évolution 6 ne soit pas une migration. | 5.2, 5.4 |
 | Import d'achats | Ajouter aux évolutions un import des commandes drive (export ou e-ticket) comme accélérateur d'historique, avant le scan de ticket par OCR, plus fragile. | 4.6, 4.9 |
-| Justification des suggestions | Déjà prévue (EF-4.8) ; la rendre centrale dans l'interface de planification, c'est l'argument de confiance que personne d'autre n'offre. | 6.2 |
+| Justification des suggestions | Déjà prévue (EF-2.5) ; la rendre centrale dans le panneau d'ajout, c'est l'argument de confiance que personne d'autre n'offre. | 6.2 |
 
 ### 8.3 Feuille de route recommandée
 
-1. MVP tel que spécifié, en usage personnel, jusqu'à atteindre le critère de 80 % de suggestions acceptées sur trois listes.
-2. Partage du foyer : c'est la condition pour que d'autres personnes l'utilisent et en parlent.
+1. MVP tel que spécifié, en usage personnel, jusqu'à ce que les suggestions tiennent leurs objectifs (2.4 des spécifications fonctionnelles).
+2. Partage de la liste au sein d'un foyer : c'est la condition pour que d'autres personnes l'utilisent et en parlent.
 3. Import d'historique drive, puis planning des repas.
-4. Alerte de péremption et notifications, une fois la durée de conservation renseignée sur le catalogue.
+4. Durée de conservation, alerte de péremption et notifications.
 
 ### 8.4 Décision
 
-Le projet est pertinent et son angle est rare. Sa réussite ne dépend pas de la fonctionnalité, que d'autres pourraient copier, mais de la qualité de l'estimation le premier mois et de la discipline de simplicité. Les spécifications v1 sont alignées avec ces deux exigences ; les ajustements ci-dessus les renforcent sans les élargir.
+Le projet est pertinent et son angle est rare. Sa réussite ne dépend pas de la fonctionnalité, que d'autres pourraient copier, mais de la qualité de l'estimation le premier mois et de la discipline de simplicité. Les spécifications sont alignées avec ces deux exigences ; les ajustements ci-dessus les renforcent sans les élargir.
 
 ## Sources
 
