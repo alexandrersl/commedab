@@ -1,91 +1,73 @@
 import { addDays, daysBetween, withinCalendar } from './date';
-import { anchorValue, isAnchor, lastIndex, liveEvents, type LiveEvents } from './events';
-import { checkDateTime, checkEvents, checkProduct, checkRate } from './guard';
+import { checkDateTime, checkListLines, checkProduct, checkPurchases, checkRate } from './guard';
+import type { ListLine, LocalDate, LocalDateTime, Product, Purchase } from './model';
+import { sortPurchases, type SortedPurchases } from './purchases';
 import { EPSILON } from './quantity';
 import type { Rate } from './rate';
-import type { LocalDate, LocalDateTime, Product, StockEvent } from './model';
 
 export interface StockEstimate {
   stock: number;
   anchorAt: LocalDateTime | null;
   /** Premier jour où le stock estimé est nul ; null sans rythme ou au-delà de l'an 9999. */
   depletionDate: LocalDate | null;
-  /** Dernière réserve entamée ou produit fini, sans achat depuis (EF-3.2). */
-  toRebuy: boolean;
   lastPurchaseAt: LocalDateTime | null;
-  lastPurchaseQuantity: number | null;
-  /** Quantité du dernier achat hors recette (RG-4) : la quantité habituelle. */
-  lastEligiblePurchaseQuantity: number | null;
 }
 
 /**
- * Stock reconstruit depuis le dernier ancrage (specs techniques 4.4) :
- * `max(0, A + Σ achats après l'ancre − r × jours(ancre → t))`. Sans ancrage, l'ancre est le
- * premier achat, de valeur 0, et cet achat entre dans la somme.
+ * Stock reconstruit depuis l'ancre (specs techniques 4.4) :
+ * `max(0, Σ achats datés de l'ancre ou après − r × jours(ancre → t))`. L'ancre est le dernier
+ * ajout manuel du produit à la liste, non retiré, de valeur 0 ; sans lui, le premier achat.
  */
 export function estimateStock(
   product: Product,
-  events: readonly StockEvent[],
+  purchases: readonly Purchase[],
+  lines: readonly ListLine[],
   rate: Rate,
   now: LocalDateTime,
 ): StockEstimate {
   checkProduct(product);
-  checkEvents(events, product.id);
+  checkPurchases(purchases, product.id);
+  checkListLines(lines, product.id);
   checkRate(rate);
   checkDateTime('now', now);
-  return stockOf(product, liveEvents(events), rate, now);
+  return stockOf(sortPurchases(purchases), lines, rate, now);
 }
 
 export function stockOf(
-  product: Product,
-  live: LiveEvents,
+  purchases: SortedPurchases,
+  lines: readonly ListLine[],
   rate: Rate,
   now: LocalDateTime,
 ): StockEstimate {
-  const lastPurchase = live[lastIndex(live, (event) => event.type === 'purchased')];
-  const lastPurchaseAt = lastPurchase?.occurredAt ?? null;
-  const lastPurchaseQuantity = lastPurchase?.quantity ?? null;
-  const lastEligiblePurchaseQuantity =
-    live[lastIndex(live, (event) => event.type === 'purchased' && !event.fromRecipe)]?.quantity ??
-    null;
-
-  const anchorIndex = lastIndex(live, isAnchor);
-  const anchor = live[anchorIndex];
-  const firstPurchaseIndex = live.findIndex((event) => event.type === 'purchased');
-  const start = anchor ?? live[firstPurchaseIndex];
-  if (start === undefined) {
-    return {
-      stock: 0,
-      anchorAt: null,
-      depletionDate: null,
-      toRebuy: false,
-      lastPurchaseAt,
-      lastPurchaseQuantity,
-      lastEligiblePurchaseQuantity,
-    };
+  const lastPurchaseAt = purchases.at(-1)?.occurredAt ?? null;
+  const anchorAt = manualAnchor(lines) ?? purchases[0]?.occurredAt;
+  if (anchorAt === undefined) {
+    return { stock: 0, anchorAt: null, depletionDate: null, lastPurchaseAt };
   }
 
-  const purchasesFrom = anchor !== undefined ? anchorIndex + 1 : firstPurchaseIndex;
-  const purchases = live.slice(purchasesFrom).filter((event) => event.type === 'purchased');
-  const purchased = purchases.reduce((sum, event) => sum + (event.quantity ?? 0), 0);
-  const total = (anchor !== undefined ? anchorValue(anchor) : 0) + purchased;
-  const elapsed = Math.max(0, daysBetween(start.occurredAt, now));
+  const total = purchases
+    .filter((purchase) => purchase.occurredAt >= anchorAt)
+    .reduce((sum, purchase) => sum + purchase.quantity, 0);
+  const elapsed = Math.max(0, daysBetween(anchorAt, now));
   const depletionDays = Math.max(0, Math.ceil(total / rate.perDay - EPSILON));
 
   return {
     stock: Math.max(0, total - rate.perDay * elapsed),
-    anchorAt: start.occurredAt,
+    anchorAt,
     depletionDate:
-      rate.perDay > 0 && withinCalendar(start.occurredAt, depletionDays)
-        ? addDays(start.occurredAt, depletionDays)
+      rate.perDay > 0 && withinCalendar(anchorAt, depletionDays)
+        ? addDays(anchorAt, depletionDays)
         : null,
-    toRebuy:
-      product.family !== 'occasional' &&
-      anchor !== undefined &&
-      (anchor.type === 'opened_last' || anchor.type === 'finished') &&
-      purchases.length === 0,
     lastPurchaseAt,
-    lastPurchaseQuantity,
-    lastEligiblePurchaseQuantity,
   };
+}
+
+/** Date du dernier ajout manuel non retiré : l'utilisateur a signalé qu'il en manque (EF-2.10). */
+function manualAnchor(lines: readonly ListLine[]): LocalDateTime | undefined {
+  let anchor: LocalDateTime | undefined;
+  for (const line of lines) {
+    if (line.origin !== 'manual' || line.deletedAt !== null) continue;
+    if (anchor === undefined || line.createdAt > anchor) anchor = line.createdAt;
+  }
+  return anchor;
 }

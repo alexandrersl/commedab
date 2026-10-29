@@ -2,42 +2,41 @@
   "id": "T41",
   "scenario": "Six intervalles entre sessions : 20, 20, 20, 7, 7, 7 jours",
   "products": [],
-  "events": [],
-  "listLines": [
+  "purchases": [
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-09-01T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-09-01T10:00:00"
     },
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-09-21T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-09-21T10:00:00"
     },
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-10-11T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-10-11T10:00:00"
     },
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-10-31T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-10-31T10:00:00"
     },
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-11-07T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-11-07T10:00:00"
     },
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-11-14T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-11-14T10:00:00"
     },
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-11-21T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-11-21T10:00:00"
     }
   ],
   "now": "2026-11-22T10:00:00",

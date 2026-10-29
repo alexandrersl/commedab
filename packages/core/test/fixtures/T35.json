@@ -1,6 +1,6 @@
 {
   "id": "T35",
-  "scenario": "État des lignes avant et après la fin de la dernière session (10/10, close à 13:00), pendant une session en cours le 12/10",
+  "scenario": "États des lignes à l'ouverture du 12/10 à 17:00 : non cochée, retirées, cochée lors d'une session fermée (10/10, close à 13:00), cochée dans la session ouverte",
   "products": [
     {
       "id": "pain",
@@ -18,11 +18,6 @@
       "declaredPerDays": 1
     },
     {
-      "id": "cafe",
-      "declaredQty": 1,
-      "declaredPerDays": 1
-    },
-    {
       "id": "lait",
       "declaredQty": 1,
       "declaredPerDays": 1
@@ -31,23 +26,16 @@
       "id": "oeufs",
       "declaredQty": 1,
       "declaredPerDays": 1
-    },
-    {
-      "id": "the",
-      "declaredQty": 1,
-      "declaredPerDays": 1
     }
   ],
-  "events": [
+  "purchases": [
     {
       "productId": "lait",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-10T10:00:00"
     },
     {
       "productId": "oeufs",
-      "type": "purchased",
       "quantity": 12,
       "occurredAt": "2026-10-12T17:30:00"
     }
@@ -68,11 +56,6 @@
       "deletedAt": "2026-10-11T12:00:00"
     },
     {
-      "productId": "cafe",
-      "createdAt": "2026-10-11T12:00:00",
-      "decision": "refused_have"
-    },
-    {
       "productId": "lait",
       "createdAt": "2026-10-09T09:00:00",
       "checkedAt": "2026-10-10T10:00:00"
@@ -81,41 +64,31 @@
       "productId": "oeufs",
       "createdAt": "2026-10-09T09:00:00",
       "checkedAt": "2026-10-12T17:30:00"
-    },
-    {
-      "productId": "the",
-      "createdAt": "2026-10-09T12:00:00",
-      "decision": "refused_stop"
     }
   ],
   "now": "2026-10-12T18:00:00",
+  "openedAt": "2026-10-12T17:00:00",
   "periodDays": 7,
   "expected": {
-    "ongoing": "2026-10-12T17:30:00",
     "lineStates": {
       "l1": "pending",
       "l2": "past",
-      "l3": "withdrawn",
-      "l4": "withdrawn",
-      "l5": "past",
-      "l6": "checked",
-      "l7": "past"
+      "l3": "past",
+      "l4": "past",
+      "l5": "checked"
     },
     "suggestions": [
       {
         "productId": "beurre",
-        "quantity": 7,
-        "marked": false
+        "quantity": 7
+      },
+      {
+        "productId": "jambon",
+        "quantity": 7
       },
       {
         "productId": "lait",
-        "quantity": 7,
-        "marked": false
-      },
-      {
-        "productId": "the",
-        "quantity": 7,
-        "marked": false
+        "quantity": 7
       }
     ]
   }

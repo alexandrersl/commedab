@@ -2,22 +2,21 @@
   "id": "T38",
   "scenario": "Sessions espacées de 40 puis 45 jours : période bornée à 31 jours",
   "products": [],
-  "events": [],
-  "listLines": [
+  "purchases": [
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-07-01T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-07-01T10:00:00"
     },
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-08-10T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-08-10T10:00:00"
     },
     {
       "productId": "pain",
-      "createdAt": "2026-09-01T09:00:00",
-      "checkedAt": "2026-09-24T10:00:00"
+      "quantity": 1,
+      "occurredAt": "2026-09-24T10:00:00"
     }
   ],
   "now": "2026-09-25T10:00:00",

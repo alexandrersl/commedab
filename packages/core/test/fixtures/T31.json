@@ -8,10 +8,9 @@
       "declaredPerDays": 32767
     }
   ],
-  "events": [
+  "purchases": [
     {
       "productId": "sel",
-      "type": "counted",
       "quantity": 1000000000,
       "occurredAt": "2026-10-01T10:00:00"
     }

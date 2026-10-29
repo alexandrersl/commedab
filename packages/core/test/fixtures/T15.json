@@ -1,74 +1,74 @@
 {
   "id": "T15",
-  "scenario": "Deux recettes partageant un ingrédient",
+  "scenario": "Recette dont des ingrédients manquants sont déjà sur la liste, dont un pour une autre recette : une seule ligne par produit, quantités cumulées",
   "products": [
     {
       "id": "oignons"
     },
     {
-      "id": "creme"
+      "id": "creme",
+      "unitLabel": "pot"
     }
   ],
-  "events": [],
+  "purchases": [],
+  "listLines": [
+    {
+      "productId": "oignons",
+      "quantity": 2,
+      "origin": "recipe",
+      "recipeId": "soupe"
+    },
+    {
+      "productId": "creme",
+      "quantity": 1
+    }
+  ],
   "recipes": [
     {
       "id": "soupe",
-      "servings": 2,
       "ingredients": [
         {
           "productId": "oignons",
-          "quantity": 2,
-          "kind": "specific"
+          "quantity": 2
         }
       ]
     },
     {
       "id": "gratin",
-      "servings": 4,
       "ingredients": [
         {
           "productId": "oignons",
-          "quantity": 1,
-          "kind": "specific"
+          "quantity": 3
         },
         {
           "productId": "creme",
-          "quantity": 1,
-          "kind": "specific"
+          "quantity": 1
         }
       ]
     }
   ],
-  "recipeRequests": [
-    {
-      "recipeId": "soupe",
-      "servings": 2
-    },
+  "recipeChanges": [
     {
       "recipeId": "gratin",
-      "servings": 4
-    }
-  ],
-  "listLines": [
-    {
-      "productId": "creme",
-      "quantity": 1,
-      "decision": "accepted"
+      "from": 0,
+      "to": 1
     }
   ],
   "now": "2026-10-02T10:00:00",
   "expected": {
-    "recipeLines": [
-      {
-        "productId": "oignons",
-        "quantity": 3,
-        "existing": false
-      },
-      {
-        "productId": "creme",
-        "quantity": 2,
-        "existing": true
-      }
+    "recipeChanges": [
+      [
+        {
+          "productId": "oignons",
+          "quantity": 5,
+          "existing": true
+        },
+        {
+          "productId": "creme",
+          "quantity": 2,
+          "existing": true
+        }
+      ]
     ]
   }
 }

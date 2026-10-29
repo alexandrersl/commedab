@@ -1,11 +1,11 @@
 import { dayOf } from './date';
 import { InvalidInputError } from './errors';
-import type { Household, ListLine, LocalDateTime, Product, Recipe, StockEvent } from './model';
+import type { ListLine, ListRecipe, LocalDateTime, Product, Purchase, Recipe } from './model';
 import type { Rate } from './rate';
 
 // Gardes des fonctions publiques : elles refusent ce que `data` ne doit jamais transmettre.
-// Une valeur de rythme ou de durée nulle ou négative n'est pas une erreur : elle vaut
-// absence (specs techniques 4.3, 4.5).
+// Une valeur de rythme ou de contenance nulle ou négative n'est pas une erreur : elle vaut
+// absence (specs techniques 4.3, 4.6).
 
 const DATE_TIME = /^\d{4}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
 
@@ -22,52 +22,48 @@ function checkFinite(field: string, value: number | null): void {
   }
 }
 
-function checkQuantity(field: string, value: number): void {
+export function checkQuantity(field: string, value: number): void {
   if (!Number.isFinite(value) || value < 0) {
     throw new InvalidInputError(field, value, 'doit être un nombre fini ≥ 0');
   }
 }
 
-function checkPositive(field: string, value: number): void {
-  if (!Number.isFinite(value) || value <= 0) {
-    throw new InvalidInputError(field, value, 'doit être un nombre fini > 0');
+export function checkInteger(field: string, value: number, min: number): void {
+  if (!Number.isInteger(value) || value < min) {
+    throw new InvalidInputError(field, value, `doit être un entier ≥ ${min}`);
   }
 }
 
 export function checkProduct(product: Product): void {
   const field = `product[${product.id}]`;
+  if (!Number.isFinite(product.packSize) || product.packSize <= 0) {
+    throw new InvalidInputError(
+      `${field}.packSize`,
+      product.packSize,
+      'doit être un nombre fini > 0',
+    );
+  }
   checkFinite(`${field}.declaredQty`, product.declaredQty);
   checkFinite(`${field}.declaredPerDays`, product.declaredPerDays);
-  checkFinite(`${field}.shelfLifeDays`, product.shelfLifeDays);
-  checkFinite(`${field}.catalogRateQty`, product.catalogRateQty);
-  checkFinite(`${field}.catalogLifetimeDays`, product.catalogLifetimeDays);
-  checkQuantity(`${field}.safetyStock`, product.safetyStock);
+  checkFinite(`${field}.contentsQty`, product.contentsQty);
+  checkFinite(`${field}.catalogQty`, product.catalogQty);
+  checkFinite(`${field}.catalogPerDays`, product.catalogPerDays);
   if (product.archivedAt !== null) checkDateTime(`${field}.archivedAt`, product.archivedAt);
 }
 
-/** Événements valides ; tous du produit `productId` s'il est donné. */
-export function checkEvents(events: readonly StockEvent[], productId?: string): void {
-  for (const event of events) {
-    const field = `event[${event.id}]`;
-    if (productId !== undefined && event.productId !== productId) {
-      throw new InvalidInputError(`${field}.productId`, event.productId, `doit être ${productId}`);
+/** Achats valides ; tous du produit `productId` s'il est donné. */
+export function checkPurchases(purchases: readonly Purchase[], productId?: string): void {
+  for (const purchase of purchases) {
+    const field = `purchase[${purchase.id}]`;
+    if (productId !== undefined && purchase.productId !== productId) {
+      throw new InvalidInputError(
+        `${field}.productId`,
+        purchase.productId,
+        `doit être ${productId}`,
+      );
     }
-    checkDateTime(`${field}.occurredAt`, event.occurredAt);
-    if (event.deletedAt !== null) checkDateTime(`${field}.deletedAt`, event.deletedAt);
-    if (event.quantity !== null) checkQuantity(`${field}.quantity`, event.quantity);
-    else if (event.type === 'purchased' || event.type === 'counted') {
-      throw new InvalidInputError(`${field}.quantity`, null, `est obligatoire pour ${event.type}`);
-    }
-  }
-}
-
-export function checkHousehold(household: Household): void {
-  if (!Number.isInteger(household.size) || household.size < 1) {
-    throw new InvalidInputError('household.size', household.size, 'doit être un entier ≥ 1');
-  }
-  const period = household.periodDays;
-  if (period !== null && (!Number.isInteger(period) || period < 1 || period > 31)) {
-    throw new InvalidInputError('household.periodDays', period, 'doit être un entier de 1 à 31');
+    checkDateTime(`${field}.occurredAt`, purchase.occurredAt);
+    checkQuantity(`${field}.quantity`, purchase.quantity);
   }
 }
 
@@ -75,9 +71,13 @@ export function checkRate(rate: Rate): void {
   checkQuantity('rate.perDay', rate.perDay);
 }
 
-export function checkListLines(lines: readonly ListLine[]): void {
+/** Lignes valides ; toutes du produit `productId` s'il est donné. */
+export function checkListLines(lines: readonly ListLine[], productId?: string): void {
   for (const line of lines) {
     const field = `listLine[${line.id}]`;
+    if (productId !== undefined && line.productId !== productId) {
+      throw new InvalidInputError(`${field}.productId`, line.productId, `doit être ${productId}`);
+    }
     checkQuantity(`${field}.quantity`, line.quantity);
     checkDateTime(`${field}.createdAt`, line.createdAt);
     if (line.checkedAt !== null) checkDateTime(`${field}.checkedAt`, line.checkedAt);
@@ -85,17 +85,27 @@ export function checkListLines(lines: readonly ListLine[]): void {
   }
 }
 
-export function checkRecipe(recipe: Recipe, servings: number): void {
-  const field = `recipe[${recipe.id}]`;
-  checkPositive(`${field}.servings`, recipe.servings);
-  checkPositive(`${field}.requestedServings`, servings);
+export function checkListRecipes(listRecipes: readonly ListRecipe[]): void {
+  for (const listRecipe of listRecipes) {
+    const field = `listRecipe[${listRecipe.id}]`;
+    checkInteger(`${field}.times`, listRecipe.times, 1);
+    checkDateTime(`${field}.createdAt`, listRecipe.createdAt);
+    if (listRecipe.deletedAt !== null) checkDateTime(`${field}.deletedAt`, listRecipe.deletedAt);
+  }
+}
+
+export function checkRecipe(recipe: Recipe): void {
+  const seen = new Set<string>();
   for (const ingredient of recipe.ingredients) {
-    checkQuantity(`${field}.ingredient[${ingredient.productId}].quantity`, ingredient.quantity);
+    const field = `recipe[${recipe.id}].ingredient[${ingredient.productId}]`;
+    if (seen.has(ingredient.productId)) {
+      throw new InvalidInputError(field, ingredient.productId, 'apparaît deux fois');
+    }
+    seen.add(ingredient.productId);
+    if (ingredient.quantity !== null) checkQuantity(`${field}.quantity`, ingredient.quantity);
   }
 }
 
 export function checkPeriod(periodDays: number): void {
-  if (!Number.isInteger(periodDays) || periodDays < 1) {
-    throw new InvalidInputError('periodDays', periodDays, 'doit être un entier ≥ 1');
-  }
+  checkInteger('periodDays', periodDays, 1);
 }

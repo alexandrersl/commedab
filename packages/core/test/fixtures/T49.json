@@ -1,0 +1,138 @@
+{
+  "id": "T49",
+  "scenario": "Conversion des ingrédients : par la contenance (g, cl), par l'unité du produit (kg), sans unité (pièces en boîte de 6), sinon un pack par fois",
+  "products": [
+    {
+      "id": "lardons",
+      "unitLabel": "barquette",
+      "contentsQty": 100,
+      "contentsUnit": "g"
+    },
+    {
+      "id": "farine",
+      "unitLabel": "kg"
+    },
+    {
+      "id": "creme",
+      "unitLabel": "pot",
+      "contentsQty": 20,
+      "contentsUnit": "cl"
+    },
+    {
+      "id": "oeufs",
+      "packSize": 6
+    },
+    {
+      "id": "persil",
+      "unitLabel": "bouquet"
+    },
+    {
+      "id": "lait",
+      "unitLabel": "bouteille",
+      "contentsQty": 1,
+      "contentsUnit": "L"
+    }
+  ],
+  "purchases": [
+    {
+      "productId": "lait",
+      "quantity": 1,
+      "occurredAt": "2026-10-02T09:00:00"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "quiche",
+      "ingredients": [
+        {
+          "productId": "lardons",
+          "quantity": 200,
+          "unit": "g"
+        },
+        {
+          "productId": "farine",
+          "quantity": 300,
+          "unit": "g"
+        },
+        {
+          "productId": "creme",
+          "quantity": 25,
+          "unit": "cl"
+        },
+        {
+          "productId": "oeufs",
+          "quantity": 3
+        },
+        {
+          "productId": "persil",
+          "quantity": 2,
+          "unit": "c. à soupe"
+        },
+        {
+          "productId": "lait",
+          "quantity": 50,
+          "unit": "cl"
+        }
+      ]
+    }
+  ],
+  "recipeRequests": [
+    {
+      "recipeId": "quiche",
+      "times": 1
+    },
+    {
+      "recipeId": "quiche",
+      "times": 2
+    }
+  ],
+  "now": "2026-10-02T10:00:00",
+  "expected": {
+    "missing": [
+      [
+        {
+          "productId": "lardons",
+          "quantity": 2
+        },
+        {
+          "productId": "farine",
+          "quantity": 1
+        },
+        {
+          "productId": "creme",
+          "quantity": 2
+        },
+        {
+          "productId": "oeufs",
+          "quantity": 1
+        },
+        {
+          "productId": "persil",
+          "quantity": 1
+        }
+      ],
+      [
+        {
+          "productId": "lardons",
+          "quantity": 4
+        },
+        {
+          "productId": "farine",
+          "quantity": 1
+        },
+        {
+          "productId": "creme",
+          "quantity": 3
+        },
+        {
+          "productId": "oeufs",
+          "quantity": 1
+        },
+        {
+          "productId": "persil",
+          "quantity": 2
+        }
+      ]
+    ]
+  }
+}

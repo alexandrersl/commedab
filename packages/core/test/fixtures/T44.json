@@ -1,0 +1,43 @@
+{
+  "id": "T44",
+  "scenario": "Ajout manuel retiré sans achat : l'ancre est ignorée",
+  "products": [
+    {
+      "id": "lait"
+    }
+  ],
+  "purchases": [
+    {
+      "productId": "lait",
+      "quantity": 2,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "lait",
+      "quantity": 2,
+      "occurredAt": "2026-10-08T10:00:00"
+    },
+    {
+      "productId": "lait",
+      "quantity": 2,
+      "occurredAt": "2026-10-15T10:00:00"
+    }
+  ],
+  "listLines": [
+    {
+      "productId": "lait",
+      "origin": "manual",
+      "createdAt": "2026-10-18T10:00:00",
+      "deletedAt": "2026-10-18T11:00:00"
+    }
+  ],
+  "now": "2026-10-20T10:00:00",
+  "expected": {
+    "states": {
+      "lait": {
+        "stock": "4/7",
+        "anchorAt": "2026-10-01T10:00:00"
+      }
+    }
+  }
+}

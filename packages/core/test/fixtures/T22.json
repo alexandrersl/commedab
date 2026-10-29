@@ -4,38 +4,43 @@
   "products": [
     {
       "id": "lait",
-      "unitKind": "volume",
-      "catalogRateQty": 0,
-      "catalogScaling": "per_person"
+      "catalogQty": 0,
+      "catalogPerDays": 1
     },
     {
       "id": "beurre",
-      "catalogRateQty": -1,
-      "catalogScaling": "per_household"
+      "catalogQty": -1,
+      "catalogPerDays": 1
+    },
+    {
+      "id": "cafe",
+      "catalogQty": 1,
+      "catalogPerDays": 0
     }
   ],
-  "events": [
+  "purchases": [
     {
       "productId": "lait",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-01T10:00:00"
     },
     {
       "productId": "lait",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-08T10:00:00"
     },
     {
       "productId": "lait",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-15T10:00:00"
     },
     {
       "productId": "beurre",
-      "type": "purchased",
+      "quantity": 1,
+      "occurredAt": "2026-10-01T10:00:00"
+    },
+    {
+      "productId": "cafe",
       "quantity": 1,
       "occurredAt": "2026-10-01T10:00:00"
     }
@@ -49,6 +54,10 @@
         "intervalCount": 2
       },
       "beurre": {
+        "perDay": 0,
+        "source": "none"
+      },
+      "cafe": {
         "perDay": 0,
         "source": "none"
       }

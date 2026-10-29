@@ -1,0 +1,134 @@
+{
+  "id": "T51",
+  "scenario": "Pastilles des recettes pendant les courses du 10/10 (session fermée à 13:30) et à l'ouverture suivante",
+  "products": [],
+  "purchases": [
+    {
+      "productId": "lardons",
+      "quantity": 1,
+      "occurredAt": "2026-10-10T10:00:00"
+    },
+    {
+      "productId": "oeufs",
+      "quantity": 6,
+      "occurredAt": "2026-10-10T10:30:00"
+    }
+  ],
+  "listLines": [
+    {
+      "productId": "lardons",
+      "origin": "recipe",
+      "recipeId": "carbonara",
+      "createdAt": "2026-10-09T20:00:00",
+      "checkedAt": "2026-10-10T10:00:00"
+    },
+    {
+      "productId": "creme",
+      "origin": "recipe",
+      "recipeId": "carbonara",
+      "createdAt": "2026-10-09T20:00:00"
+    },
+    {
+      "productId": "oeufs",
+      "origin": "recipe",
+      "recipeId": "omelette",
+      "createdAt": "2026-10-09T20:00:00",
+      "checkedAt": "2026-10-10T10:30:00"
+    }
+  ],
+  "listRecipes": [
+    {
+      "recipeId": "carbonara",
+      "createdAt": "2026-10-09T20:00:00"
+    },
+    {
+      "recipeId": "salade",
+      "times": 2,
+      "createdAt": "2026-10-09T20:00:00"
+    },
+    {
+      "recipeId": "omelette",
+      "createdAt": "2026-10-09T20:00:00"
+    },
+    {
+      "recipeId": "gateau",
+      "createdAt": "2026-10-09T20:00:00"
+    },
+    {
+      "recipeId": "carbonara",
+      "createdAt": "2026-10-01T20:00:00",
+      "deletedAt": "2026-10-02T20:00:00"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "carbonara",
+      "ingredients": [
+        {
+          "productId": "lardons"
+        },
+        {
+          "productId": "creme"
+        },
+        {
+          "productId": "pates"
+        }
+      ]
+    },
+    {
+      "id": "salade",
+      "ingredients": [
+        {
+          "productId": "tomates"
+        }
+      ]
+    },
+    {
+      "id": "omelette",
+      "ingredients": [
+        {
+          "productId": "oeufs"
+        }
+      ]
+    }
+  ],
+  "now": "2026-10-10T14:00:00",
+  "expected": {
+    "openings": [
+      {
+        "openedAt": "2026-10-10T11:00:00",
+        "recipeBadges": [
+          {
+            "recipeId": "carbonara",
+            "checked": 1,
+            "total": 2,
+            "full": false
+          },
+          {
+            "recipeId": "salade",
+            "checked": 0,
+            "total": 0,
+            "full": true
+          },
+          {
+            "recipeId": "omelette",
+            "checked": 1,
+            "total": 1,
+            "full": true
+          }
+        ]
+      },
+      {
+        "openedAt": "2026-10-10T14:00:00",
+        "recipeBadges": [
+          {
+            "recipeId": "carbonara",
+            "checked": 0,
+            "total": 1,
+            "full": false
+          }
+        ]
+      }
+    ]
+  }
+}

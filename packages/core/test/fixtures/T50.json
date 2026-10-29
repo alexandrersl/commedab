@@ -1,0 +1,101 @@
+{
+  "id": "T50",
+  "scenario": "Recette ajoutée une fois, puis comptée deux fois, ou retirée : l'écart des manques ajuste les lignes non cochées",
+  "products": [
+    {
+      "id": "pommes-de-terre",
+      "unitLabel": "kg"
+    },
+    {
+      "id": "creme",
+      "unitLabel": "pot"
+    },
+    {
+      "id": "sel",
+      "unitLabel": "paquet"
+    }
+  ],
+  "purchases": [],
+  "listLines": [
+    {
+      "productId": "pommes-de-terre",
+      "origin": "recipe",
+      "recipeId": "gratin"
+    },
+    {
+      "productId": "creme",
+      "origin": "recipe",
+      "recipeId": "gratin"
+    },
+    {
+      "productId": "sel",
+      "origin": "recipe",
+      "recipeId": "gratin"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "gratin",
+      "ingredients": [
+        {
+          "productId": "pommes-de-terre",
+          "quantity": 1,
+          "unit": "kg"
+        },
+        {
+          "productId": "creme",
+          "quantity": 1
+        },
+        {
+          "productId": "sel"
+        }
+      ]
+    }
+  ],
+  "recipeChanges": [
+    {
+      "recipeId": "gratin",
+      "from": 1,
+      "to": 2
+    },
+    {
+      "recipeId": "gratin",
+      "from": 1,
+      "to": 0
+    }
+  ],
+  "now": "2026-10-02T10:00:00",
+  "expected": {
+    "recipeChanges": [
+      [
+        {
+          "productId": "pommes-de-terre",
+          "quantity": 2,
+          "existing": true
+        },
+        {
+          "productId": "creme",
+          "quantity": 2,
+          "existing": true
+        }
+      ],
+      [
+        {
+          "productId": "pommes-de-terre",
+          "quantity": 0,
+          "existing": true
+        },
+        {
+          "productId": "creme",
+          "quantity": 0,
+          "existing": true
+        },
+        {
+          "productId": "sel",
+          "quantity": 0,
+          "existing": true
+        }
+      ]
+    ]
+  }
+}

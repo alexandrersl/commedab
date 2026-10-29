@@ -1,13 +1,12 @@
 import type {
-  FinishedAt,
-  Household,
+  Ingredient,
   LineState,
   ListLine,
+  ListRecipe,
   LocalDateTime,
   Period,
   Product,
-  Recipe,
-  StockEvent,
+  Purchase,
 } from '../../src/index';
 
 /** Nombre, ou fraction écrite `"1/7"` pour rester lisible dans le JSON. */
@@ -16,38 +15,41 @@ export type Quantity = number | string;
 export interface Fixture {
   id: string;
   scenario: string;
-  household?: Partial<Household>;
   products: (Partial<Product> & { id: string })[];
-  events: (Partial<StockEvent> & Pick<StockEvent, 'productId' | 'type' | 'occurredAt'>)[];
+  purchases: (Partial<Purchase> & Pick<Purchase, 'productId' | 'quantity' | 'occurredAt'>)[];
   listLines?: (Partial<ListLine> & { productId: string })[];
-  recipes?: Recipe[];
-  recipeRequests?: { recipeId: string; servings: number }[];
-  /** « Fini » signalé à `at`, daté par `resolveFinishedAt` puis ajouté aux événements. */
-  finishedReport?: { productId: string; at: LocalDateTime };
+  listRecipes?: (Partial<ListRecipe> & { recipeId: string })[];
+  recipes?: { id: string; ingredients: (Partial<Ingredient> & { productId: string })[] }[];
+  /** Recettes demandées à `missingIngredients`, attendues dans `expected.missing`. */
+  recipeRequests?: { recipeId: string; times: number }[];
+  /** Passages de `from` à `to` fois par `applyRecipe`, attendus dans `expected.recipeChanges`. */
+  recipeChanges?: { recipeId: string; from: number; to: number }[];
   now: LocalDateTime;
+  /** Ouverture de l'application, pour `listView` ; `now` par défaut. */
+  openedAt?: LocalDateTime;
   periodDays?: number;
   expected: {
     rates?: Record<string, { perDay?: Quantity; source?: string; intervalCount?: number }>;
     intervals?: Record<string, number[]>;
     states?: Record<
       string,
-      {
-        stock?: Quantity;
-        anchorAt?: string | null;
-        depletionDate?: string | null;
-        toRebuy?: boolean;
-      }
+      { stock?: Quantity; anchorAt?: string | null; depletionDate?: string | null }
     >;
-    finishedAt?: FinishedAt;
-    suggestions?: { productId: string; quantity: number; marked: boolean }[];
-    /** Sessions de courses formées par les coches des lignes ; `ongoing` : la session en cours. */
+    suggestions?: { productId: string; quantity: number }[];
     sessions?: { startedAt: string; endedAt: string; closesAt?: string }[];
-    ongoing?: string | null;
+    /** États des lignes à l'ouverture `openedAt` de la fixture. */
     lineStates?: Record<string, LineState>;
+    /** Ce que la Liste affiche à plusieurs ouvertures de l'application. */
+    openings?: {
+      openedAt: LocalDateTime;
+      lineStates?: Record<string, LineState>;
+      recipeBadges?: { recipeId: string; checked: number; total: number; full: boolean }[];
+    }[];
     period?: Partial<Period>;
     /** `suggestForPeriod` refuse l'entrée par une `InvalidInputError` sur ce champ. */
     invalidInput?: string;
-    recipeLines?: { productId: string; quantity: number; existing: boolean }[];
+    missing?: { productId: string; quantity: number }[][];
+    recipeChanges?: { productId: string; quantity: number; existing: boolean }[][];
   };
 }
 
@@ -116,114 +118,112 @@ const object =
 const product = object(
   {
     id: string,
-    unitKind: oneOf('piece', 'weight', 'volume'),
-    family: oneOf('rhythm', 'reserve', 'occasional'),
+    unitLabel: string,
+    packSize: number,
     declaredQty: nullable(number),
     declaredPerDays: nullable(number),
-    safetyStock: number,
-    shelfLifeDays: nullable(number),
-    catalogRateQty: nullable(number),
-    catalogLifetimeDays: nullable(number),
-    catalogScaling: nullable(oneOf('per_person', 'per_household')),
+    contentsQty: nullable(number),
+    contentsUnit: nullable(string),
+    catalogQty: nullable(number),
+    catalogPerDays: nullable(number),
     archivedAt: nullable(string),
   },
   ['id'],
 );
-const event = object(
-  {
-    id: string,
-    productId: string,
-    type: oneOf('purchased', 'opened_last', 'finished', 'counted'),
-    quantity: nullable(number),
-    occurredAt: string,
-    fromRecipe: boolean,
-    deletedAt: nullable(string),
-  },
-  ['productId', 'type', 'occurredAt'],
+const purchase = object(
+  { id: string, productId: string, quantity: number, occurredAt: string, fromRecipe: boolean },
+  ['productId', 'quantity', 'occurredAt'],
 );
 const listLine = object(
   {
     id: string,
     productId: string,
     quantity: number,
-    decision: nullable(oneOf('accepted', 'modified', 'refused_have', 'refused_stop')),
+    origin: oneOf('suggestion', 'manual', 'recipe'),
+    recipeId: nullable(string),
     createdAt: string,
     checkedAt: nullable(string),
     deletedAt: nullable(string),
   },
   ['productId'],
 );
+const listRecipe = object(
+  { id: string, recipeId: string, times: number, createdAt: string, deletedAt: nullable(string) },
+  ['recipeId'],
+);
 const recipe = object(
   {
     id: string,
-    servings: number,
     ingredients: array(
-      object({ productId: string, quantity: number, kind: oneOf('base', 'specific') }, [
+      object({ productId: string, quantity: nullable(number), unit: nullable(string) }, [
         'productId',
-        'quantity',
-        'kind',
       ]),
     ),
   },
-  ['id', 'servings', 'ingredients'],
+  ['id', 'ingredients'],
 );
+const lineStates = record(oneOf('pending', 'checked', 'past'));
+const packs = object({ productId: string, quantity: number }, ['productId', 'quantity']);
 const expected = object({
   rates: record(object({ perDay: quantity, source: string, intervalCount: number })),
   intervals: record(array(number)),
   states: record(
-    object({
-      stock: quantity,
-      anchorAt: nullable(string),
-      depletionDate: nullable(string),
-      toRebuy: boolean,
-    }),
+    object({ stock: quantity, anchorAt: nullable(string), depletionDate: nullable(string) }),
   ),
-  finishedAt: object({ at: string, advanced: boolean, beforePurchaseOn: string }, [
-    'at',
-    'advanced',
-  ]),
-  suggestions: array(
-    object({ productId: string, quantity: number, marked: boolean }, [
-      'productId',
-      'quantity',
-      'marked',
-    ]),
-  ),
+  suggestions: array(packs),
   sessions: array(
     object({ startedAt: string, endedAt: string, closesAt: string }, ['startedAt', 'endedAt']),
   ),
-  ongoing: nullable(string),
-  lineStates: record(oneOf('pending', 'checked', 'withdrawn', 'past')),
-  period: object({
-    days: number,
-    source: oneOf('declared', 'learned', 'default'),
-    intervalCount: number,
-  }),
+  lineStates,
+  openings: array(
+    object(
+      {
+        openedAt: string,
+        lineStates,
+        recipeBadges: array(
+          object({ recipeId: string, checked: number, total: number, full: boolean }, [
+            'recipeId',
+            'checked',
+            'total',
+            'full',
+          ]),
+        ),
+      },
+      ['openedAt'],
+    ),
+  ),
+  period: object({ days: number, source: oneOf('learned', 'default'), intervalCount: number }),
   invalidInput: string,
-  recipeLines: array(
-    object({ productId: string, quantity: number, existing: boolean }, [
-      'productId',
-      'quantity',
-      'existing',
-    ]),
+  missing: array(array(packs)),
+  recipeChanges: array(
+    array(
+      object({ productId: string, quantity: number, existing: boolean }, [
+        'productId',
+        'quantity',
+        'existing',
+      ]),
+    ),
   ),
 });
 const fixture = object(
   {
     id: string,
     scenario: string,
-    household: object({ size: number, periodDays: nullable(number) }),
     products: array(product),
-    events: array(event),
+    purchases: array(purchase),
     listLines: array(listLine),
+    listRecipes: array(listRecipe),
     recipes: array(recipe),
-    recipeRequests: array(object({ recipeId: string, servings: number }, ['recipeId', 'servings'])),
-    finishedReport: object({ productId: string, at: string }, ['productId', 'at']),
+    recipeRequests: array(object({ recipeId: string, times: number }, ['recipeId', 'times'])),
+    recipeChanges: array(
+      object({ recipeId: string, from: number, to: number }, ['recipeId', 'from', 'to']),
+    ),
     now: string,
+    openedAt: string,
     periodDays: number,
     expected,
   },
-  ['id', 'scenario', 'products', 'events', 'now', 'expected'],
+  ['id', 'scenario', 'products', 'purchases', 'now', 'expected'],
 );
 
 export function parseFixture(raw: unknown): Fixture {

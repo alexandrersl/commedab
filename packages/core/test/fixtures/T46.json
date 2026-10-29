@@ -1,0 +1,69 @@
+{
+  "id": "T46",
+  "scenario": "Coches à 10:00 et 10:30, session fermée à 13:30 : les lignes cochées restent aux ouvertures de 11:00 et 13:29, sortent à celle de 13:30",
+  "products": [],
+  "purchases": [
+    {
+      "productId": "pain",
+      "quantity": 1,
+      "occurredAt": "2026-10-10T10:00:00"
+    },
+    {
+      "productId": "lait",
+      "quantity": 1,
+      "occurredAt": "2026-10-10T10:30:00"
+    }
+  ],
+  "listLines": [
+    {
+      "productId": "pain",
+      "createdAt": "2026-10-09T09:00:00",
+      "checkedAt": "2026-10-10T10:00:00"
+    },
+    {
+      "productId": "lait",
+      "createdAt": "2026-10-09T09:00:00",
+      "checkedAt": "2026-10-10T10:30:00"
+    },
+    {
+      "productId": "beurre",
+      "createdAt": "2026-10-09T09:00:00"
+    }
+  ],
+  "now": "2026-10-10T14:00:00",
+  "expected": {
+    "sessions": [
+      {
+        "startedAt": "2026-10-10T10:00:00",
+        "endedAt": "2026-10-10T10:30:00",
+        "closesAt": "2026-10-10T13:30:00"
+      }
+    ],
+    "openings": [
+      {
+        "openedAt": "2026-10-10T11:00:00",
+        "lineStates": {
+          "l1": "checked",
+          "l2": "checked",
+          "l3": "pending"
+        }
+      },
+      {
+        "openedAt": "2026-10-10T13:29:00",
+        "lineStates": {
+          "l1": "checked",
+          "l2": "checked",
+          "l3": "pending"
+        }
+      },
+      {
+        "openedAt": "2026-10-10T13:30:00",
+        "lineStates": {
+          "l1": "past",
+          "l2": "past",
+          "l3": "pending"
+        }
+      }
+    ]
+  }
+}

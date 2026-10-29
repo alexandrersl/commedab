@@ -1,46 +1,40 @@
 {
   "id": "T11",
-  "scenario": "Produit ponctuel",
+  "scenario": "Produit archivé (« Je n'en achète plus ») : jamais suggéré",
   "products": [
     {
-      "id": "champagne",
-      "family": "occasional"
+      "id": "lait",
+      "declaredQty": 1,
+      "declaredPerDays": 1,
+      "archivedAt": "2026-10-05T10:00:00"
+    },
+    {
+      "id": "beurre",
+      "declaredQty": 1,
+      "declaredPerDays": 1
     }
   ],
-  "events": [
+  "purchases": [
     {
-      "productId": "champagne",
-      "type": "purchased",
-      "quantity": 2,
-      "occurredAt": "2026-09-01T10:00:00"
-    },
-    {
-      "productId": "champagne",
-      "type": "purchased",
-      "quantity": 2,
-      "occurredAt": "2026-09-15T10:00:00"
-    },
-    {
-      "productId": "champagne",
-      "type": "purchased",
-      "quantity": 2,
+      "productId": "lait",
+      "quantity": 1,
       "occurredAt": "2026-10-01T10:00:00"
-    },
-    {
-      "productId": "champagne",
-      "type": "finished",
-      "occurredAt": "2026-10-05T22:00:00"
     }
   ],
   "now": "2026-10-10T10:00:00",
-  "periodDays": 31,
+  "periodDays": 7,
   "expected": {
     "rates": {
-      "champagne": {
-        "perDay": 0,
-        "source": "none"
+      "lait": {
+        "perDay": 1,
+        "source": "declared"
       }
     },
-    "suggestions": []
+    "suggestions": [
+      {
+        "productId": "beurre",
+        "quantity": 7
+      }
+    ]
   }
 }

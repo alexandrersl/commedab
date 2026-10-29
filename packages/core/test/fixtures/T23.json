@@ -6,8 +6,8 @@
       "id": "yaourt",
       "declaredQty": 0,
       "declaredPerDays": 7,
-      "catalogRateQty": 0.5,
-      "catalogScaling": "per_person"
+      "catalogQty": 0.5,
+      "catalogPerDays": 1
     },
     {
       "id": "cafe",
@@ -15,22 +15,19 @@
       "declaredPerDays": 7
     }
   ],
-  "events": [
+  "purchases": [
     {
       "productId": "cafe",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-01T10:00:00"
     },
     {
       "productId": "cafe",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-08T10:00:00"
     },
     {
       "productId": "cafe",
-      "type": "purchased",
       "quantity": 1,
       "occurredAt": "2026-10-15T10:00:00"
     }

@@ -1,8 +1,8 @@
 import { dayNumber, dayOf } from './date';
-import { liveEvents, type LiveEvents } from './events';
-import { checkEvents, checkHousehold, checkProduct } from './guard';
+import { checkProduct, checkPurchases } from './guard';
 import { median } from './median';
-import type { Household, LocalDate, LocalDateTime, Product, RateSource, StockEvent } from './model';
+import type { LocalDate, Product, Purchase, RateSource } from './model';
+import { sortPurchases, type SortedPurchases } from './purchases';
 
 const MIN_PURCHASES = 3;
 const MIN_INTERVALS = 2;
@@ -11,14 +11,14 @@ const LOWER_BOUND = 0.5;
 const UPPER_BOUND = 2;
 
 export interface Rate {
-  /** Unités d'achat consommées par jour ; 0 sans rythme. */
+  /** Unités consommées par jour ; 0 sans rythme. */
   perDay: number;
   source: RateSource;
   /** Intervalles entrés dans la médiane, pour un rythme appris. */
   intervalCount: number;
 }
 
-/** Intervalle de consommation observé entre un achat et l'achat ou le « fini » suivant. */
+/** Intervalle de consommation observé entre un achat et l'achat suivant. */
 export interface Interval {
   purchasedOn: LocalDate;
   quantity: number;
@@ -29,99 +29,63 @@ export interface Interval {
 const NO_RATE: Rate = { perDay: 0, source: 'none', intervalCount: 0 };
 
 /** Rythme retenu : déclaré, sinon appris, sinon catalogue (specs techniques 4.3). */
-export function resolveRate(
-  product: Product,
-  events: readonly StockEvent[],
-  household: Household,
-): Rate {
+export function resolveRate(product: Product, purchases: readonly Purchase[]): Rate {
   checkProduct(product);
-  checkEvents(events, product.id);
-  checkHousehold(household);
-  return rateOf(product, liveEvents(events), household);
+  checkPurchases(purchases, product.id);
+  return rateOf(product, sortPurchases(purchases));
 }
 
-export function rateOf(product: Product, live: LiveEvents, household: Household): Rate {
-  if (product.family === 'occasional') return NO_RATE;
-
-  const declared = declaredRate(product);
+export function rateOf(product: Product, purchases: SortedPurchases): Rate {
+  const declared = ratio(product.declaredQty, product.declaredPerDays);
   if (declared !== null) return { perDay: declared, source: 'declared', intervalCount: 0 };
 
-  const catalog = catalogRate(product, household);
-  const learned = learnedRate(live, catalog);
+  const catalog = ratio(product.catalogQty, product.catalogPerDays);
+  const learned = learnedRate(purchases, catalog);
   if (learned !== null) return learned;
   if (catalog !== null) return { perDay: catalog, source: 'catalog', intervalCount: 0 };
   return NO_RATE;
 }
 
 /**
- * Intervalles des achats éligibles (hors recette, RG-4), deux achats du même jour comptant
- * pour un seul. Un intervalle se clôt au premier des deux : achat suivant ou « fini »
- * postérieur ; le dernier achat n'en a un que si un « fini » le suit.
+ * Intervalles entre achats éligibles consécutifs (hors recette, RG-4), deux achats du même
+ * jour comptant pour un seul ; le dernier achat n'en a pas.
  */
-export function observedIntervals(events: readonly StockEvent[]): Interval[] {
-  checkEvents(events);
-  const live = liveEvents(events);
-  return intervalsOf(purchaseDays(live), live);
+export function observedIntervals(purchases: readonly Purchase[]): Interval[] {
+  checkPurchases(purchases);
+  return intervalsOf(purchaseDays(sortPurchases(purchases)));
 }
 
-function intervalsOf(purchases: readonly PurchaseDay[], live: LiveEvents): Interval[] {
-  const finished = live.filter((event) => event.type === 'finished');
-  const intervals: Interval[] = [];
-
-  purchases.forEach((purchase, k) => {
-    const ends: number[] = [];
-    const next = purchases[k + 1];
-    if (next !== undefined) ends.push(dayNumber(next.day));
-    const end = finished.find((event) => event.occurredAt > purchase.lastAt);
-    if (end !== undefined) ends.push(dayNumber(end.occurredAt));
-    if (ends.length === 0) return;
-
-    const days = Math.min(...ends) - dayNumber(purchase.day);
-    if (days < 1) return;
-    intervals.push({
+function intervalsOf(purchases: readonly PurchaseDay[]): Interval[] {
+  return purchases.slice(0, -1).map((purchase, k) => {
+    const days = dayNumber((purchases[k + 1] as PurchaseDay).day) - dayNumber(purchase.day);
+    return {
       purchasedOn: purchase.day,
       quantity: purchase.quantity,
       days,
       perDay: purchase.quantity / days,
-    });
+    };
   });
-  return intervals;
-}
-
-function declaredRate(product: Product): number | null {
-  const { declaredQty, declaredPerDays } = product;
-  if (declaredQty === null || declaredPerDays === null) return null;
-  if (declaredQty <= 0 || declaredPerDays <= 0) return null;
-  return declaredQty / declaredPerDays;
 }
 
 /**
- * Valeurs copiées du catalogue à la création, ajustées à la taille actuelle du foyer : par
- * personne sauf `per_household`, comme dans le catalogue. Une valeur nulle ou négative est
- * ignorée : elle annulerait la borne du rythme appris.
+ * `qty` unités par `perDays` jours. Une valeur nulle ou négative vaut absence : au catalogue,
+ * elle annulerait la borne du rythme appris.
  */
-function catalogRate(product: Product, household: Household): number | null {
-  if (product.catalogRateQty !== null && product.catalogRateQty > 0) {
-    return product.catalogScaling === 'per_household'
-      ? product.catalogRateQty
-      : product.catalogRateQty * household.size;
-  }
-  if (product.catalogLifetimeDays !== null && product.catalogLifetimeDays > 0) {
-    return 1 / product.catalogLifetimeDays;
-  }
-  return null;
+function ratio(qty: number | null, perDays: number | null): number | null {
+  if (qty === null || perDays === null || qty <= 0 || perDays <= 0) return null;
+  return qty / perDays;
 }
 
-/** Médiane des cinq derniers taux, bornée par la référence sous cinq intervalles. */
-function learnedRate(live: LiveEvents, reference: number | null): Rate | null {
-  const purchases = purchaseDays(live);
-  if (purchases.length < MIN_PURCHASES) return null;
-  const intervals = intervalsOf(purchases, live).slice(-MEDIAN_WINDOW);
+/** Médiane des cinq derniers taux, bornée par le catalogue sous cinq intervalles. */
+function learnedRate(purchases: SortedPurchases, catalog: number | null): Rate | null {
+  const days = purchaseDays(purchases);
+  if (days.length < MIN_PURCHASES) return null;
+  const intervals = intervalsOf(days).slice(-MEDIAN_WINDOW);
   if (intervals.length < MIN_INTERVALS) return null;
 
   let perDay = median(intervals.map((interval) => interval.perDay));
-  if (intervals.length < MEDIAN_WINDOW && reference !== null) {
-    perDay = Math.min(Math.max(perDay, LOWER_BOUND * reference), UPPER_BOUND * reference);
+  if (intervals.length < MEDIAN_WINDOW && catalog !== null) {
+    perDay = Math.min(Math.max(perDay, LOWER_BOUND * catalog), UPPER_BOUND * catalog);
   }
   return { perDay, source: 'learned', intervalCount: intervals.length };
 }
@@ -129,21 +93,16 @@ function learnedRate(live: LiveEvents, reference: number | null): Rate | null {
 interface PurchaseDay {
   day: LocalDate;
   quantity: number;
-  lastAt: LocalDateTime;
 }
 
-function purchaseDays(live: LiveEvents): PurchaseDay[] {
+function purchaseDays(purchases: SortedPurchases): PurchaseDay[] {
   const days: PurchaseDay[] = [];
-  for (const event of live) {
-    if (event.type !== 'purchased' || event.fromRecipe) continue;
-    const day = dayOf(event.occurredAt);
+  for (const purchase of purchases) {
+    if (purchase.fromRecipe) continue;
+    const day = dayOf(purchase.occurredAt);
     const last = days.at(-1);
-    if (last?.day === day) {
-      last.quantity += event.quantity ?? 0;
-      last.lastAt = event.occurredAt;
-    } else {
-      days.push({ day, quantity: event.quantity ?? 0, lastAt: event.occurredAt });
-    }
+    if (last?.day === day) last.quantity += purchase.quantity;
+    else days.push({ day, quantity: purchase.quantity });
   }
   return days;
 }

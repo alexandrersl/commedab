@@ -1,27 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
-  applyRecipes,
+  applyRecipe,
   InvalidInputError,
-  listView,
+  missingIngredients,
   observedIntervals,
   resolvePeriod,
-  unitStep,
   suggestForPeriod,
-  type Product,
-  type Recipe,
 } from '../src/index';
-import { eventsOf, quantity, scenario, statesOf } from './fixture';
+import { ofProduct, quantity, recipeOf, scenario, statesOf, viewOf } from './fixture';
 import { fixtures } from './fixtures/index';
 
 const all = fixtures.map(scenario);
 const suggestible = all.filter((s) => s.fixture.expected.invalidInput === undefined);
 const PRECISION = 6;
-
-/** Jours couverts par une suggestion « à rythme » (RG-10). */
-function horizonOf(product: Product, periodDays: number): number {
-  const shelfLife = product.shelfLifeDays;
-  return shelfLife !== null && shelfLife > 0 ? Math.min(periodDays, shelfLife) : periodDays;
-}
 
 function suggestionsOf(s: (typeof all)[number]) {
   const periodDays = s.fixture.periodDays;
@@ -30,20 +21,14 @@ function suggestionsOf(s: (typeof all)[number]) {
     products: s.products,
     states: statesOf(s, s.fixture.now),
     periodDays,
-    list: listView(s.listLines, s.fixture.now),
+    list: viewOf(s),
   });
 }
 
 describe.each(all)('$fixture.id — $fixture.scenario', (s) => {
   const { expected, now } = s.fixture;
   const states = statesOf(s, now);
-
-  if (expected.finishedAt !== undefined) {
-    const finishedAt = expected.finishedAt;
-    it('date du « fini »', () => {
-      expect(s.finishedAt).toEqual(finishedAt);
-    });
-  }
+  const products = new Map(s.products.map((p) => [p.id, p]));
 
   if (expected.rates !== undefined) {
     const rates = expected.rates;
@@ -65,7 +50,7 @@ describe.each(all)('$fixture.id — $fixture.scenario', (s) => {
     const intervals = expected.intervals;
     it('intervalles', () => {
       for (const [productId, days] of Object.entries(intervals)) {
-        const actual = observedIntervals(eventsOf(s.events, productId));
+        const actual = observedIntervals(ofProduct(s.purchases, productId));
         expect(actual.map((interval) => interval.days)).toEqual(days);
       }
     });
@@ -83,7 +68,6 @@ describe.each(all)('$fixture.id — $fixture.scenario', (s) => {
         if (state.depletionDate !== undefined) {
           expect(actual?.depletionDate).toBe(state.depletionDate);
         }
-        if (state.toRebuy !== undefined) expect(actual?.toRebuy).toBe(state.toRebuy);
       }
     });
   }
@@ -91,38 +75,49 @@ describe.each(all)('$fixture.id — $fixture.scenario', (s) => {
   if (expected.suggestions !== undefined) {
     const suggestions = expected.suggestions;
     it('suggestions', () => {
-      const actual = suggestionsOf(s)?.map(({ productId, quantity, justification }) => ({
-        productId,
-        quantity,
-        marked: justification.marked,
-      }));
+      const actual = suggestionsOf(s)?.map(({ productId, quantity }) => ({ productId, quantity }));
       expect(actual).toEqual(suggestions);
     });
   }
 
-  if (expected.sessions !== undefined || expected.ongoing !== undefined) {
-    const { sessions, ongoing } = expected;
+  if (expected.sessions !== undefined) {
+    const sessions = expected.sessions;
     it('sessions de courses', () => {
-      const view = listView(s.listLines, now);
-      if (sessions !== undefined) expect(view.sessions).toMatchObject(sessions);
-      if (ongoing !== undefined) expect(view.ongoing?.startedAt ?? null).toBe(ongoing);
+      expect(viewOf(s).sessions).toMatchObject(sessions);
     });
   }
 
   if (expected.lineStates !== undefined) {
     const lineStates = expected.lineStates;
     it('état des lignes', () => {
-      const actual = Object.fromEntries(
-        listView(s.listLines, now).lines.map(({ line, state }) => [line.id, state]),
-      );
+      const actual = Object.fromEntries(viewOf(s).lines.map(({ line, state }) => [line.id, state]));
       expect(actual).toMatchObject(lineStates);
+    });
+  }
+
+  for (const opening of expected.openings ?? []) {
+    it(`liste à l'ouverture de ${opening.openedAt}`, () => {
+      const view = viewOf({ ...s, fixture: { ...s.fixture, openedAt: opening.openedAt } });
+      if (opening.lineStates !== undefined) {
+        const actual = Object.fromEntries(view.lines.map(({ line, state }) => [line.id, state]));
+        expect(actual).toMatchObject(opening.lineStates);
+      }
+      if (opening.recipeBadges !== undefined) {
+        const actual = view.recipes.map(({ listRecipe, checked, total, full }) => ({
+          recipeId: listRecipe.recipeId,
+          checked,
+          total,
+          full,
+        }));
+        expect(actual).toEqual(opening.recipeBadges);
+      }
     });
   }
 
   if (expected.period !== undefined) {
     const period = expected.period;
     it('période de la liste', () => {
-      expect(resolvePeriod(s.household, listView(s.listLines, now).sessions)).toMatchObject(period);
+      expect(resolvePeriod(viewOf(s).sessions)).toMatchObject(period);
     });
   }
 
@@ -134,21 +129,33 @@ describe.each(all)('$fixture.id — $fixture.scenario', (s) => {
     });
   }
 
-  if (expected.recipeLines !== undefined) {
-    const recipeLines = expected.recipeLines;
-    it('recettes', () => {
-      const recipes = new Map<string, Recipe>((s.fixture.recipes ?? []).map((r) => [r.id, r]));
-      const lines = applyRecipes({
-        requests: (s.fixture.recipeRequests ?? []).map(({ recipeId, servings }) => {
-          const recipe = recipes.get(recipeId);
-          if (recipe === undefined) throw new Error(`Recette inconnue : ${recipeId}`);
-          return { recipe, servings };
+  if (expected.missing !== undefined) {
+    const missing = expected.missing;
+    it('ingrédients manquants', () => {
+      const actual = (s.fixture.recipeRequests ?? []).map(({ recipeId, times }) =>
+        missingIngredients({ recipe: recipeOf(s, recipeId), times, products, states }),
+      );
+      expect(actual).toEqual(missing);
+    });
+  }
+
+  if (expected.recipeChanges !== undefined) {
+    const changes = expected.recipeChanges;
+    it('recettes sur la liste', () => {
+      const pending = viewOf(s)
+        .lines.filter(({ state }) => state === 'pending')
+        .map(({ line }) => line);
+      const actual = (s.fixture.recipeChanges ?? []).map(({ recipeId, from, to }) =>
+        applyRecipe({
+          recipe: recipeOf(s, recipeId),
+          from,
+          to,
+          products,
+          states,
+          listLines: pending,
         }),
-        products: new Map(s.products.map((p) => [p.id, p])),
-        states,
-        listLines: s.listLines,
-      });
-      expect(lines).toEqual(recipeLines);
+      );
+      expect(actual).toEqual(changes);
     });
   }
 });
@@ -165,29 +172,25 @@ describe('propriétés (specs techniques 4.8)', () => {
     }
   });
 
-  it.each(all)('$fixture.id : un événement supprimé ne compte pas', (s) => {
-    const kept = { ...s, events: s.events.filter((event) => event.deletedAt === null) };
+  it.each(all)('$fixture.id : une ligne retirée n’est pas une ancre', (s) => {
+    const kept = { ...s, listLines: s.listLines.filter((line) => line.deletedAt === null) };
     expect(statesOf(s, s.fixture.now)).toEqual(statesOf(kept, s.fixture.now));
   });
 
-  it.each(suggestible)(
-    '$fixture.id : rien n’est suggéré quand le stock couvre la période (rythme connu)',
-    (s) => {
-      const periodDays = s.fixture.periodDays;
-      if (periodDays === undefined) return;
-      const states = statesOf(s, s.fixture.now);
-      const suggested = new Set(suggestionsOf(s)?.map((suggestion) => suggestion.productId));
-      for (const product of s.products.filter((p) => p.family === 'rhythm')) {
-        const state = states.get(product.id);
-        if (state === undefined || state.rate.perDay === 0) continue;
-        if (state.stock >= state.rate.perDay * horizonOf(product, periodDays))
-          expect(suggested.has(product.id)).toBe(false);
-      }
-    },
-  );
+  it.each(suggestible)('$fixture.id : rien n’est suggéré quand le stock couvre la période', (s) => {
+    const periodDays = s.fixture.periodDays;
+    if (periodDays === undefined) return;
+    const states = statesOf(s, s.fixture.now);
+    const suggested = new Set(suggestionsOf(s)?.map((suggestion) => suggestion.productId));
+    for (const product of s.products) {
+      const state = states.get(product.id);
+      if (state !== undefined && state.stock >= state.rate.perDay * periodDays)
+        expect(suggested.has(product.id)).toBe(false);
+    }
+  });
 
   it.each(suggestible)(
-    '$fixture.id : une suggestion « à rythme » dépasse le besoin de moins d’un pas (RG-2, RG-10)',
+    '$fixture.id : une suggestion dépasse le besoin de moins d’un pack (RG-2)',
     (s) => {
       const periodDays = s.fixture.periodDays;
       if (periodDays === undefined) return;
@@ -196,12 +199,11 @@ describe('propriétés (specs techniques 4.8)', () => {
       for (const suggestion of suggestionsOf(s) ?? []) {
         const product = products.get(suggestion.productId);
         const state = states.get(suggestion.productId);
-        if (product?.family !== 'rhythm' || state === undefined || state.rate.perDay === 0) {
-          continue;
-        }
-        const need = state.rate.perDay * horizonOf(product, periodDays) - state.stock;
-        expect(suggestion.quantity).toBeGreaterThanOrEqual(need - 1e-9);
-        expect(suggestion.quantity).toBeLessThan(need + unitStep(product.unitKind));
+        if (product === undefined || state === undefined) continue;
+        const need = state.rate.perDay * periodDays - state.stock;
+        const units = suggestion.quantity * product.packSize;
+        expect(units).toBeGreaterThanOrEqual(need - 1e-9);
+        expect(units).toBeLessThan(need + product.packSize);
       }
     },
   );

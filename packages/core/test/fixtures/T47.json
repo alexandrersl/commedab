@@ -1,0 +1,33 @@
+{
+  "id": "T47",
+  "scenario": "Produit retiré de la liste, besoin positif : suggéré aussitôt",
+  "products": [
+    {
+      "id": "lait",
+      "declaredQty": 1,
+      "declaredPerDays": 1
+    }
+  ],
+  "purchases": [],
+  "listLines": [
+    {
+      "productId": "lait",
+      "origin": "manual",
+      "createdAt": "2026-10-01T09:00:00",
+      "deletedAt": "2026-10-01T09:30:00"
+    }
+  ],
+  "now": "2026-10-01T10:00:00",
+  "periodDays": 7,
+  "expected": {
+    "lineStates": {
+      "l1": "past"
+    },
+    "suggestions": [
+      {
+        "productId": "lait",
+        "quantity": 7
+      }
+    ]
+  }
+}

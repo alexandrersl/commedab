@@ -1,55 +1,80 @@
-import { checkListLines, checkRecipe } from './guard';
-import type { ListLine, Product, Recipe } from './model';
-import { EPSILON, roundUpToStep } from './quantity';
+import { checkInteger, checkListLines, checkProduct, checkRecipe } from './guard';
+import type { Ingredient, ListLine, Product, Recipe } from './model';
+import { EPSILON, packsFor } from './quantity';
 import type { ProductState } from './state';
+import { toProductUnits } from './units';
+
+export interface MissingIngredient {
+  productId: string;
+  /** Packs. */
+  quantity: number;
+}
 
 export interface RecipeLine {
   productId: string;
-  /** Quantité totale de la ligne après cumul, arrondie au pas de l'unité. */
+  /** Packs de la ligne après l'ajout ; 0 : la ligne est retirée. */
   quantity: number;
-  /** Une ligne du produit existe déjà sur la liste : elle est mise à jour, pas dupliquée. */
+  /** Une ligne non cochée du produit existe : elle est mise à jour, pas dupliquée. */
   existing: boolean;
 }
 
-/**
- * Ajout de recettes à la liste (specs techniques 4.6). Les quantités sont mises à l'échelle
- * des portions demandées ; un ingrédient de base n'est ajouté qu'à hauteur du manque, calculé
- * sur le total des recettes.
- */
-export function applyRecipes(input: {
-  requests: readonly { recipe: Recipe; servings: number }[];
+interface RecipeInput {
+  recipe: Recipe;
   products: ReadonlyMap<string, Product>;
   states: ReadonlyMap<string, ProductState>;
-  /** Lignes non cochées de la liste : état `pending` (4.9). */
-  listLines: readonly ListLine[];
-}): RecipeLine[] {
+}
+
+/** Ingrédients qui manquent pour faire `times` fois la recette, dans l'ordre de la recette (4.6). */
+export function missingIngredients(input: RecipeInput & { times: number }): MissingIngredient[] {
+  checkRecipe(input.recipe);
+  checkInteger('times', input.times, 1);
+  return input.recipe.ingredients.flatMap((ingredient) => {
+    const quantity = missingPacks(ingredient, input.times, input);
+    return quantity > 0 ? [{ productId: ingredient.productId, quantity }] : [];
+  });
+}
+
+/**
+ * Passage d'une recette de `from` à `to` fois sur la liste (4.6) : l'écart des manques, au
+ * stock du moment, s'ajoute aux lignes non cochées ou s'en retire. `listLines` : lignes non
+ * cochées de la liste (état `pending`).
+ */
+export function applyRecipe(
+  input: RecipeInput & { from: number; to: number; listLines: readonly ListLine[] },
+): RecipeLine[] {
+  checkRecipe(input.recipe);
+  checkInteger('from', input.from, 0);
+  checkInteger('to', input.to, 0);
   checkListLines(input.listLines);
-  const required = new Map<string, { specific: number; base: number }>();
-  for (const { recipe, servings } of input.requests) {
-    checkRecipe(recipe, servings);
-    const scale = servings / recipe.servings;
-    for (const ingredient of recipe.ingredients) {
-      const total = required.get(ingredient.productId) ?? { specific: 0, base: 0 };
-      total[ingredient.kind] += ingredient.quantity * scale;
-      required.set(ingredient.productId, total);
-    }
-  }
-
   const lines: RecipeLine[] = [];
-  for (const [productId, { specific, base }] of required) {
-    const product = input.products.get(productId);
-    if (product === undefined) throw new Error(`Produit inconnu : ${productId}`);
-    const stock = input.states.get(productId)?.stock ?? 0;
-    const added = specific + Math.max(0, base - stock);
-    if (added <= EPSILON) continue;
-
-    const current = input.listLines.filter((line) => line.productId === productId);
-    const listed = current.reduce((sum, line) => sum + line.quantity, 0);
+  for (const ingredient of input.recipe.ingredients) {
+    const delta =
+      missingPacks(ingredient, input.to, input) - missingPacks(ingredient, input.from, input);
+    const current = input.listLines.find((line) => line.productId === ingredient.productId);
+    if (delta === 0 || (delta < 0 && current === undefined)) continue;
     lines.push({
-      productId,
-      quantity: roundUpToStep(listed + added, product.unitKind),
-      existing: current.length > 0,
+      productId: ingredient.productId,
+      quantity: Math.max(0, (current?.quantity ?? 0) + delta),
+      existing: current !== undefined,
     });
   }
   return lines;
+}
+
+/**
+ * Manque d'un ingrédient en packs : la quantité requise, convertie en unités du produit (un
+ * pack sans conversion possible), moins le stock estimé ; sans quantité, un pack si le stock
+ * est nul.
+ */
+function missingPacks(ingredient: Ingredient, times: number, input: RecipeInput): number {
+  const product = input.products.get(ingredient.productId);
+  if (product === undefined) throw new Error(`Produit inconnu : ${ingredient.productId}`);
+  checkProduct(product);
+  if (times === 0) return 0;
+  const stock = input.states.get(product.id)?.stock ?? 0;
+  if (ingredient.quantity === null) return stock <= EPSILON ? 1 : 0;
+
+  const units = toProductUnits(ingredient.quantity, ingredient.unit, product) ?? product.packSize;
+  const missing = times * units - stock;
+  return missing > EPSILON ? packsFor(missing, product.packSize) : 0;
 }

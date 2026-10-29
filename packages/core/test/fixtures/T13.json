@@ -8,10 +8,9 @@
       "declaredPerDays": 1
     }
   ],
-  "events": [
+  "purchases": [
     {
       "productId": "yaourts",
-      "type": "purchased",
       "quantity": 10,
       "occurredAt": "2026-10-01T10:00:00"
     }
@@ -28,8 +27,7 @@
     "suggestions": [
       {
         "productId": "yaourts",
-        "quantity": 7,
-        "marked": false
+        "quantity": 7
       }
     ]
   }
