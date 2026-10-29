@@ -203,7 +203,7 @@ Chaque table porte household_id ; les flèches vont de l'enfant vers la référe
 | Convention | Règle |
 | --- | --- |
 | Identifiants | UUID v7 (triables par date) générés côté client, colonne `id` sur toutes les tables ; l'achat créé à la coche a pour `id` l'UUID v5 de sa ligne (5.5) |
-| Rattachement | Colonne `household_id` non nulle sur toute table métier, indexée ; clé des politiques RLS et des règles de synchro |
+| Rattachement | Colonne `household_id` non nulle sur toute table métier, indexée ; clé des politiques RLS et des règles de synchro. Une clé étrangère vers une table métier porte sur `(household_id, id)` : une ligne ne référence que son propre household |
 | Horodatage | `created_at`, `updated_at` en `timestamptz` UTC, posés par le client ; l'affichage convertit dans le fuseau de l'appareil |
 | Suppression | Logique par `deleted_at` sur les lignes de liste, les recettes de la liste, les recettes et leurs ingrédients ; archivage par `archived_at` pour les produits (RG-7). Seuls les achats sont supprimés physiquement : décocher une ligne ou supprimer un achat de l'historique efface l'achat (EF-1.3, EF-3.4), dont la trace n'aurait aucun usage |
 | Quantités | `numeric(10,3)` : en unités du produit pour les achats, les rythmes et les ingrédients, en packs pour les lignes de liste (RG-1) |
@@ -224,7 +224,7 @@ Chaque table porte household_id ; les flèches vont de l'enfant vers la référe
 
 | Colonne | Type | Note |
 | --- | --- | --- |
-| household\_id | uuid |  |
+| id, household\_id | uuid |  |
 | user\_id | uuid | référence `auth.users` |
 | created\_at | timestamptz |  |
 
@@ -266,7 +266,7 @@ Le jeu par défaut (7.4) est créé avec le household (5.6).
 | quantity | numeric | unités achetées : packs de la ligne × `pack_size` (5.3 FS) |
 | occurred\_at | timestamptz | date métier, modifiable depuis l'historique (EF-3.4) ; distincte de `created_at` |
 | list\_line\_id | uuid, nullable | ligne cochée d'origine (EF-1.3), qui porte l'origine recette pour RG-4 ; nul seulement pour un achat importé (section 10) |
-| created\_at | timestamptz |  |
+| created\_at, updated\_at | timestamptz |  |
 
 Index : `(household_id, product_id, occurred_at desc)`.
 
@@ -298,7 +298,7 @@ Un produit a au plus une ligne non cochée : ajouter un produit déjà présent 
 | Table | Colonnes |
 | --- | --- |
 | recipe | id, household\_id, name, notes (text, nullable), deleted\_at, created\_at, updated\_at |
-| recipe\_ingredient | id, household\_id, recipe\_id, product\_id, quantity (numeric, nullable), unit (text, nullable : nul = unité du produit), deleted\_at ; un produit au plus une fois par recette |
+| recipe\_ingredient | id, household\_id, recipe\_id, product\_id, quantity (numeric, nullable), unit (text, nullable : nul = unité du produit), deleted\_at, created\_at, updated\_at ; un produit au plus une fois par recette |
 
 ### 3.4 Catalogue par défaut (hors base)
 
@@ -531,6 +531,7 @@ bucket_definitions:
 - Tout l'historique du compte est synchronisé au MVP : pas de fenêtre glissante. Le volume d'un compte (quelques Mo par an) ne la justifie pas avant plusieurs années ; elle sera introduite alors, par une colonne `period_key` (année-mois) filtrée dans ces règles, sans changement de modèle.
 - `deleted_at` est synchronisé comme les autres colonnes : une suppression logique est une mise à jour ordinaire. La suppression d'un achat est un `DELETE`, répliqué comme tel sur les autres appareils.
 - Le catalogue n'apparaît pas : il est dans le binaire de l'app.
+- Les tables synchronisées sont publiées par la publication Postgres `powersync`, créée par la migration initiale ; les règles sont dans `supabase/sync-rules/sync-rules.yaml`.
 
 ### 5.4 Connecteur d'envoi
 
@@ -547,8 +548,8 @@ Les identifiants étant générés côté client (UUID v7) et les écritures ét
 | Règle | Mise en œuvre |
 | --- | --- |
 | Achat à la coche idempotent (EF-1.3) | L'`id` de l'achat créé en cochant une ligne est l'UUID v5 de `list_line.id`. Cocher crée l'achat (`upsert`), avec `occurred_at` = `checked_at` et `quantity` = `packUnits` de la ligne ; décocher le supprime (`delete`) ; recocher le recrée sous le même `id` ; modifier la quantité d'une ligne cochée met à jour l'achat. Deux appareils qui cochent la même ligne produisent le même achat, conservé une seule fois ; la dernière écriture fixe l'état |
-| Suppressions | Politique RLS `delete` sur `stock_event` seulement (3.2) ; les autres tables n'ont que des suppressions logiques, et les produits que l'archivage (`archived_at`, RG-7) |
-| Rattachement au household | RLS : `household_id in (select household_id from household_member where user_id = auth.uid())`, lecture et écriture ; `household_member` lisible par son compte, écrit uniquement par le trigger d'inscription (5.6) |
+| Suppressions | Privilège `delete` accordé sur `stock_event` seulement (3.2), la politique RLS de chaque table couvrant lecture et écriture ; les autres tables n'ont que des suppressions logiques, et les produits que l'archivage (`archived_at`, RG-7) |
+| Rattachement au household | RLS : `household_id in (select household_id from household_member where user_id = auth.uid())`, lecture et écriture ; `household_member` lisible par son compte, écrit uniquement par le trigger d'inscription (5.6) ; `household` et `category` créés par ce même trigger, le client ne faisant que les mettre à jour (`catalog_contribution`, ordre des rayons) |
 | Un compte, un household | Index unique sur `household_member.user_id` |
 
 ### 5.6 Logique serveur
