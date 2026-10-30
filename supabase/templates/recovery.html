@@ -1,0 +1,12 @@
+<!-- Réinitialisation du mot de passe (EF-5.10). Lien valable une heure (5.2). -->
+<h2>Commedab</h2>
+<p>Tu as demandé à changer de mot de passe. Ouvre ce lien pour en choisir un nouveau.</p>
+<p>
+  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=recovery"
+    >Choisir un nouveau mot de passe</a
+  >
+</p>
+<p>
+  Le lien est valable une heure. Si ce n'est pas toi, ignore cet e-mail : ton mot de passe ne change
+  pas.
+</p>
