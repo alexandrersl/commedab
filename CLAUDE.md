@@ -6,7 +6,10 @@ Liste de courses qui apprend les habitudes de son utilisateur : estime le stock
 Les spécifications font foi. Avant toute décision non couverte ici, les lire :
 
 - `docs/specs-fonctionnelles.md` (exigences EF-x.y, règles RG-x, ENF-x)
-- `docs/specs-techniques.md` (sections 1 à 10)
+- `docs/specs-techniques.md` (sections 1 à 11)
+
+`docs/design/` décrit l'apparence (design system, composants, `tokens.json`,
+maquettes) ; les specs gagnent sur le comportement.
 
 Une règle de ce fichier qui contredit les specs est un bug de ce fichier.
 
@@ -67,11 +70,13 @@ dans `data` derrière une interface.
   parce que tu en prends chaque semaine ».
 - Un seul champ obligatoire par formulaire : le nom. Un produit sans rayon va
   dans « À classer ».
-- Un geste = une action, sans confirmation (sauf la suppression du compte).
-  Sur la Liste, on annule par le geste inverse (décocher), sans message
-  éphémère ; ailleurs, une suppression s'annule par message éphémère.
+- Un geste = une action, sans confirmation (sauf la suppression d'une recette
+  ou du compte). Sur la Liste, on annule par le geste inverse (décocher), sans
+  message éphémère ; la suppression d'un achat s'annule par message éphémère.
 - Une suggestion ne se refuse pas ; ignorée, elle revient.
 - Tout fonctionne hors ligne ; aucune action n'attend le réseau.
+- Aucune valeur visuelle en dur : couleurs, tailles, rayons et durées viennent
+  de `docs/design/tokens.json` (specs techniques 11). Icônes Phosphor, jeu fermé.
 
 ## Avant chaque commit
 
