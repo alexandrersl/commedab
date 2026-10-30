@@ -319,7 +319,7 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 ### 3.6 Sécurité et synchronisation
 
 - **RLS** : une seule politique par table, `household_id in (select household_id from household_member where user_id = auth.uid())`, en lecture et en écriture ; la suppression n'est autorisée que sur `stock_event` (3.2, 5.5).
-- **Règles de synchro** : un bucket par household, contenant toutes les tables métier filtrées par `household_id`. Au MVP, tout l'historique est synchronisé ; une fenêtre glissante pourra être introduite plus tard, par une colonne `period_key`, quand le volume le justifiera (5.3).
+- **Règles de synchro** : un flux par household, contenant toutes les tables métier filtrées par `household_id`. Au MVP, tout l'historique est synchronisé ; une fenêtre glissante pourra être introduite plus tard, par une colonne `period_key`, quand le volume le justifiera (5.3).
 - **Écritures** : toutes idempotentes (UUID client), rejouées par le moteur à la reconnexion ; conflit = dernière écriture gagnante par ligne (ENF-2).
 
 ### 3.7 Points tranchés le 19/10/2026
@@ -504,34 +504,37 @@ L'app n'appelle Supabase directement que pour l'authentification et pour les éc
 
 - Supabase Auth, sans lien magique. Au MVP : e-mail et mot de passe, et connexion Google (OAuth web, gratuit) ; d'autres fournisseurs viendront après le MVP. Connexion Apple ajoutée en phase B : « Sign in with Apple » exige un identifiant de service créé dans le compte développeur Apple, et Apple l'impose dès qu'un autre fournisseur social est proposé dans une app du store ; sur la PWA de phase A, Google seul est toléré.
 - Le JWT Supabase est accepté tel quel par PowerSync (vérification par la clé publique du projet) ; aucun service d'échange de jeton.
-- L'identifiant du household n'est pas mis dans le JWT : les règles de synchro le résolvent par une **requête de paramètres** sur `household_member`, ce qui restera valable quand une liste sera partagée entre plusieurs comptes.
+- L'identifiant du household n'est pas mis dans le JWT : les règles de synchro le résolvent par une **sous-requête** sur `household_member` (`with` du flux), ce qui restera valable quand une liste sera partagée entre plusieurs comptes.
 
 ### 5.3 Règles de synchronisation
 
-Un seul bucket par household, décrit en YAML côté PowerSync :
+Un seul flux (Sync Stream) par household, abonné d'office, décrit en YAML côté PowerSync :
 
 ```yaml
-bucket_definitions:
+config:
+  edition: 3
+
+streams:
   household:
-    parameters: >
-      select household_id from household_member
-      where user_id = request.user_id()
-    data:
-      - select * from household where id = bucket.household_id
-      - select * from household_member where household_id = bucket.household_id
-      - select * from category where household_id = bucket.household_id
-      - select * from product where household_id = bucket.household_id
-      - select * from recipe where household_id = bucket.household_id
-      - select * from recipe_ingredient where household_id = bucket.household_id
-      - select * from list_line where household_id = bucket.household_id
-      - select * from list_recipe where household_id = bucket.household_id
-      - select * from stock_event where household_id = bucket.household_id
+    auto_subscribe: true
+    with:
+      own_household: SELECT household_id FROM household_member WHERE user_id = auth.user_id()
+    queries:
+      - SELECT * FROM household WHERE id IN own_household
+      - SELECT * FROM household_member WHERE household_id IN own_household
+      - SELECT * FROM category WHERE household_id IN own_household
+      - SELECT * FROM product WHERE household_id IN own_household
+      - SELECT * FROM recipe WHERE household_id IN own_household
+      - SELECT * FROM recipe_ingredient WHERE household_id IN own_household
+      - SELECT * FROM list_line WHERE household_id IN own_household
+      - SELECT * FROM list_recipe WHERE household_id IN own_household
+      - SELECT * FROM stock_event WHERE household_id IN own_household
 ```
 
 - Tout l'historique du compte est synchronisé au MVP : pas de fenêtre glissante. Le volume d'un compte (quelques Mo par an) ne la justifie pas avant plusieurs années ; elle sera introduite alors, par une colonne `period_key` (année-mois) filtrée dans ces règles, sans changement de modèle.
 - `deleted_at` est synchronisé comme les autres colonnes : une suppression logique est une mise à jour ordinaire. La suppression d'un achat est un `DELETE`, répliqué comme tel sur les autres appareils.
 - Le catalogue n'apparaît pas : il est dans le binaire de l'app.
-- Les tables synchronisées sont publiées par la publication Postgres `powersync`, créée par la migration initiale ; les règles sont dans `supabase/sync-rules/sync-rules.yaml`.
+- Les tables synchronisées sont publiées par la publication Postgres `powersync`, créée par la migration initiale ; les règles sont dans `supabase/sync-streams/sync-streams.yaml`. Le client n'a aucun abonnement à demander : `auto_subscribe` synchronise le flux dès la connexion.
 
 ### 5.4 Connecteur d'envoi
 
