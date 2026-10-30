@@ -6,3 +6,10 @@
   déployées dans la même étape que les migrations.
 
 Pas d'instance locale : le développement utilise le projet cloud `commedab-dev`.
+
+- `config.toml` : configuration de l'authentification (fournisseurs, URL de redirection, liens
+  d'une heure, SMTP Resend) et des fonctions, appliquée par `supabase config push` (5.2).
+- `templates/` : e-mails du compte dans la voix de l'application (EF-5.11).
+- `functions/export-data/` : export des données envoyé par e-mail (5.6), déployé par
+  `supabase functions deploy export-data`.
+- `.env.example` : secrets attendus ; copié en `supabase/.env`, jamais commité.

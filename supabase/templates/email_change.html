@@ -1,0 +1,11 @@
+<!-- Changement d'adresse (évolution 9 des specs fonctionnelles), écrit dès le MVP (EF-5.11). -->
+<h2>Commedab</h2>
+<p>Tu veux recevoir les e-mails de Commedab à {{ .NewEmail }}. Ouvre ce lien pour confirmer.</p>
+<p>
+  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email_change"
+    >Confirmer ma nouvelle adresse</a
+  >
+</p>
+<p>
+  Le lien est valable une heure. Si ce n'est pas toi, ignore cet e-mail : ton adresse ne change pas.
+</p>
