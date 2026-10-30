@@ -32,7 +32,7 @@ Deux familles, hébergées par Google Fonts (Expo : `@expo-google-fonts/fraunces
 - **Fraunces, droit, jamais en italique.** Deux graisses : 600 pour les titres (`title-screen` 28, `title-hero` 32, `title-section` 17, nom de recette sur carte 20) ; 500 pour les phrases en langage courant (`sentence` : l'estimation à 18, « Comme d'hab chef ? » à 24). En dessous de 18 px, Fraunces est interdite.
 - **Manrope** pour tout le reste : `body` 16/500 (champs), `body-strong` 16/600 (nom d'un produit), `body-sm` 14/500, `label` 13/600, `caption` 12/600, `tab` 11/600, `button` 15/700, `button-sm` 13/700.
 
-Les tailles sont celles des maquettes ; on ne les augmente pas. Dynamic Type iOS est respecté : aucune hauteur de ligne n'est figée dans les composants, les contrôles grandissent avec leur texte. Chiffres tabulaires (`tabular-nums`) partout où des quantités s'alignent.
+Les tailles sont celles des maquettes ; on ne les augmente pas. Les hauteurs de ligne de `tokens.json` sont des valeurs de base à la taille système par défaut : Dynamic Type iOS est respecté, les composants n'imposent aucune hauteur en pixels et grandissent avec leur texte. Chiffres tabulaires (`tabular-nums`) partout où des quantités s'alignent.
 
 ## Espacement, formes, bordures
 
@@ -78,10 +78,11 @@ Pas de toast pour un geste dont le résultat est visible sous le doigt. Un toast
 Où il y a des icônes, et où il n'y en a pas :
 - **Onglets** : `ListChecks`, `Basket`, `ChefHat`, `Sliders`.
 - **Utilitaires** : `MagnifyingGlass` (recherche), `Check` en *bold* (coche), `CaretLeft` / `CaretRight` (navigation), `Plus`, `X`, `WifiSlash`.
-- **Rayons** : un jeu fermé de 17 icônes, une par rayon, devant chaque en-tête de section de la liste et de l'annuaire (voir le composant Icons). On n'en ajoute pas sans ajouter un rayon.
+- **Rayons** : un jeu fermé, une icône par rayon par défaut des specs techniques (7.4) plus « À classer », devant chaque en-tête de section de la liste et de l'annuaire (voir le composant Icons). On n'en ajoute pas sans ajouter un rayon.
 - **Recette** : `ChefHat` est le seul signe récurrent de la marque ; il marque une recette partout (onglet, pastille, résultat de recherche).
 - **États vides** : une icône du jeu ci-dessus à 40 px en `ink-muted` au-dessus du titre, facultative.
 - **Jamais** : sur une ligne de produit, dans un titre, sur une carte recette, en décoration. Pas d'emoji, pas d'illustration.
+- **Apple** : le bouton « Continuer avec Apple » n'est affiché qu'en natif (iOS/Android), jamais sur la PWA.
 
 En magasin on scanne des noms ; les icônes servent au repérage des groupes, pas à décorer les lignes.
 
@@ -91,7 +92,7 @@ Pas de logo dessiné à ce stade : le nom en Fraunces 600 fait office de marque 
 
 ## Pour le code
 
-`tokens.json` est la source des valeurs : il alimente `tailwind.config` de NativeWind (couleurs par thème, `fontFamily`, `spacing`, `borderRadius`) et `docs/design-system.md` dans le dépôt. Les aperçus de composants sont en HTML/CSS et servent de référence visuelle, pas de code à copier : les composants React Native reprennent les mêmes noms d'états (`pressed`, `disabled`, `loading`, `pending`, `highlight`, `checked`, `complete`, `selected`).
+`tokens.json` est la source des valeurs : il alimente `tailwind.config` de NativeWind (couleurs par thème, `fontFamily`, `spacing`, `borderRadius`). Dans le dépôt, le design system vit dans `docs/design/` (`design-system.md`, `components.md`, `tokens.json`). Les aperçus de composants sont en HTML/CSS et servent de référence visuelle, pas de code à copier : les composants React Native reprennent les mêmes noms d'états (`pressed`, `disabled`, `loading`, `pending`, `highlight`, `checked`, `complete`, `selected`).
 
 
 # Voix
@@ -117,9 +118,9 @@ Ces textes sont ceux de l'app ; un nouveau texte doit pouvoir se glisser parmi e
 | Contexte | Texte |
 | --- | --- |
 | Titre des suggestions | Comme d'hab chef ? |
-| Justification d'une suggestion | Tu en prends 5 par semaine, il doit t'en rester 1 |
-| Justification d'une suggestion | D'habitude tu en reprends tous les 12 jours |
-| Justification d'une suggestion | Le dernier pack date de 9 jours |
+| Justification d'une suggestion | Il doit t'en rester 1, de quoi tenir jusqu'à mardi |
+| Justification d'une suggestion | D'habitude tu en reprends tous les 12 jours, ça fait 11 |
+| Justification d'une suggestion | Le dernier pack date de 9 jours, il doit être fini |
 | Estimation, rythme connu | Il t'en reste environ 2 bouteilles, de quoi tenir jusqu'à mardi. |
 | Estimation, probablement fini | Probablement fini : le dernier pack date de 3 semaines. |
 | Estimation, rien à dire | Je ne sais pas encore : dis-moi quand tu en reprends, j'apprendrai. |
@@ -137,9 +138,9 @@ Ces textes sont ceux de l'app ; un nouveau texte doit pouvoir se glisser parmi e
 | Toast, erreur d'écriture | Pas enregistré — Réessayer |
 | Bandeau hors ligne | Hors ligne · tes modifications seront envoyées plus tard |
 | Erreur de chargement | Impossible de charger tes produits. Réessaie, et si ça continue, dis-le nous depuis les Réglages. |
-| Réglage | Aider à améliorer le catalogue — Rythmes d'achat partagés, anonymes et agrégés |
+| Réglage | Aider à améliorer le catalogue — Noms de produits partagés, anonymes et agrégés |
 | Champ de rythme | Tu en prends · appris · 5 / semaine |
-| Erreur de champ | Un chiffre, en L ou en cl |
+| Erreur de champ | Un chiffre |
 
 ## À ne pas écrire
 
@@ -147,4 +148,5 @@ Ces textes sont ceux de l'app ; un nouveau texte doit pouvoir se glisser parmi e
 - « Félicitations, votre liste est terminée ! »
 - « Êtes-vous sûr de vouloir supprimer cet élément ? » → un bouton « Supprimer la recette » en `alert` dans une feuille suffit ; le libellé est la question.
 - « Chargement en cours… » → un squelette.
+- « OK » sur la barre du clavier → « Terminé », le libellé système.
 - « Aucun résultat. » → la ligne « Créer « … » » est la réponse.
