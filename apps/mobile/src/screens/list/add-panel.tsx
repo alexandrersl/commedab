@@ -8,16 +8,11 @@ import {
 } from '@commedab/core';
 import { Plus } from 'phosphor-react-native';
 import { useMemo, useState, type ReactNode } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable as RNPressable,
-  ScrollView,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable as RNPressable, View } from 'react-native';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AddControl } from '../../components/add-control';
+import { CardList, type CardEntry } from '../../components/card-list';
 import { Glyph } from '../../components/icons';
 import { Divider, ListRow } from '../../components/list-row';
 import { Badge, Pill } from '../../components/pill';
@@ -52,17 +47,31 @@ function Title({ children, meta }: { children: string; meta?: string }) {
   );
 }
 
-function Rows({ children }: { children: ReactNode[] }) {
-  return (
-    <View>
-      {children.map((child, i) => (
-        <View key={i}>
-          {i > 0 && <Divider />}
-          {child}
-        </View>
-      ))}
-    </View>
-  );
+function resultKey(result: SearchResult): string {
+  switch (result.kind) {
+    case 'recipe':
+      return `recipe-${result.recipe.id}`;
+    case 'product':
+      return `product-${result.product.id}`;
+    case 'catalog':
+      return `catalog-${result.entry.id}`;
+    case 'create':
+      return 'create';
+  }
+}
+
+/** Une entrée du panneau : un titre, ou une ligne et le séparateur qui la précède. */
+type Entry =
+  | { kind: 'title'; node: ReactNode }
+  | { kind: 'row'; node: ReactNode; divider: boolean; inset: boolean };
+
+function rowsOf(prefix: string, rows: { key: string; node: ReactNode }[], inset: boolean) {
+  return rows.map(({ key, node }, i): CardEntry<Entry> => ({
+    key: `${prefix}-${key}`,
+    type: 'row',
+    card: false,
+    item: { kind: 'row', node, divider: i > 0, inset },
+  }));
 }
 
 /**
@@ -225,9 +234,10 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
       .slice(0, PROPOSED_CATEGORIES);
   }, [engine.products, engine.categories]);
 
-  let content: ReactNode;
+  let header: ReactNode = null;
+  let entries: CardEntry<Entry>[] = [];
   if (createdProduct !== undefined && query === '') {
-    content = (
+    header = (
       <View className="gap-3 px-4 pt-4">
         <View className="flex-row items-center gap-3">
           <View className="flex-1">
@@ -289,63 +299,89 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
       </View>
     );
   } else if (query.trim() !== '') {
-    content = <Rows>{results.map((result) => renderResult(result))}</Rows>;
+    entries = rowsOf(
+      'result',
+      results.map((result) => ({ key: resultKey(result), node: renderResult(result) })),
+      false,
+    );
   } else if (engine.loading) {
-    content = (
+    header = (
       <View className="px-4 pt-4">
         <Title>{"Comme d'hab chef ?"}</Title>
         <SkeletonRows count={2} header={false} />
       </View>
     );
   } else {
-    content = (
-      <View className="px-4">
-        {suggestions.length > 0 && (
-          <>
-            <View className="pb-1 pt-4">
-              <Text variant="sentence-lg">{"Comme d'hab chef ?"}</Text>
-            </View>
-            <Rows>
-              {suggestions.map((suggestion) => {
+    const title = (key: string, node: ReactNode): CardEntry<Entry> => ({
+      key,
+      type: key,
+      card: false,
+      item: { kind: 'title', node },
+    });
+    entries = [
+      ...(suggestions.length > 0
+        ? [
+            title(
+              'suggestions',
+              <View className="pb-1 pt-4">
+                <Text variant="sentence-lg">{"Comme d'hab chef ?"}</Text>
+              </View>,
+            ),
+            ...rowsOf(
+              'suggestion',
+              suggestions.flatMap((suggestion) => {
                 const product = engine.productById.get(suggestion.productId);
                 const state = engine.states.get(suggestion.productId);
-                if (product === undefined || state === undefined) return null;
-                return (
-                  <SuggestionRow
-                    key={suggestion.productId}
+                if (product === undefined || state === undefined) return [];
+                return [
+                  {
+                    key: product.id,
+                    node: (
+                      <SuggestionRow
+                        name={product.name}
+                        reason={suggestionReason(product, state, engine.now)}
+                        suggested={suggestion.quantity}
+                        quantity={quantityOf(product.id)}
+                        quantityLabel={labelOf(product.id)}
+                        pending={pending.has(lineOf(product.id)?.id ?? '')}
+                        onChange={(next) =>
+                          change(product.id, next, () =>
+                            data.list.acceptSuggestion(product.id, next),
+                          )
+                        }
+                      />
+                    ),
+                  },
+                ];
+              }),
+              true,
+            ),
+          ]
+        : []),
+      ...(everything.length > 0
+        ? [
+            title(
+              'everything',
+              <Title meta={`${everything.length} · du plus acheté`}>Tous tes produits</Title>,
+            ),
+            ...rowsOf(
+              'product',
+              everything.map((product) => ({
+                key: product.id,
+                node: (
+                  <ListRow
+                    checkbox={false}
                     name={product.name}
-                    reason={suggestionReason(product, state, engine.now)}
-                    suggested={suggestion.quantity}
-                    quantity={quantityOf(product.id)}
-                    quantityLabel={labelOf(product.id)}
-                    pending={pending.has(lineOf(product.id)?.id ?? '')}
-                    onChange={(next) =>
-                      change(product.id, next, () => data.list.acceptSuggestion(product.id, next))
-                    }
+                    subtitle={productSubtitle(product.id)}
+                    accessory={productControl(product.id)}
                   />
-                );
-              })}
-            </Rows>
-          </>
-        )}
-        {everything.length > 0 && (
-          <>
-            <Title meta={`${everything.length} · du plus acheté`}>Tous tes produits</Title>
-            <Rows>
-              {everything.map((product) => (
-                <ListRow
-                  key={product.id}
-                  checkbox={false}
-                  name={product.name}
-                  subtitle={productSubtitle(product.id)}
-                  accessory={productControl(product.id)}
-                />
-              ))}
-            </Rows>
-          </>
-        )}
-      </View>
-    );
+                ),
+              })),
+              true,
+            ),
+          ]
+        : []),
+    ];
   }
 
   return (
@@ -365,13 +401,21 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
           entering={SlideInDown.duration(duration.base)}
           className="flex-1 overflow-hidden rounded-t-sheet bg-ground"
         >
-          <ScrollView
-            className="flex-1"
-            keyboardShouldPersistTaps="handled"
-            contentContainerClassName="pb-4"
-          >
-            {content}
-          </ScrollView>
+          <CardList
+            gutter={false}
+            entries={entries}
+            header={header}
+            render={(entry) =>
+              entry.kind === 'title' ? (
+                <View className="px-4">{entry.node}</View>
+              ) : (
+                <View className={entry.inset ? 'px-4' : ''}>
+                  {entry.divider && <Divider />}
+                  {entry.node}
+                </View>
+              )
+            }
+          />
           <View
             className="border-t-thin border-line bg-surface px-4 py-2"
             style={{ paddingBottom: Math.max(insets.bottom, space['2']) }}
