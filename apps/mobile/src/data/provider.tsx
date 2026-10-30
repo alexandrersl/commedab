@@ -1,4 +1,4 @@
-import { openAppDatabase, type AppDatabase, type Data, type SyncState } from '@commedab/data';
+import { openAppDatabase, type AppDatabase, type Data, type SyncStatus } from '@commedab/data';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useSession } from '../auth/session';
 import { supabase } from '../auth/supabase';
@@ -57,9 +57,25 @@ export function useData(): Data {
   return useAppDatabase().data;
 }
 
-export function useSyncState(): SyncState {
+const INITIAL: SyncStatus = { online: true, synced: false, rejected: false };
+
+export function useSyncStatus(): SyncStatus {
   const db = useAppDatabase();
-  const [state, setState] = useState<SyncState>('pending');
-  useEffect(() => db.onSyncState(setState), [db]);
-  return state;
+  const [status, setStatus] = useState<SyncStatus>(INITIAL);
+  useEffect(() => db.onStatus(setStatus), [db]);
+  return status;
+}
+
+const NONE: ReadonlySet<string> = new Set();
+
+/** Lignes écrites sur l'appareil, pas encore acceptées par le serveur (EF-6.3). */
+export function usePendingIds(): ReadonlySet<string> {
+  const db = useAppDatabase();
+  const [ids, setIds] = useState(NONE);
+  useEffect(() => db.onPending(setIds), [db]);
+  return ids;
+}
+
+export function useRetryUpload(): () => void {
+  return useAppDatabase().retryUpload;
 }

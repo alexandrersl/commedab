@@ -1,6 +1,5 @@
 import { Tabs } from 'expo-router/js-tabs';
 import { Basket, ChefHat, ListChecks, Sliders, type Icon } from 'phosphor-react-native';
-import { SyncDot } from '../../components/sync-dot';
 import { useTheme } from '../../theme';
 
 function icon(TabIcon: Icon) {
@@ -22,7 +21,6 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerRight: () => <SyncDot />,
         tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors['ink-muted'],
       }}

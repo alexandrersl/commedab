@@ -3,9 +3,10 @@
 // Les écrans n'importent jamais PowerSync et n'écrivent jamais de SQL : tout passe par ici.
 // Voir docs/specs-techniques.md, sections 2.9, 5 et 6.2.
 
-export { openAppDatabase, type AppDatabase, type SyncState } from './app-database';
+export { openAppDatabase, type AppDatabase, type SyncStatus } from './app-database';
 export {
   createData,
+  type AccountServer,
   type Data,
   type DeletedPurchase,
   type ProductChanges,

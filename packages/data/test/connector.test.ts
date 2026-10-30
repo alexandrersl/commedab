@@ -2,6 +2,7 @@ import { UpdateType, type CrudEntry, type CrudTransaction } from '@powersync/com
 import { describe, expect, it } from 'vitest';
 import {
   isRejection,
+  RejectedTransactionError,
   uploadNextTransaction,
   type Backend,
   type RejectedWrite,
@@ -64,17 +65,17 @@ describe('connecteur d’envoi (specs techniques 5.4)', () => {
     expect(await t.run()).toBe(false);
   });
 
-  it('abandonne une transaction refusée par le serveur, sans ses données', async () => {
+  it('garde en file une transaction refusée par le serveur et la signale, sans ses données', async () => {
     const t = setup(
       [entry(UpdateType.DELETE, 'product', 'p1'), entry(UpdateType.PUT, 'product', 'p2', {})],
       [{ status: 403, error: { code: '42501', message: 'permission denied' } }],
     );
-    await t.run();
+    await expect(t.run()).rejects.toBeInstanceOf(RejectedTransactionError);
     expect(t.rejected).toEqual([
       { table: 'product', op: UpdateType.DELETE, status: 403, code: '42501' },
     ]);
     expect(t.calls).toHaveLength(1);
-    expect(t.completed()).toBe(1);
+    expect(t.completed()).toBe(0);
   });
 
   it('garde en file une transaction qui échoue sur le réseau ou le serveur', async () => {
@@ -95,7 +96,7 @@ describe('connecteur d’envoi (specs techniques 5.4)', () => {
     [429, false],
     [500, false],
     [0, false],
-  ])('statut %i : abandon %s', (status, rejected) => {
+  ])('statut %i : refus %s', (status, rejected) => {
     expect(isRejection(status)).toBe(rejected);
   });
 });

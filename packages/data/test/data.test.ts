@@ -121,6 +121,15 @@ describe('liste (EF-1.3 à EF-1.5, EF-2.9 à EF-2.11)', () => {
     expect(await db.getOptional('SELECT archived_at FROM product')).toEqual({ archived_at: null });
   });
 
+  it('reprend un produit archivé sans l’ajouter à la liste, et refuse de le régler avant (EF-3.8)', async () => {
+    await data.products.stopBuying(milk);
+    await expect(data.products.updateProduct(milk, { packSize: 2 })).rejects.toThrow('archivé');
+    await data.products.resumeBuying(milk);
+    expect(await db.getOptional('SELECT archived_at FROM product')).toEqual({ archived_at: null });
+    expect(await lines()).toEqual([]);
+    await data.products.updateProduct(milk, { packSize: 2 });
+  });
+
   it('crée l’achat de la coche, le corrige, le supprime au décochage et le recrée', async () => {
     const line = await data.list.acceptSuggestion(milk, 2);
     at('2026-10-29T17:30:00Z');
@@ -289,7 +298,7 @@ describe('rayons (EF-5.1, RG-9)', () => {
 });
 
 describe('compte (EF-5.4, EF-5.5)', () => {
-  it('règle la contribution au catalogue et exporte sans identifiant de household', async () => {
+  it('règle la contribution au catalogue', async () => {
     await data.account.setCatalogContribution(false);
     const settings: unknown[] = [];
     const stop = data.account.watch({ onResult: (s) => settings.push(s) });
@@ -301,20 +310,21 @@ describe('compte (EF-5.4, EF-5.5)', () => {
       { householdId: HOUSEHOLD, catalogContribution: false },
       { householdId: HOUSEHOLD, catalogContribution: true },
     ]);
+  });
 
-    await data.products.createProduct({ name: 'Lait', entry: null, addToList: true });
-    const exported = await data.account.exportData();
-    expect(Object.keys(exported)).toEqual([
-      'exported_at',
-      'categories',
-      'products',
-      'purchases',
-      'recipes',
-      'recipe_ingredients',
-      'list_lines',
-      'list_recipes',
-    ]);
-    expect(JSON.stringify(exported)).not.toContain('household_id');
+  it('confie l’export et la suppression du compte au serveur (5.6)', async () => {
+    const calls: string[] = [];
+    const remote = createData(db, {
+      now: () => clock,
+      server: {
+        requestExport: async () => void calls.push('export'),
+        deleteAccount: async () => void calls.push('delete'),
+      },
+    });
+    await remote.account.requestExport();
+    await remote.account.deleteAccount();
+    expect(calls).toEqual(['export', 'delete']);
+    await expect(data.account.requestExport()).rejects.toThrow();
   });
 });
 

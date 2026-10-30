@@ -20,7 +20,7 @@ export interface Backend {
   delete(table: string, id: string): PromiseLike<WriteResult>;
 }
 
-/** Écriture abandonnée : la ligne locale sera écrasée par l'état serveur à la synchro suivante. */
+/** Écriture refusée par le serveur : elle reste en file, l'envoi est suspendu (specs techniques 5.4). */
 export interface RejectedWrite {
   table: string;
   op: UpdateType;
@@ -37,9 +37,9 @@ export function supabaseBackend(client: SupabaseClient): Backend {
 }
 
 /**
- * Un refus du serveur (contrainte, RLS, privilège) ne passera jamais : la transaction est
- * abandonnée. Une erreur réseau, une session expirée, une limite de débit ou une 5xx est
- * rejouée plus tard.
+ * Un refus du serveur (contrainte, RLS, privilège) ne passera pas de lui-même : l'envoi est
+ * suspendu jusqu'à un nouvel essai demandé. Une erreur réseau, une session expirée, une limite
+ * de débit ou une 5xx est rejouée plus tard, sans suspension.
  */
 export function isRejection(status: number): boolean {
   return status >= 400 && status < 500 && ![401, 408, 429].includes(status);
@@ -56,7 +56,17 @@ function write(backend: Backend, entry: CrudEntry): PromiseLike<WriteResult> {
   }
 }
 
-/** Rejoue la plus ancienne transaction en file ; rend faux quand la file est vide. */
+/** Levée quand le serveur refuse une écriture : la transaction reste en file. */
+export class RejectedTransactionError extends Error {
+  constructor(readonly rejected: RejectedWrite) {
+    super(`Écriture refusée (${rejected.status}) sur ${rejected.table}`);
+  }
+}
+
+/**
+ * Rejoue la plus ancienne transaction en file ; rend faux quand la file est vide. Une
+ * transaction refusée n'est jamais abandonnée : aucune perte silencieuse (EF-6.4).
+ */
 export async function uploadNextTransaction(
   db: Pick<CommonPowerSyncDatabase, 'getNextCrudTransaction'>,
   backend: Backend,
@@ -70,8 +80,9 @@ export async function uploadNextTransaction(
     if (!isRejection(status)) {
       throw new Error(`Envoi interrompu (${status}) : ${error.message}`);
     }
-    onRejected({ table: entry.table, op: entry.op, status, code: error.code });
-    break;
+    const rejected = { table: entry.table, op: entry.op, status, code: error.code };
+    onRejected(rejected);
+    throw new RejectedTransactionError(rejected);
   }
   await transaction.complete();
   return true;
@@ -79,9 +90,12 @@ export async function uploadNextTransaction(
 
 /**
  * Connecteur PowerSync ↔ Supabase (specs techniques 5.2, 5.4) : jeton de la session Supabase,
- * écritures rejouées dans l'ordre sous RLS. Aucune logique métier.
+ * écritures rejouées dans l'ordre sous RLS. Après un refus, l'envoi reste suspendu jusqu'à
+ * `release` (« Réessayer », retour du réseau). Aucune logique métier.
  */
 export class SupabaseConnector implements PowerSyncBackendConnector {
+  private held = false;
+
   constructor(
     private readonly client: SupabaseClient,
     private readonly powersyncUrl: string,
@@ -102,8 +116,22 @@ export class SupabaseConnector implements PowerSyncBackendConnector {
     };
   }
 
+  get suspended(): boolean {
+    return this.held;
+  }
+
+  release(): void {
+    this.held = false;
+  }
+
   async uploadData(db: CommonPowerSyncDatabase): Promise<void> {
+    if (this.held) throw new Error('Envoi suspendu après un refus du serveur');
     const backend = supabaseBackend(this.client);
-    while (await uploadNextTransaction(db, backend, this.onRejected));
+    try {
+      while (await uploadNextTransaction(db, backend, this.onRejected));
+    } catch (error) {
+      if (error instanceof RejectedTransactionError) this.held = true;
+      throw error;
+    }
   }
 }
