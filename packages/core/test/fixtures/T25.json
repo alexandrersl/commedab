@@ -4,8 +4,7 @@
   "products": [
     {
       "id": "pain",
-      "declaredQty": 1,
-      "declaredPerDays": 1
+      "declaredDaysPerUnit": 1
     }
   ],
   "purchases": [],

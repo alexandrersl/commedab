@@ -4,8 +4,7 @@
   "products": [
     {
       "id": "sel",
-      "declaredQty": 1,
-      "declaredPerDays": 32767
+      "declaredDaysPerUnit": 32767
     }
   ],
   "purchases": [

@@ -43,8 +43,7 @@ export function checkProduct(product: Product): void {
       'doit être un nombre fini > 0',
     );
   }
-  checkFinite(`${field}.declaredQty`, product.declaredQty);
-  checkFinite(`${field}.declaredPerDays`, product.declaredPerDays);
+  checkFinite(`${field}.declaredDaysPerUnit`, product.declaredDaysPerUnit);
   checkFinite(`${field}.contentsQty`, product.contentsQty);
   checkFinite(`${field}.catalogQty`, product.catalogQty);
   checkFinite(`${field}.catalogPerDays`, product.catalogPerDays);

@@ -32,17 +32,19 @@ export function quantity(value: Quantity): number {
 
 /** Complète la fixture avec les valeurs par défaut du modèle (specs techniques 3.3). */
 export function scenario(fixture: Fixture): Scenario {
-  const products: Product[] = fixture.products.map((product) => ({
+  const products: Product[] = fixture.products.map(({ declaredDaysPerUnit, ...product }) => ({
     unitLabel: 'pièce',
     packSize: 1,
-    declaredQty: null,
-    declaredPerDays: null,
     contentsQty: null,
     contentsUnit: null,
     catalogQty: null,
     catalogPerDays: null,
     archivedAt: null,
     ...product,
+    declaredDaysPerUnit:
+      declaredDaysPerUnit === undefined || declaredDaysPerUnit === null
+        ? null
+        : quantity(declaredDaysPerUnit),
   }));
   const purchases: Purchase[] = fixture.purchases.map((purchase, i) => ({
     id: `p${i + 1}`,

@@ -15,7 +15,10 @@ export type Quantity = number | string;
 export interface Fixture {
   id: string;
   scenario: string;
-  products: (Partial<Product> & { id: string })[];
+  products: (Partial<Omit<Product, 'declaredDaysPerUnit'>> & {
+    id: string;
+    declaredDaysPerUnit?: Quantity | null;
+  })[];
   purchases: (Partial<Purchase> & Pick<Purchase, 'productId' | 'quantity' | 'occurredAt'>)[];
   listLines?: (Partial<ListLine> & { productId: string })[];
   listRecipes?: (Partial<ListRecipe> & { recipeId: string })[];
@@ -120,8 +123,7 @@ const product = object(
     id: string,
     unitLabel: string,
     packSize: number,
-    declaredQty: nullable(number),
-    declaredPerDays: nullable(number),
+    declaredDaysPerUnit: nullable(quantity),
     contentsQty: nullable(number),
     contentsUnit: nullable(string),
     catalogQty: nullable(number),

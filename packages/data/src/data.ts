@@ -34,9 +34,8 @@ export interface ProductChanges {
   packSize?: number;
   contentsQty?: number | null;
   contentsUnit?: string | null;
-  /** Rythme déclaré, à effacer ensemble pour rendre la main au rythme appris (EF-3.3). */
-  declaredQty?: number | null;
-  declaredPerDays?: number | null;
+  /** Rythme déclaré en jours par unité ; nul rend la main au rythme appris (EF-3.3). */
+  declaredDaysPerUnit?: number | null;
 }
 
 export interface RecipeInput {
@@ -57,8 +56,7 @@ const PRODUCT_COLUMNS: Record<keyof ProductChanges, string> = {
   packSize: 'pack_size',
   contentsQty: 'contents_qty',
   contentsUnit: 'contents_unit',
-  declaredQty: 'declared_qty',
-  declaredPerDays: 'declared_per_days',
+  declaredDaysPerUnit: 'declared_days_per_unit',
 };
 
 function checkPacks(packs: number): void {
