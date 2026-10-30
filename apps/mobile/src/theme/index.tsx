@@ -36,6 +36,12 @@ const FONT_FILES: Record<string, number> = {
   Manrope_700Bold,
 };
 
+function fontFile(name: string): number {
+  const file = FONT_FILES[name];
+  if (file === undefined) throw new Error(`Police ${name} de tokens.json non importée`);
+  return file;
+}
+
 function pixels(value: string): number {
   return Number.parseFloat(value);
 }
@@ -45,8 +51,19 @@ export const size = Object.fromEntries(
   Object.entries(tokens.size).map(([name, value]) => [name, pixels(value)]),
 ) as Record<keyof typeof tokens.size, number>;
 
+/** Espacements de `tokens.json`, en points : `space[4]` vaut 16. */
+export const space = Object.fromEntries(
+  Object.entries(tokens.spacing).map(([name, value]) => [name, pixels(value)]),
+) as Record<'1' | '2' | '3' | '4' | '6' | '8', number>;
+
 /** Zone de tap portée à `control` (44) autour d'un contrôle de `control-sm` (36) : ENF-1. */
 export const HIT_SLOP = (size.control - size['control-sm']) / 2;
+
+/** Règles communes des états (`docs/design/design-system.md`, États). */
+export const STATE = { pressedScale: 0.97, pressedOpacity: 0.85, disabled: 0.45, pending: 0.55 };
+
+/** Taille des icônes : 22 dans les onglets et les en-têtes, 16 dans les pastilles, 14 en en-tête de rayon. */
+export const ICON = { header: size.icon, pill: 16, section: 14, empty: 40 };
 
 const VARS = {
   light: vars(
@@ -57,6 +74,8 @@ const VARS = {
 
 interface Theme {
   scheme: Scheme;
+  /** Variables de couleur du thème, à reposer sur ce qui s'affiche hors de l'arbre (feuilles). */
+  vars: (typeof VARS)[Scheme];
   /** Valeurs des couleurs pour ce qui ne prend pas de classe (icônes, curseurs, indicateurs). */
   colors: Record<ColorName, string>;
   /** Durées en ms, nulles quand le système réduit les animations. */
@@ -80,11 +99,12 @@ export function ThemeRoot({ children, scheme: forced }: { children: ReactNode; s
   const scheme: Scheme = forced ?? (system === 'dark' ? 'dark' : 'light');
   const reduced = useReducedMotion();
   const [loaded, error] = useFonts(
-    Object.fromEntries(tokens.fontNames.map((name) => [name, FONT_FILES[name] ?? 0])),
+    Object.fromEntries(tokens.fontNames.map((name) => [name, fontFile(name)])),
   );
   const theme = useMemo<Theme>(
     () => ({
       scheme,
+      vars: VARS[scheme],
       colors: tokens.colors[scheme],
       duration: Object.fromEntries(
         Object.entries(tokens.duration).map(([name, value]) => [name, reduced ? 0 : pixels(value)]),

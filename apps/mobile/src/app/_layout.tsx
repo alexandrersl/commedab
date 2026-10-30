@@ -1,7 +1,9 @@
 import '../../global.css';
+import '../theme/interop';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SessionProvider, useSession } from '../auth/session';
+import { ToastProvider } from '../components/toast';
 import { AppDataProvider } from '../data/provider';
 import { ThemeRoot } from '../theme';
 
@@ -11,7 +13,9 @@ export default function RootLayout() {
       <ThemeRoot>
         <SessionProvider>
           <AppDataProvider>
-            <Routes />
+            <ToastProvider>
+              <Routes />
+            </ToastProvider>
           </AppDataProvider>
         </SessionProvider>
       </ThemeRoot>
@@ -26,6 +30,7 @@ function Routes() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="gallery" />
       <Stack.Protected guard={signedIn && !recovering}>
         <Stack.Screen name="(tabs)" />
       </Stack.Protected>
