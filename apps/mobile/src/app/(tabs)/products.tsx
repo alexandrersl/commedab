@@ -15,7 +15,7 @@ import { Text } from '../../components/text';
 import { shortEstimate } from '../../copy/estimate';
 import { useEngine } from '../../data/engine';
 import { usePendingIds, useSyncStatus } from '../../data/provider';
-import { ICON } from '../../theme';
+import { size } from '../../theme';
 
 interface Group {
   key: string;
@@ -115,7 +115,9 @@ export default function Products() {
                         subtitleTone={line === undefined ? estimate.tone : 'muted'}
                         pending={pending.has(product.id)}
                         onPress={() => router.push(`/product/${product.id}`)}
-                        accessory={<Glyph icon={CaretRight} color="ink-muted" size={ICON.pill} />}
+                        accessory={
+                          <Glyph icon={CaretRight} color="ink-muted" size={size['icon-sm']} />
+                        }
                       />
                     </Fragment>
                   );
@@ -132,7 +134,7 @@ export default function Products() {
             <Text variant="body-sm" tone="muted">
               {`Tu n'achètes plus ${archivedCount} produit${archivedCount > 1 ? 's' : ''}`}
             </Text>
-            <Glyph icon={CaretRight} color="ink-muted" size={ICON.pill} />
+            <Glyph icon={CaretRight} color="ink-muted" size={size['icon-sm']} />
           </Pressable>
         )}
       </>

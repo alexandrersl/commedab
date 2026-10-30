@@ -7,12 +7,28 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { ICON, useTheme } from '../theme';
+import { opacity, size, useTheme } from '../theme';
 import { Button } from './button';
 import { Glyph } from './icons';
 import { Text } from './text';
 
-const WIDTHS = { full: '100%', half: '50%', third: '33%' } as const;
+const WIDTHS = { full: 'w-full', half: 'w-1/2', third: 'w-1/3' } as const;
+
+/**
+ * Pulse des squelettes : `duration-slow` × 4 par battement (tokens.json, `skeleton`), jusqu'à
+ * l'opacité d'attente ; immobile quand le système réduit les animations.
+ */
+export function usePulse() {
+  const { duration } = useTheme();
+  const value = useSharedValue(1);
+  useEffect(() => {
+    value.value =
+      duration.slow === 0
+        ? 1
+        : withRepeat(withTiming(opacity.pending, { duration: duration.slow * 4 }), -1, true);
+  }, [duration.slow, value]);
+  return useAnimatedStyle(() => ({ opacity: value.value }));
+}
 
 /** Bloc de squelette qui pulse (components.md, States) ; jamais de spinner plein écran. */
 export function Skeleton({
@@ -24,19 +40,11 @@ export function Skeleton({
   tall?: boolean;
   round?: boolean;
 }) {
-  const { duration } = useTheme();
-  const opacity = useSharedValue(1);
-  useEffect(() => {
-    opacity.value =
-      duration.slow === 0
-        ? 1
-        : withRepeat(withTiming(0.5, { duration: duration.slow * 4 }), -1, true);
-  }, [duration.slow, opacity]);
-  const pulse = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  const pulse = usePulse();
   return (
     <Animated.View
-      className={`rounded-pill bg-skeleton ${tall ? 'h-control-sm' : 'h-3'} ${round ? 'w-checkbox h-checkbox' : ''}`}
-      style={[round ? undefined : { width: WIDTHS[width] }, pulse]}
+      className={`rounded-pill bg-skeleton ${tall ? 'h-control-sm' : 'h-3'} ${round ? 'h-checkbox w-checkbox' : WIDTHS[width]}`}
+      style={pulse}
     />
   );
 }
@@ -83,7 +91,7 @@ export function EmptyState({
 }) {
   return (
     <View className="items-center gap-2 rounded-card border-thin border-line bg-surface px-6 py-8">
-      {icon !== undefined && <Glyph icon={icon} color="ink-muted" size={ICON.empty} />}
+      {icon !== undefined && <Glyph icon={icon} color="ink-muted" size={size['icon-lg']} />}
       <Text variant="sentence" className="text-center">
         {title}
       </Text>
@@ -106,7 +114,7 @@ export function OfflineBanner({ text }: { text: string }) {
       accessibilityLiveRegion="polite"
       className="flex-row items-center gap-3 rounded-card bg-surface-2 px-3 py-2"
     >
-      <Glyph icon={WifiSlash} color="ink-muted" size={ICON.pill} />
+      <Glyph icon={WifiSlash} color="ink-muted" size={size['icon-sm']} />
       <Text variant="caption" tone="muted" className="flex-1">
         {text}
       </Text>

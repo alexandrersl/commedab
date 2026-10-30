@@ -18,7 +18,7 @@ import { Toggle } from '../../components/toggle';
 import { useData, useSyncStatus } from '../../data/provider';
 import { useWatch } from '../../data/use-watch';
 import { useWrite } from '../../data/use-write';
-import { STATE, useTheme } from '../../theme';
+import { useTheme, opacity } from '../../theme';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -55,7 +55,7 @@ function Row({
       disabled={disabled || onPress === undefined}
       accessibilityLabel={action === undefined ? label : `${action} ${label}`}
       className="min-h-row flex-row items-center justify-between gap-3 px-4"
-      style={disabled ? { opacity: STATE.disabled } : undefined}
+      style={disabled ? { opacity: opacity.disabled } : undefined}
     >
       <Text variant={tone === 'action' ? 'button' : 'body'} tone={tone}>
         {label}

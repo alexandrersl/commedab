@@ -6,15 +6,15 @@ import {
   Cookie,
   Cow,
   DotsThreeCircle,
+  Grains,
   HandSoap,
-  Package,
   Snowflake,
   SprayBottle,
   Wine,
   type Icon,
   type IconWeight,
 } from 'phosphor-react-native';
-import { ICON, useTheme, type ColorName } from '../theme';
+import { size as sizes, useTheme, type ColorName } from '../theme';
 
 /** Icône de chaque rayon par défaut, par sa clé (specs techniques 11.2) ; nul : « À classer ». */
 const CATEGORY_ICONS: Record<string, Icon> = {
@@ -23,7 +23,7 @@ const CATEGORY_ICONS: Record<string, Icon> = {
   'entretien-maison': SprayBottle,
   'fruits-legumes': Carrot,
   boulangerie: Bread,
-  'epicerie-salee': Package,
+  'epicerie-salee': Grains,
   'epicerie-sucree': Cookie,
   boissons: Wine,
   cremerie: Cheese,
@@ -35,7 +35,7 @@ const CATEGORY_ICONS: Record<string, Icon> = {
 export function Glyph({
   icon: Component,
   color = 'ink',
-  size = ICON.header,
+  size = sizes.icon,
   weight = 'regular',
 }: {
   icon: Icon;
@@ -50,7 +50,7 @@ export function Glyph({
 export function CategoryIcon({
   categoryKey,
   color = 'ink-muted',
-  size = ICON.section,
+  size = sizes['icon-xs'],
 }: {
   categoryKey: string | null;
   color?: ColorName;

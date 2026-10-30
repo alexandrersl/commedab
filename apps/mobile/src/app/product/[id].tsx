@@ -30,7 +30,7 @@ import { categoryName, productMeta, purchaseLabel } from '../../screens/products
 import { PurchaseSheet } from '../../screens/products/purchase-sheet';
 import { RateSheet } from '../../screens/products/rate-sheet';
 import { useWrite } from '../../data/use-write';
-import { STATE } from '../../theme';
+import { opacity } from '../../theme';
 
 const RATE_HINTS: Record<RateSource, string> = {
   declared: 'déclaré',
@@ -139,7 +139,7 @@ export default function ProductSheet() {
     <View className="gap-2">
       <View
         className="flex-row"
-        style={pending.has(line?.id ?? '') ? { opacity: STATE.pending } : undefined}
+        style={pending.has(line?.id ?? '') ? { opacity: opacity.pending } : undefined}
       >
         <AddControl
           quantity={line?.quantity ?? null}
@@ -287,7 +287,7 @@ export default function ProductSheet() {
                 onPress={() => setPurchase(entry)}
                 accessibilityLabel={`${historyDate(entry.occurredAt)}, ${purchaseLabel(product, entry.quantity)}`}
                 className="min-h-control flex-row items-center justify-between px-4"
-                style={pending.has(entry.id) ? { opacity: STATE.pending } : undefined}
+                style={pending.has(entry.id) ? { opacity: opacity.pending } : undefined}
               >
                 <Text variant="body-sm" tone="muted">
                   {historyDate(entry.occurredAt)}

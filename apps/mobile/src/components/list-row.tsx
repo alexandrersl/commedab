@@ -2,7 +2,7 @@ import { Check } from 'phosphor-react-native';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import { ICON, STATE } from '../theme';
+import { opacity, size } from '../theme';
 import { CategoryIcon, Glyph } from './icons';
 import { Pressable } from './pressable';
 import { Text } from './text';
@@ -49,7 +49,7 @@ export function ListRow({
       className={`min-h-row flex-row items-center gap-3 px-4 py-2 ${
         highlight ? 'border-l-focus border-action bg-surface-2' : 'bg-surface'
       }`}
-      style={pending ? { opacity: STATE.pending } : undefined}
+      style={pending ? { opacity: opacity.pending } : undefined}
     >
       {checkbox && (
         <View
@@ -57,7 +57,7 @@ export function ListRow({
             checked ? 'bg-action' : 'border-strong border-line-strong'
           }`}
         >
-          {checked && <Glyph icon={Check} color="on-action" size={ICON.section} weight="bold" />}
+          {checked && <Glyph icon={Check} color="on-action" size={size['icon-xs']} weight="bold" />}
         </View>
       )}
       <View className="flex-1">
@@ -86,7 +86,7 @@ export function ListRow({
   return (
     <ReanimatedSwipeable
       friction={2}
-      rightThreshold={48}
+      rightThreshold={size['control-lg']}
       renderRightActions={() => (
         <Pressable
           onPress={onRemove}

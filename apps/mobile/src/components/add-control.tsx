@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { Minus, Plus } from 'phosphor-react-native';
 import { Platform, View } from 'react-native';
-import { ICON, STATE } from '../theme';
+import { opacity, size } from '../theme';
 import { Button } from './button';
 import { Glyph } from './icons';
 import { Pressable } from './pressable';
@@ -44,7 +44,7 @@ export function Stepper({
           ? 'rounded-field border-thin border-line-strong bg-surface'
           : 'rounded-pill border-thin border-action bg-action-soft'
       }`}
-      style={disabled ? { opacity: STATE.disabled } : undefined}
+      style={disabled ? { opacity: opacity.disabled } : undefined}
     >
       <Pressable
         small
@@ -53,7 +53,7 @@ export function Stepper({
         accessibilityLabel={removes ? 'Retirer' : 'Moins'}
         className="min-h-control-sm min-w-control-sm items-center justify-center"
       >
-        <Glyph icon={Minus} size={ICON.pill} color={removes ? 'alert' : tone} />
+        <Glyph icon={Minus} size={size['icon-sm']} color={removes ? 'alert' : tone} />
       </Pressable>
       <Text
         variant="button-sm"
@@ -69,7 +69,7 @@ export function Stepper({
         accessibilityLabel="Plus"
         className="min-h-control-sm min-w-control-sm items-center justify-center"
       >
-        <Glyph icon={Plus} size={ICON.pill} color={tone} />
+        <Glyph icon={Plus} size={size['icon-sm']} color={tone} />
       </Pressable>
     </View>
   );
@@ -100,7 +100,7 @@ export function AddControl({
   disabled?: boolean;
 }) {
   return (
-    <View style={pending ? { opacity: STATE.pending } : undefined}>
+    <View style={pending ? { opacity: opacity.busy } : undefined}>
       {quantity === null ? (
         <Button
           variant="outline"

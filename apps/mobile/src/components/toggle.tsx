@@ -1,5 +1,5 @@
 import { Switch, View } from 'react-native';
-import { STATE, useTheme } from '../theme';
+import { useTheme, opacity } from '../theme';
 import { Text } from './text';
 
 /**
@@ -23,7 +23,7 @@ export function Toggle({
   return (
     <View
       className="min-h-row flex-row items-center gap-3 px-4 py-2"
-      style={disabled ? { opacity: STATE.disabled } : undefined}
+      style={disabled ? { opacity: opacity.disabled } : undefined}
     >
       <View className="flex-1">
         <Text variant="body">{label}</Text>

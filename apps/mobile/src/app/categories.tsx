@@ -14,7 +14,7 @@ import { Text } from '../components/text';
 import { useEngine } from '../data/engine';
 import { useData } from '../data/provider';
 import { useWrite } from '../data/use-write';
-import { ICON, size, useTheme } from '../theme';
+import { size, useTheme } from '../theme';
 
 /** Un rayon qu'on glisse par sa poignée, d'autant de rangs que le doigt parcourt de lignes. */
 function DraggableRow({
@@ -62,10 +62,10 @@ function DraggableRow({
             accessibilityLabel={`Déplacer ${category.name}`}
             className="min-h-control min-w-control items-center justify-center"
           >
-            <Glyph icon={DotsSixVertical} color="ink-muted" size={ICON.pill} />
+            <Glyph icon={DotsSixVertical} color="ink-muted" size={size['icon-sm']} />
           </View>
         </GestureDetector>
-        <CategoryIcon categoryKey={category.key} color="ink" size={ICON.pill} />
+        <CategoryIcon categoryKey={category.key} color="ink" size={size['icon-sm']} />
         <Text variant="body" className="flex-1">
           {category.name}
         </Text>

@@ -27,10 +27,22 @@ declare const tokens: {
   spacing: Record<string, string>;
   radius: Record<string, string>;
   size: Record<
-    'control-sm' | 'control' | 'control-lg' | 'row' | 'checkbox' | 'icon' | 'tab-bar',
+    | 'control-sm'
+    | 'control'
+    | 'control-lg'
+    | 'row'
+    | 'checkbox'
+    | 'icon'
+    | 'icon-sm'
+    | 'icon-xs'
+    | 'icon-lg'
+    | 'progress'
+    | 'tab-bar',
     string
   >;
   border: Record<string, string>;
+  opacity: Record<'disabled' | 'pending' | 'busy', string>;
+  scale: Record<'pressed', string>;
   duration: Record<'fast' | 'base' | 'slow', string>;
 };
 

@@ -4,7 +4,7 @@ import { Glyph } from '../../components/icons';
 import { Pressable } from '../../components/pressable';
 import { Text } from '../../components/text';
 import { displayUnit } from '../../copy/words';
-import { ICON, useTheme } from '../../theme';
+import { useTheme, size } from '../../theme';
 
 /**
  * Un ingrédient en cours d'édition (planche Nouvelle recette) : nom, quantité facultative en
@@ -52,7 +52,7 @@ export function IngredientRow({
         className="min-h-control-sm flex-row items-center gap-1 rounded-field border-thin border-line-strong bg-surface px-2"
       >
         <Text variant="button-sm">{displayUnit(unit)}</Text>
-        <Glyph icon={CaretDown} size={ICON.pill} color="ink-muted" />
+        <Glyph icon={CaretDown} size={size['icon-sm']} color="ink-muted" />
       </Pressable>
       <Pressable
         small
@@ -60,7 +60,7 @@ export function IngredientRow({
         accessibilityLabel={`Retirer ${name}`}
         className="min-h-control-sm min-w-control-sm items-center justify-center"
       >
-        <Glyph icon={X} color="ink-muted" size={ICON.pill} />
+        <Glyph icon={X} color="ink-muted" size={size['icon-sm']} />
       </Pressable>
     </View>
   );
