@@ -8,7 +8,7 @@ Le composant d'ajout commun, présent partout où un produit ou une recette peut
 
 Deux états qui se remplacent sur place :
 
-1. **Pas sur la liste** → bouton contour « Ajouter » (ou « Ajouter N » quand le moteur propose une quantité). Sur la fiche produit, deux boutons quand le produit s'achète par packs : « Ajouter 1 pack (6) » et « + 1 bouteille ».
+1. **Pas sur la liste** → bouton contour « Ajouter » (ou « Ajouter N » quand le moteur propose une quantité). Sur la fiche produit, un seul bouton : « Ajouter 1 pack (6) » quand le produit s'achète par packs, « Ajouter 1 bouteille » sinon ; la liste compte en packs entiers.
 2. **Sur la liste** → stepper `− N +`. `+` ajoute une unité (ou un pack). `−` à 1 **retire la ligne** sans rien enregistrer : le `−` passe en `alert` pour le dire. Pour une recette, N est le nombre de fois qu'elle est comptée.
 
 États : en attente (`is-pending`, opacité 0,6 pendant l'écriture locale, jamais plus de `duration-base` visible en pratique), désactivé si le produit est archivé. Variante **champ** (`is-field`, rectangle `surface` bordé `line-strong`, texte `ink`) pour régler une valeur hors liste (packs, quantité) : le fond `action-soft` reste réservé à « sur la liste ». Le passage bouton → stepper se fait en `duration-fast`, sans toast : le changement sous le doigt suffit.
@@ -53,6 +53,23 @@ Jamais de pourcentage, jamais de « stock », jamais de date brute : un jour de 
 Le jeu d'icônes de l'app : Phosphor, importé tel quel depuis `@phosphor-icons/core` (ici) et `phosphor-react-native` (dans l'app). Deux graisses : *regular* partout, *fill* pour l'onglet actif, *bold* pour la coche seulement.
 
 Trois familles d'usage, et rien d'autre : les onglets, les utilitaires, et le jeu fermé des rayons (les 11 rayons par défaut des specs techniques 7.4, plus « À classer »). Une icône de rayon s'affiche à 22 px dans l'annuaire Produits et à 14 px devant un en-tête de section de la liste, toujours en `currentColor` de son texte.
+
+| Rayon (specs 7.4) | Icône Phosphor |
+| --- | --- |
+| À classer | `DotsThreeCircle` |
+| Hygiène et beauté | `HandSoap` |
+| Bébé et animaux | `Baby` |
+| Entretien et maison | `SprayBottle` |
+| Fruits et légumes | `Carrot` |
+| Boulangerie | `Bread` |
+| Épicerie salée | `Grains` |
+| Épicerie sucrée | `Cookie` |
+| Boissons | `Wine` |
+| Crémerie | `Cheese` |
+| Viande, poisson, traiteur | `Cow` |
+| Surgelés | `Snowflake` |
+
+Onglets : `ListChecks`, `Basket`, `ChefHat`, `Sliders`. Utilitaires : `MagnifyingGlass`, `Check` (bold), `CaretLeft`, `CaretRight`, `CaretDown`, `Plus`, `X`, `WifiSlash`, `EnvelopeSimple`, `DotsSixVertical` (poignée de tri). Marques, uniquement sur les boutons de connexion : logos officiels Google (en couleur, c'est une exigence de Google) et Apple, hors tokens par exception documentée.
 
 Ajouter une icône = ajouter un rayon ou un geste ; on ne met jamais d'icône sur une ligne de produit, un titre ou une carte recette. Les noms des rayons doivent rester alignés sur la liste des rayons des spécifications.
 
@@ -120,7 +137,9 @@ L'en-tête d'un écran. Deux formes :
 - **Racine** (onglet) : titre `title-screen` à gauche, une méta ou une action à droite (« 2 sur 12 », « + Nouvelle »). Marge haute `space-6`.
 - **Fiche** : flèche retour Phosphor `CaretLeft` à gauche, actions texte à droite (« Modifier », « Supprimer » en `alert`, « Je n'en achète plus »), puis le nom en `title-hero` sur la ligne suivante avec sa méta en `label`.
 
-Jamais plus de deux actions à droite. Pas de titre centré, pas d'icône dans le titre.
+- **Modal** (création, ordre des rayons) : « Annuler » à gauche, titre centré en `title-section`, action à droite (« Enregistrer »), ou retour à gauche et titre centré sans action.
+
+Jamais plus de deux actions à droite, pas d'icône dans le titre. Le titre centré n'existe que sur les écrans modaux.
 
 ## SearchField
 
@@ -140,7 +159,7 @@ Trois formes, trois interactions :
 2. **Saisie numérique** (Contenance, quantité d'ingrédient) : chiffres tabulaires alignés à droite, toujours accolée à un sélecteur d'unité (cl / L / g / kg) quand la valeur en a une. Tap → le rectangle passe en bordure `action` 1,5 px avec curseur, clavier numérique, barre « Terminé » au-dessus du clavier (le libellé système, jamais « OK »). Enregistré en quittant le champ ; erreur en `caption` `alert` sous le libellé, bordure `alert`, valeur conservée.
 3. **Stepper de valeur** (Acheté par packs de, quantité dans la feuille du rythme ; la feuille du rythme porte aussi un segment jour / semaine / mois, capsule `surface-2` avec l'option active en `surface`) : même mécanique que le stepper d'ajout, mais en **variante champ** : rectangle `radius-field`, fond `surface`, bordure `line-strong`, texte `ink`, − et + en `ink-muted`. Le vert `action` sur un stepper veut toujours dire « sur la liste » ; un réglage n'y a pas droit.
 
-En tête de la section : le **nom** (saisie texte) et le **rayon** (sélecteur). Le rythme porte un indice `appris` / `déclaré` / `à définir` en `ink-muted` devant la valeur : le moteur dit d'où vient le chiffre. Pendant l'enregistrement, un spinner `action` remplace le chevron ; jamais de bouton « Valider ». Désactivé (produit archivé) : toute la ligne à 0,45, pas de chevron. Toute la ligne est tapable, pas seulement le rectangle.
+En tête de la section : le **nom** (saisie texte) et le **rayon** (sélecteur). Le rythme porte un indice `appris` (calculé sur les achats) / `habituel` (venu du catalogue) / `déclaré` / `à définir` en `ink-muted` devant la valeur : le moteur dit d'où vient le chiffre. Pendant l'enregistrement, un spinner `action` remplace le chevron ; jamais de bouton « Valider ». Désactivé (produit archivé) : toute la ligne à 0,45, pas de chevron. Toute la ligne est tapable, pas seulement le rectangle.
 
 ## States
 
