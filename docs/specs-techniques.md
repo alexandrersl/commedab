@@ -23,6 +23,7 @@ Contraintes de départ, indépendantes des choix :
 | 8. Sécurité et données personnelles | Décidé |
 | 9. Qualité, CI/CD, exploitation | Décidé |
 | 10. Contraintes pour les évolutions | Validé |
+| 11. Design system | Décidé |
 
 ## 1. Cible et plan de livraison
 
@@ -104,7 +105,7 @@ Ce modèle « réplique locale, autorité serveur » répond aux trois exigences
 | Composant | Choix | Rôle |
 | --- | --- | --- |
 | Base serveur | PostgreSQL via Supabase | Source de vérité, schéma relationnel, Row Level Security par household |
-| Authentification | Supabase Auth | Compte par e-mail et mot de passe ou Google, Apple en phase B (5.2) ; le household n'est pas dans le JWT, les règles de synchro le résolvent par `household_member` |
+| Authentification | Supabase Auth | Compte par e-mail et mot de passe, Google, ou Apple en phase B (5.2) ; le household n'est pas dans le JWT, les règles de synchro le résolvent par `household_member` |
 | Synchronisation | PowerSync | Réplique Postgres vers SQLite sur l'appareil, file d'écritures hors ligne rejouée à la reconnexion, règles de synchro limitant chaque appareil aux données de son household |
 | Base locale | SQLite : pilote natif du SDK PowerSync React Native (op-sqlite) sur iOS et Android, wa-sqlite sur OPFS pour le web | Lecture et écriture de l'app, requêtes SQL, réactivité |
 | Logique serveur | Fonctions Postgres et Supabase Edge Functions, uniquement si nécessaire | Validation d'écritures, tâches planifiées, futur import de commandes |
@@ -130,7 +131,7 @@ Ce modèle « réplique locale, autorité serveur » répond aux trois exigences
 ### 2.5 Compte et household
 
 - Le **household** est l'ensemble des données d'un compte : au MVP, un compte a exactement un household, qui ne sert que de rattachement technique (RLS, synchro). Aucun écran ne le montre : pas de nom, pas de taille, pas de membres.
-- Inscription par e-mail ou Google à la première ouverture, immédiatement suivie de la création automatique du household du compte. Aucun écran d'initialisation (EF-5.3).
+- Inscription par e-mail, Google ou Apple à la première ouverture, immédiatement suivie de la création automatique du household du compte. Une inscription par e-mail n'ouvre de session qu'après confirmation de l'adresse (5.2) : rien n'est écrit dans le household avant. Aucun écran d'initialisation (EF-5.3).
 - Toute table métier porte une colonne `household_id`, jamais `user_id` : la politique RLS autorise un utilisateur sur les lignes du household dont il est membre. Le partage d'une liste (évolution 6 des spécifications fonctionnelles) se résumera à ajouter un membre au household, sans migration des données.
 - Les règles de synchro PowerSync sélectionnent les lignes par `household_id` ; un appareil ne reçoit que son household.
 
@@ -181,7 +182,7 @@ Coût estimé d'un remplacement dans ces conditions : réécriture de la couche 
 
 ## 3. Modèle de données
 
-**Statut : validé le 19/10/2026, révisé le 29/10/2026.**
+**Statut : validé le 19/10/2026, révisé le 30/10/2026.**
 
 ### 3.1 Vue d'ensemble
 
@@ -250,7 +251,7 @@ Le jeu par défaut (7.4) est créé avec le household (5.6).
 | category\_id | uuid, nullable | nul = « À classer », groupe affiché en tête de liste (EF-1.2, EF-2.8) |
 | unit\_label | text | unité comptée (RG-1) : « pièce » par défaut, « bouteille », « kg »… |
 | pack\_size | numeric | unités par pack, strictement positif, 1 par défaut (5.3 FS) |
-| declared\_qty, declared\_per\_days | numeric, smallint, nullables | rythme déclaré : `declared_qty` unités par `declared_per_days` jours (EF-3.3) |
+| declared\_days\_per\_unit | numeric, nullable | rythme déclaré, en jours par unité (EF-3.3) : saisi en unités par jour, semaine ou mois, converti par `core` (4.3) ; seule cette forme est enregistrée |
 | contents\_qty, contents\_unit | numeric, text, nullables | contenance d'une unité : 1 et `l`, 500 et `g` (EF-4.4) |
 | catalog\_entry\_id, catalog\_version | text, smallint, nullables | origine catalogue (RG-8) |
 | catalog\_qty, catalog\_per\_days | numeric, smallint, nullables | rythme indicatif pour une personne, copié du catalogue à la création et jamais resynchronisé (RG-8) |
@@ -330,7 +331,7 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 
 ## 4. Moteur d'estimation
 
-**Statut : décidé le 19/10/2026, révisé le 29/10/2026.**
+**Statut : décidé le 19/10/2026, révisé le 30/10/2026.**
 
 ### 4.1 Principes
 
@@ -345,6 +346,8 @@ Au MVP, ces données sont calculées à la volée par le moteur (section 4) et m
 | Fonction | Entrées | Sortie |
 | --- | --- | --- |
 | `resolveRate` | produit (avec les valeurs catalogue copiées), achats du produit | rythme en unités par jour, source (`declared`, `learned`, `catalog`, `none`), nombre d'intervalles utilisés |
+| `toDaysPerUnit` | quantité et période (`day`, `week`, `month`) saisies dans la feuille du rythme | rythme déclaré en jours par unité, à enregistrer (4.3) |
+| `toPerPeriod` | rythme en unités par jour | quantité entière et période, pour l'afficher (« 5 / semaine ») et préremplir la feuille (4.3) |
 | `observedIntervals` | achats d'un produit | intervalles entre achats (fiche produit, tests) |
 | `estimateStock` | produit, achats et lignes de la liste du produit, rythme, date courante | stock estimé, date d'ancrage, date d'épuisement prévue, dernier achat |
 | `productState` | produit, achats et lignes de la liste du produit, date courante | `ProductState` : rythme et stock estimé |
@@ -364,10 +367,12 @@ Chaque fonction vérifie ses entrées et lève une `InvalidInputError`, qui nomm
 
 Le rythme `r` s'exprime en unités par jour. Sources par priorité (5.1 FS) :
 
-1. **Déclaré** : `r = declared_qty / declared_per_days`. Une quantité ou une durée nulle ou négative vaut absence de rythme déclaré : on passe à la source suivante (T23).
+1. **Déclaré** : `r = 1 / declared_days_per_unit`. Une durée nulle ou négative vaut absence de rythme déclaré : on passe à la source suivante (T23).
 2. **Appris** : voir ci-dessous ; retenu seulement si au moins 3 achats éligibles (RG-3).
 3. **Catalogue** : `r = catalog_qty / catalog_per_days`, valeur pour une personne copiée sur le produit à sa création. Une valeur nulle ou négative est ignorée (T22) : elle ramènerait la borne du rythme appris à zéro. Une mise à jour du catalogue ne change rien (RG-8).
 4. **Aucun** : produit sans rythme ; jamais suggéré.
+
+**Saisie et affichage du rythme.** La fiche produit montre et fait saisir un rythme en unités par jour, par semaine ou par mois (EF-3.3), qui durent 1, 7 et 30 jours. `toDaysPerUnit` convertit la saisie, `N` unités par période de `P` jours, en `P / N` jours par unité : 5 par semaine donnent 1,4 jour par unité (T52). `N` est un nombre fini strictement positif ; une autre valeur est refusée par une `InvalidInputError`. Seule la durée par unité est enregistrée : la période saisie ne l'est pas. À l'inverse, `toPerPeriod` exprime un rythme `r`, déclaré, appris ou du catalogue, dans la période où `r × P`, arrondi à l'entier, s'écarte le moins de sa valeur exacte, en écart relatif ; à égalité, la plus courte l'emporte, et un arrondi nul écarte la période. Une saisie se réaffiche donc telle quelle, à une période équivalente près (14 par semaine se relisent 2 / jour). Un rythme inférieur à une unité tous les 60 jours s'affiche « 1 / mois », la plus petite valeur que la feuille permette de saisir (T52).
 
 **Rythme appris.** Soient les achats éligibles du produit, triés par date : `P1 … Pn` avec leurs quantités `q1 … qn`. Un achat est éligible s'il ne provient pas d'une ligne d'origine recette (RG-4).
 
@@ -481,12 +486,13 @@ Les tests sont écrits avant le moteur, sous forme de fixtures JSON (produits, a
 | T49 | Ingrédients en grammes sur un produit à contenance, sur un produit au kilo, et dans une unité inconvertible (4.6) | conversion par la contenance, par l'unité, sinon un pack |
 | T50 | Recette ajoutée une fois, comptée deux fois, puis retirée (4.6) | manque doublé, puis lignes ramenées à zéro et retirées |
 | T51 | Recette avec deux lignes dont une cochée, recette à laquelle rien ne manquait, avant et après les courses suivantes (4.7) | 1 sur 2 ; pleine ; disparues à l'ouverture qui suit les courses |
+| T52 | Rythmes saisis par jour, par semaine et par mois, et rythmes affichés (4.3) | 5 par semaine → 1,4 jour par unité, relu 5 / semaine ; rythme déclaré de 1,4 jour par unité : r = 5/7 ; 1 par 42 jours affiché 1 / mois |
 
 Propriétés vérifiées en complément : le moteur est idempotent (deux appels identiques donnent le même résultat), le stock n'est jamais négatif, la quantité suggérée est nulle dès que le stock couvre la période, et une suggestion dépasse le besoin de moins d'un pack.
 
 ## 5. API et synchronisation
 
-**Statut : décidé le 19/10/2026, révisé le 29/10/2026.**
+**Statut : décidé le 19/10/2026, révisé le 30/10/2026.**
 
 ### 5.1 Principe
 
@@ -498,11 +504,16 @@ Il n'y a **pas d'API applicative** au MVP. Trois couches remplacent ce qu'une AP
 | Règles de synchronisation | Quelles lignes descendent vers quel appareil | PowerSync Service |
 | Connecteur d'envoi | Comment les écritures locales remontent | Module unique dans l'app (2.9) |
 
-L'app n'appelle Supabase directement que pour l'authentification et pour les écritures du connecteur ; toutes ses lectures passent par SQLite.
+L'app n'appelle Supabase directement que pour l'authentification, pour les écritures du connecteur et pour les deux opérations de compte (5.6) ; toutes ses lectures passent par SQLite.
 
 ### 5.2 Authentification
 
-- Supabase Auth, sans lien magique. Au MVP : e-mail et mot de passe, et connexion Google (OAuth web, gratuit) ; d'autres fournisseurs viendront après le MVP. Connexion Apple ajoutée en phase B : « Sign in with Apple » exige un identifiant de service créé dans le compte développeur Apple, et Apple l'impose dès qu'un autre fournisseur social est proposé dans une app du store ; sur la PWA de phase A, Google seul est toléré.
+- **Fournisseurs** : Supabase Auth, sans lien magique. E-mail et mot de passe, Google (OAuth web, gratuit) et Apple, proposés dans cet ordre (EF-5.8). « Sign in with Apple » exige un identifiant de service créé dans le compte développeur Apple, et Apple l'impose dès qu'un autre fournisseur social est proposé dans une app du store : il est prévu dès maintenant (écran, configuration) et activé en phase B ; la PWA de phase A n'affiche que Google. D'autres fournisseurs viendront après le MVP.
+- **Confirmation de l'adresse** : activée, comportement par défaut de Supabase. `signUp` ne rend pas de session tant que l'adresse n'est pas confirmée ; une connexion sur une adresse non confirmée (`email_not_confirmed`) mène à l'écran « Vérifie ta boîte mail ». Le renvoi (`resend`) est limité par Supabase à un e-mail par minute et par adresse : l'écran en tient le compte à rebours, de 60 s après chaque envoi (EF-5.9). Une adresse jamais confirmée garde un household vide, créé par le trigger d'inscription (5.6), sans effet sur le service.
+- **Mot de passe** : 8 caractères minimum (8.3). La réinitialisation (`resetPasswordForEmail`) répond de la même façon que l'adresse ait un compte ou non (EF-5.10). Le lien est valable une heure ; Supabase applique une même durée à tous les liens envoyés par e-mail (expiration de l'OTP e-mail, réglage du projet), qui vaut donc aussi pour la confirmation de l'adresse.
+- **Session** : persistante, sans « se souvenir de moi » ; le client Supabase garde la session sur l'appareil et la prolonge par le jeton de rafraîchissement (8.3). Elle ne se ferme qu'à la déconnexion ou à la suppression du compte.
+- **Liens profonds** : tout lien d'un e-mail du compte et tout retour OAuth reviennent dans l'application, sur la route qui le traite (confirmation, nouveau mot de passe), par l'URL de la PWA en phase A et par le schéma `commedab://` en natif (`scheme` d'`app.json`). L'application passe cette adresse de retour à chaque appel (`emailRedirectTo`, `redirectTo`) ; chacune est déclarée dans les URL de redirection autorisées du projet Supabase, pour chaque environnement (9.3). Le lien porte un `token_hash` et son type, que la route vérifie (`verifyOtp`) : un lien expiré ou déjà utilisé ouvre « Lien expiré » (EF-5.10). Point de vigilance : certains clients de messagerie ne rendent pas cliquable un lien `commedab://` ; si le test sur iPhone le confirme en phase B, les e-mails pointeront vers une URL `https` du domaine de la PWA, associée à l'application (liens universels), qui la relaie.
+- **E-mails** : les modèles de Supabase sont remplacés par des modèles écrits dans la voix de l'application (`docs/design/design-system.md`, Voix ; EF-5.11) : confirmation de l'adresse, réinitialisation du mot de passe, changement d'adresse (écrit dès le MVP, servi par l'évolution 9 des spécifications fonctionnelles). Ils sont versionnés dans `supabase/templates/` avec la configuration de l'authentification (fournisseurs, URL de redirection, durée des liens) et appliqués au projet par le CLI, jamais retouchés dans le tableau de bord. L'envoi passe par un serveur SMTP déclaré au projet : celui de Supabase par défaut ne délivre qu'aux adresses de l'équipe du projet, ce qui suffit en phase A pour l'auteur seul, pas au-delà.
 - Le JWT Supabase est accepté tel quel par PowerSync (vérification par la clé publique du projet) ; aucun service d'échange de jeton.
 - L'identifiant du household n'est pas mis dans le JWT : les règles de synchro le résolvent par une **sous-requête** sur `household_member` (`with` du flux), ce qui restera valable quand une liste sera partagée entre plusieurs comptes.
 
@@ -561,19 +572,20 @@ Les identifiants étant générés côté client (UUID v7) et les écritures ét
 Réduite au strict minimum :
 
 - **Création du household** : trigger Postgres sur `auth.users` à l'inscription, qui crée `household` (`catalog_contribution` vrai), `household_member` et le jeu de rayons par défaut avec leurs `key` et `system_key` (7.4). Aucun écran d'initialisation (EF-5.3).
-- **Export des données** (EF-5.5) : réalisé côté client depuis SQLite, en JSON, sans fonction serveur ; tout l'historique étant synchronisé (5.3), l'export local est complet. Le fichier contient les produits, les achats, les recettes avec leurs ingrédients et leurs notes, la liste (`list_line` et `list_recipe`, lignes passées comprises) et les rayons dans leur ordre.
+- **Export des données** (EF-5.5) : Edge Function `export-data`, appelée par l'app avec le JWT de la session. Elle lit sous RLS les données du household et envoie le JSON en pièce jointe d'un e-mail à l'adresse du compte, par le serveur SMTP du projet (5.2) ; l'app affiche le message éphémère dès que la fonction a accepté la demande, sans attendre l'e-mail. Le fichier contient les produits, les achats, les recettes avec leurs ingrédients et leurs notes, la liste (`list_line` et `list_recipe`, lignes passées comprises) et les rayons dans leur ordre. Le serveur étant la référence, l'export est complet dès que la file d'écritures de l'appareil est vide ; il n'est proposé qu'en ligne (EF-6.3).
 - **Suppression du compte** (EF-5.6) : fonction Postgres `delete_account()` appelée par l'app, qui supprime physiquement le household et toutes ses données, puis l'utilisateur ; l'app vide ensuite sa base locale. Les agrégats anonymes déjà constitués pour le catalogue (7.3) ne contiennent aucune donnée du compte et ne sont pas concernés.
 
-Pas d'Edge Function au MVP. Elles n'arriveront qu'avec les notifications et l'import de commandes (section 10).
+Une seule Edge Function au MVP, l'export ; les suivantes n'arriveront qu'avec les notifications et l'import de commandes (section 10).
 
 ### 5.7 Points tranchés le 19/10/2026
 
 1. Fenêtre glissante abandonnée au MVP : tout l'historique est synchronisé ; `period_key` sera ajouté quand le volume le justifiera.
 2. Pas de lien magique : mot de passe et Google au MVP, Apple en phase B, d'autres fournisseurs ensuite.
+3. Décidé le 30/10/2026 : confirmation de l'adresse e-mail à l'inscription, liens profonds pour tous les e-mails du compte, modèles d'e-mail versionnés (5.2) ; export envoyé par e-mail par une Edge Function (5.6).
 
 ## 6. Frontend
 
-**Statut : décidé le 26/10/2026, révisé le 29/10/2026.**
+**Statut : décidé le 26/10/2026, révisé le 30/10/2026.**
 
 ### 6.1 Structure du projet
 
@@ -595,10 +607,10 @@ repo/
 | Langage | TypeScript strict partout, `noUncheckedIndexedAccess` | Erreurs attrapées avant l'exécution ; indispensable quand le code est généré |
 | Framework | Expo, SDK courant au démarrage, nouvelle architecture React Native | Section 1 |
 | Navigation | Expo Router (fichiers = routes), onglets JavaScript (`expo-router/js-tabs`) ; écrans du compte protégés par `Stack.Protected` selon la session | Même navigation sur web et natif, liens profonds gratuits. Les onglets natifs n'ont sur le web qu'une barre de repli : à reconsidérer en phase B |
-| Composants | Primitives React Native + composants maison, pas de kit UI lourd | Expo UI (SwiftUI, Compose) est natif seulement : incompatible avec la phase A web. Un kit tiers ajouterait une dépendance pour cinq écrans |
-| Styles | NativeWind (Tailwind pour React Native) | Même syntaxe sur les trois cibles, bien connue des modèles de génération de code |
+| Composants | Primitives React Native + composants maison, un par entrée de `docs/design/components.md` (11.3), pas de kit UI lourd | Expo UI (SwiftUI, Compose) est natif seulement : incompatible avec la phase A web. Un kit tiers ajouterait une dépendance pour cinq écrans |
+| Styles | NativeWind (Tailwind pour React Native), thème dérivé de `docs/design/tokens.json` (11.1) | Même syntaxe sur les trois cibles, bien connue des modèles de génération de code |
 | Listes | FlashList | Longues listes de produits sans saccade (ENF-3) |
-| Icônes | Lucide (`lucide-react-native`) | Jeu cohérent, fonctionne sur web |
+| Icônes | Phosphor (`phosphor-react-native`), jeu fermé (11.2) | Celui du design system ; fonctionne sur web |
 | État | Requêtes réactives de `data` (`watch`, 6.2), consommées par des hooks de `mobile` ; Zustand pour l'état d'interface seulement (filtre, onglet, brouillon de saisie) | Pas de store global des données : SQLite est la source, les écrans s'abonnent |
 | Formulaires | Aucune bibliothèque : champs contrôlés, validation dans `core` | Un seul champ obligatoire par formulaire (ENF-8) |
 
@@ -612,15 +624,15 @@ repo/
 | Dépôt | Commandes |
 | --- | --- |
 | `list` | `addProduct`, `acceptSuggestion`, `checkLine`, `uncheckLine`, `setLineQuantity`, `removeLine`, `setRecipeTimes` |
-| `products` | `createProduct`, `updateProduct`, `stopBuying` |
+| `products` | `createProduct`, `updateProduct`, `stopBuying`, `resumeBuying` |
 | `purchases` | `editPurchase`, `deletePurchase`, `restorePurchase` |
-| `recipes` | `saveRecipe`, `deleteRecipe`, `restoreRecipe` |
+| `recipes` | `saveRecipe`, `deleteRecipe` |
 | `categories` | `moveCategory` |
-| `account` | `setCatalogContribution`, `exportData` |
+| `account` | `setCatalogContribution`, `requestExport`, `deleteAccount` |
 
-Cocher, décocher, changer la quantité d'une ligne cochée ou la retirer crée, supprime ou met à jour son achat, pour la quantité rendue par `packUnits`. Ajouter un produit déjà présent incrémente sa ligne, et un produit archivé le réactive (EF-2.9, EF-2.10). Décocher une ligne dont le produit a été remis sur la liste entre-temps la fond dans la nouvelle ligne, pour qu'un produit n'ait jamais deux lignes non cochées. Les lignes d'une recette sont celles que rend `applyRecipe`. Supprimer un achat ou une recette rend de quoi l'annuler (`restorePurchase`, `restoreRecipe`) le temps du message éphémère. Une commande ne contient aucune formule : tout calcul vient de `core`.
+Cocher, décocher, changer la quantité d'une ligne cochée ou la retirer crée, supprime ou met à jour son achat, pour la quantité rendue par `packUnits`. Ajouter un produit déjà présent incrémente sa ligne, et un produit archivé le réactive (EF-2.9, EF-2.10). Décocher une ligne dont le produit a été remis sur la liste entre-temps la fond dans la nouvelle ligne, pour qu'un produit n'ait jamais deux lignes non cochées. Les lignes d'une recette sont celles que rend `applyRecipe`. Supprimer un achat rend de quoi l'annuler (`restorePurchase`) le temps du message éphémère ; une recette n'est supprimée qu'après confirmation et ne se restaure pas (EF-4.6). `resumeBuying` efface `archived_at` sans toucher à la liste (EF-3.8). Une commande refuse une modification d'un produit archivé autre que `resumeBuying` (EF-3.5). `requestExport` et `deleteAccount` appellent le serveur (5.6) et échouent hors ligne. Une commande ne contient aucune formule : tout calcul vient de `core`.
 
-`openAppDatabase` ouvre la base de l'application, la connecte au compte de la session Supabase par le connecteur (5.4), la vide à la déconnexion et publie l'état de synchro de l'en-tête (6.5).
+`openAppDatabase` ouvre la base de l'application, la connecte au compte de la session Supabase par le connecteur (5.4), la vide à la déconnexion et publie l'état de connexion et de synchro (6.5).
 
 La Liste passe à `listView` (4.7) les lignes, les recettes de la liste avec leurs ingrédients, les achats et la date d'ouverture de l'application, que `mobile` relève au démarrage et à chaque retour au premier plan ; seules les lignes affichées sont rendues, `resolvePeriod` donne la période et `suggestForPeriod` reçoit la vue entière.
 
@@ -633,12 +645,16 @@ Quatre onglets, Liste · Produits · Recettes · Réglages, le panneau Ajouter, 
 | Écran | Contenu | Gestes clés |
 | --- | --- | --- |
 | **Liste** | En-tête « Ma liste », compteur « N sur M », barre de progression, pastilles des recettes ajoutées (EF-1.9) ; lignes groupées par rayon dans l'ordre configuré (« À classer » en tête, frais et surgelés en dernier), sous-titre de recette (EF-1.10), lignes cochées barrées en fin de groupe jusqu'à leur sortie (4.7) ; en bas, le champ « Ajouter un produit ou une recette » et son badge « N suggestions » (EF-1.11) | Tap sur une ligne : cocher, décocher. Appui long : surbrillance et mini-feuille (quantité −/+, « Voir la fiche », « Retirer de la liste »). Glissement vers la gauche : « Retirer », seul. Tap sur une pastille : fiche recette. Ni confirmation ni message éphémère |
-| **Panneau Ajouter** (par-dessus la Liste) | Voile sur la Liste, champ collé au clavier et « Fermer » ; avant saisie, les suggestions et leur justification (EF-2.2, EF-2.5), puis « Tous tes produits » ; à la frappe, recettes, produits, catalogue et « Créer « … » » (EF-2.7, 7.5) | « Ajouter N » sur une suggestion ; composant d'ajout sur chaque résultat (EF-2.9) ; « Créer » en un tap, rayon et unité proposés en dessous (EF-2.8) |
-| **Produits** | Recherche instantanée, référentiel groupé par rayon, « il t'en reste environ 2 » et dernier achat en sous-titre, produits archivés en bas (EF-3.1) | Tap sur un produit : sa fiche |
-| **Fiche produit** | Nom, rayon, unité, estimation en langage courant, composant d'ajout (« Ajouter 1 pack (6) »), « Je n'en achète plus » ; section Réglages toujours visible : rythme (« Tu en prends 5 / semaine »), unité, contenance, « Acheté par packs de » ; historique des achats (EF-3.2 à EF-3.4) | Tout est modifiable en place ; rien n'est demandé. Supprimer un achat s'annule par message éphémère |
+| **Panneau Ajouter** (par-dessus la Liste) | Liste décalée vers le haut, ses premières lignes sous un voile (EF-2.1) ; champ collé au clavier et « Fermer » ; avant saisie, « Comme d'hab chef ? » et les suggestions avec leur justification (EF-2.2, EF-2.5), puis « Tous tes produits » ; à la frappe, recettes, produits, catalogue et « Créer « … » » (EF-2.7, 7.5) | « Ajouter N » sur une suggestion ; composant d'ajout sur chaque résultat (EF-2.9) ; « Créer » en un tap, rayon et unité proposés en dessous (EF-2.8) |
+| **Produits** | Recherche instantanée, référentiel groupé par rayon, « il t'en reste environ 2 » et dernier achat en sous-titre ; en pied, « Tu n'achètes plus N produits » (EF-3.1) | Tap sur un produit : sa fiche |
+| **Tu n'achètes plus** | Produits archivés, date du dernier achat, « Reprendre » (EF-3.8) | « Reprendre » : le produit quitte l'écran ; tap : sa fiche |
+| **Fiche produit** | Nom, rayon, unité, estimation en langage courant, composant d'ajout (« Ajouter 1 pack (6) »), « Je n'en achète plus » ; section Réglages toujours visible : rythme (« Tu en prends · appris · 5 / semaine »), rayon, unité, contenance, « Acheté par packs de » ; historique des achats (EF-3.2 à EF-3.4). Archivé : « Reprendre », réglages en lecture seule | Sélecteurs en feuille, feuille du rythme, saisie numérique enregistrée en quittant le champ, stepper ; jamais de bouton Valider (EF-3.3). Supprimer un achat s'annule par message éphémère |
 | **Recettes** | Cartes : nom, « 5 ingrédients · il te manque 2 », composant d'ajout en haut à droite, pastilles d'ingrédients manquants puis possédés (barrés) ; « + Nouvelle » (EF-4.1) | Composant d'ajout : ajouter la recette, puis la compter N fois (EF-4.5) ; tap sur une carte : fiche recette |
-| **Fiche recette** | Ingrédients manquants d'abord, avec quantité, estimation et composant d'ajout ; « Ajouter à la liste » et la phrase de ce qui partira ; notes ; « Modifier », « Supprimer » (EF-4.3). En édition : nom, ingrédients par la recherche du panneau Ajouter, quantité et unité en ligne, notes (EF-4.2) | Supprimer s'annule par message éphémère (EF-4.6) |
-| **Réglages** | Rayons (ordre par glisser-déposer) ; Compte (e-mail, mot de passe, déconnexion) ; Mes données (« Aider à améliorer le catalogue », activé par défaut ; « Exporter mes données » ; « Supprimer mon compte ») ; pied de page « Commedab 0.1 · AGPL-3.0 » (EF-5.1 à EF-5.7) | Chaque réglage s'applique dès qu'il change ; seule la suppression du compte demande confirmation |
+| **Fiche recette** | Ingrédients manquants d'abord, avec quantité, estimation et composant d'ajout ; « Ajouter à la liste » et la phrase de ce qui partira ; notes ; « Modifier », « Supprimer » (EF-4.3) | « Modifier » : écran d'édition ; « Supprimer » : feuille de confirmation (EF-4.6) |
+| **Nouvelle recette, Modifier la recette** | « Annuler », « Enregistrer » ; nom, ingrédients par la recherche du panneau Ajouter avec quantité et unité en ligne, notes (EF-4.2) | Enregistrer sans nom : erreur sous le champ |
+| **Réglages** | Rayons (lien vers « Ordre des rayons ») ; Compte (e-mail, mot de passe, déconnexion) ; Mes données (« Aider à améliorer le catalogue », activé par défaut ; « Exporter mes données » ; « Supprimer mon compte ») ; pied de page « Commedab 0.1 · AGPL-3.0 » (EF-5.1 à EF-5.7). Hors ligne : Compte et Mes données désactivés (EF-6.3) | Chaque réglage s'applique dès qu'il change ; export par e-mail et message éphémère ; seule la suppression du compte demande confirmation |
+| **Ordre des rayons** | Rayons à glisser-déposer, « À classer » fixé en tête, frais puis surgelés en dernier (EF-5.1, RG-9) | Glisser une poignée : déplacer le rayon |
+| **Compte** (hors onglets, sans session) | Connexion, inscription, « Vérifie ta boîte mail », mot de passe oublié, « C'est envoyé », nouveau mot de passe, lien expiré (EF-5.8 à EF-5.10) ; « Nouveau mot de passe » sert aussi depuis les Réglages | Routes protégées par la session (`Stack.Protected`) ; les liens des e-mails y mènent (5.2) |
 
 Règle transversale (ENF-8) : la Liste, le panneau Ajouter et l'onglet Produits n'affichent jamais les mots « rythme » ni « stock » ; ils disent « il t'en reste environ 2 » et « proposé parce que tu en prends chaque semaine ».
 
@@ -651,9 +667,10 @@ Règle transversale (ENF-8) : la Liste, le panneau Ajouter et l'onglet Produits 
 
 ### 6.5 Hors ligne et synchronisation dans l'interface
 
-- Aucune action n'attend le réseau ; toute écriture est locale puis synchronisée (2.1).
-- Un indicateur discret (point dans l'en-tête) signale « synchronisé », « en attente » ou « erreur » ; jamais de bandeau bloquant.
-- Un échec définitif du connecteur (5.4) est journalisé sur l'appareil et fait passer l'indicateur en « erreur » ; il remonte aussi dans Sentry, sans les données de la ligne (9.5). Le MVP n'a pas d'écran de diagnostic.
+- Aucune action n'attend le réseau ; toute écriture est locale puis synchronisée (2.1). Seules les opérations du compte (connexion, mot de passe, export, suppression) en ont besoin ; hors ligne, les sections Compte et Mes données des Réglages sont désactivées, l'interrupteur du catalogue compris, bien que son écriture soit locale (EF-6.3).
+- `data` publie l'état de connexion du moteur de synchro ; hors ligne, les écrans affichent le bandeau d'EF-6.3 sous leur en-tête, jamais un écran bloquant.
+- `data` publie aussi les identifiants des lignes dont une écriture attend l'envoi (file du connecteur, 5.4) : les écrans les rendent en attente (`pending`, 11.3), utilisables.
+- Une commande qui échoue rend son erreur ; l'écran affiche le message éphémère « Pas enregistré — Réessayer », dont l'action relance la même commande (EF-6.4). Un échec définitif du connecteur (5.4) est journalisé sur l'appareil, affiche le même message et remonte dans Sentry, sans les données de la ligne (9.5) ; la ligne reprend l'état du serveur à la synchro suivante. Le MVP n'a pas d'écran de diagnostic.
 
 ### 6.6 Conventions pour le développement assisté
 
@@ -763,7 +780,7 @@ La recherche du panneau Ajouter (EF-2.7), reprise pour les ingrédients d'une re
 
 | Donnée | Finalité | Base |
 | --- | --- | --- |
-| E-mail, mot de passe haché (ou identifiant Google) | Compte et connexion | Supabase Auth |
+| E-mail, mot de passe haché (ou identifiant Google ou Apple) | Compte et connexion | Supabase Auth |
 | Produits, achats, liste, recettes, ordre des rayons | Le service lui-même | Tables du household |
 | Choix « Aider à améliorer le catalogue » | Agrégation anonyme des noms de produits (7.3) | `household.catalog_contribution` |
 | Journal des échecs de synchronisation | Dépannage (6.5) | Appareil uniquement |
@@ -780,15 +797,15 @@ L'application ne collecte **aucune** donnée de localisation, aucun prix, aucun 
 
 ### 8.3 Compte
 
-- Mot de passe : 10 caractères minimum, vérification contre les listes de mots de passe compromis (option Supabase Auth), pas de règles de composition.
-- Réinitialisation par e-mail ; sessions longues avec jeton de rafraîchissement (pas de reconnexion quotidienne).
+- Mot de passe : 8 caractères minimum (EF-5.9), vérification contre les listes de mots de passe compromis (option Supabase Auth), pas de règles de composition.
+- Adresse confirmée par un lien avant toute session ; réinitialisation par un lien valable une heure, sans révéler si l'adresse a un compte (5.2) ; sessions longues avec jeton de rafraîchissement (pas de reconnexion quotidienne).
 - Suppression du compte depuis l'app (EF-5.6) par la fonction `delete_account()` (5.6) : le compte et toutes les données de son household, effective immédiatement, sans délai de rétention.
-- Export depuis l'app en JSON (EF-5.5), généré sur l'appareil depuis SQLite (contenu en 5.6).
+- Export en JSON (EF-5.5), envoyé à l'adresse du compte par la fonction `export-data` (contenu en 5.6) : seule cette adresse le reçoit.
 
 ### 8.4 Obligations
 
 - Politique de confidentialité et mentions légales publiées sur le site de la PWA et liées depuis l'app ; obligatoires pour le store en phase C.
-- Registre des traitements : un document court, tenu par l'auteur, qui liste les données de 8.1, les sous-traitants (Supabase, PowerSync, hébergeur web, Google pour la connexion) et leurs régions d'hébergement. Les projets Supabase et PowerSync sont créés dans une région de l'Union européenne.
+- Registre des traitements : un document court, tenu par l'auteur, qui liste les données de 8.1, les sous-traitants (Supabase, PowerSync, hébergeur web, Google et Apple pour la connexion, serveur SMTP des e-mails du compte et de l'export) et leurs régions d'hébergement. Les projets Supabase et PowerSync sont créés dans une région de l'Union européenne.
 - Pas de cookies ni de traceurs sur la PWA : aucune bannière de consentement nécessaire.
 - Agrégation des noms de produits activée par défaut (EF-5.4) : elle repose sur l'intérêt légitime d'améliorer le catalogue, et non sur un consentement. Un nom de produit peut révéler une donnée de santé (un médicament, un produit pour régime), catégorie particulière au sens de l'article 9 du RGPD ; l'absence de tout rattachement à un compte, le seuil de 5 comptes, l'interrupteur visible dans les Réglages et la déclaration dans la politique de confidentialité limitent ce risque sans le supprimer. Le choix est à réexaminer avant la phase C, qui ouvre l'app à d'autres utilisateurs.
 
@@ -879,6 +896,7 @@ Les règles de synchro PowerSync sont déployées par le CLI PowerSync dans la m
 | 6. Partage de la liste, répartition des courses | Données rattachées au household et non au compte, RLS et synchro par household (2.5) | Table d'invitation et fonctions serveur pour rejoindre et quitter un household, e-mail des membres ; puis colonne `assigned_to` nullable sur `list_line` (ou affectation par rayon), filtre « ma part » sur la Liste |
 | 7. Saisie en langage naturel | Champ d'ajout unique, recherche dans `core` (7.5) | Fonction pure `parseAddInput("3kg de pomme de terre")` → `{ name: "Pomme de terre", qty: 3, unit: "kg" }` dans `core`, avec ses fixtures ; quantité convertie en packs comme un ingrédient (4.6) |
 | 8. Autres fournisseurs d'identité | Supabase Auth (5.2) | Configuration du fournisseur, bouton de connexion |
+| 9. Changement d'adresse e-mail | Modèle d'e-mail écrit et versionné, liens profonds (5.2) | Écrans de saisie et de confirmation de la nouvelle adresse (`updateUser`), activation de la double confirmation de Supabase |
 | Import de commandes drive | `stock_event.type`, `list_line_id` nullable | Edge Function d'import, correspondance produits drive → produits génériques, achats sans ligne de liste |
 | Code-barres | Produit générique | Table `product_barcode` (code, produit) ; scan natif (phase B) ; variantes rattachées au produit générique |
 
@@ -889,11 +907,68 @@ Les règles de synchro PowerSync sont déployées par le CLI PowerSync dans la m
 3. Le moteur reste pur et sans effet de bord ; une nouvelle règle est une nouvelle fonction avec ses fixtures.
 4. Les écrans ne voient ni SQL ni PowerSync ; une évolution passe par un nouveau dépôt ou une nouvelle commande dans `data`.
 5. Le catalogue n'écrit jamais dans `product`.
-6. Aucune fonction serveur n'est nécessaire à l'usage quotidien ; elles n'existent que pour l'inscription, la suppression de compte et, plus tard, le partage et les imports.
+6. Aucune fonction serveur n'est nécessaire à l'usage quotidien ; elles n'existent que pour l'inscription, l'export, la suppression de compte et, plus tard, le partage et les imports.
+
+## 11. Design system
+
+**Statut : décidé le 30/10/2026.**
+
+`docs/design/` décrit l'apparence de l'application : `design-system.md` (principes, couleur, typographie, formes, tailles, états, mouvement, retours, iconographie, voix), `components.md` (un guide par composant), `tokens.json` (les valeurs, en thème clair et sombre) et `maquettes/` (une planche par écran et par état). Les spécifications restent la source du comportement ; un désaccord entre une planche et les spécifications se règle dans les spécifications, et `docs/design/` suit.
+
+### 11.1 Jetons
+
+`docs/design/tokens.json` est la seule source des valeurs : aucune couleur, taille, rayon ni durée n'est écrite en dur ailleurs, et aucune valeur n'en est recopiée à la main. `tailwind.config` de NativeWind lit ce fichier au chargement et en dérive son thème :
+
+| Groupe de `tokens.json` | Dans NativeWind |
+| --- | --- |
+| `color` | Une classe par jeton (`bg-surface`, `text-ink-muted`, `border-line-strong`), dont la valeur est la variable CSS `--<jeton>` ; les variables sont valuées pour le thème clair et redéfinies pour le sombre, posées à la racine de l'application depuis le même fichier, et le thème suit le schéma de couleurs du système (`dark:`) |
+| `type` | `fontFamily` : `display` = Fraunces (600, 500), `sans` = Manrope (500, 600, 700), chargées par `@expo-google-fonts/fraunces` et `@expo-google-fonts/manrope` ; une taille de texte par style (`title-screen`, `sentence`, `body`…), avec sa graisse et son espacement de lettres, sans hauteur de ligne |
+| `spacing` | `spacing` : `1`, `2`, `3`, `4`, `6`, `8` |
+| `radius` | `borderRadius` : `field`, `card`, `sheet`, `pill` |
+| `size` | Hauteurs minimales des contrôles (`control-sm`, `control`, `control-lg`, `row`, `tab-bar`), tailles de la case et des icônes |
+| `border`, `duration` | Épaisseurs de bordure ; durées des animations, ramenées à 0 quand le système réduit les animations |
+
+- **Thème sombre dès le MVP**, piloté par le système : `userInterfaceStyle: automatic` dans `app.json`, aucun réglage dans l'app.
+- **Dynamic Type** (iOS) respecté : les tailles de texte suivent le réglage de l'appareil, aucune hauteur de ligne n'est figée, les tailles de `size` sont des minimums et les contrôles grandissent avec leur texte. Tout contrôle de 36 px (`control-sm`) reçoit un `hitSlop` qui porte sa zone de tap à 44 px (ENF-1).
+
+### 11.2 Icônes
+
+Phosphor, par `phosphor-react-native` : graisse *regular* partout, *fill* pour l'onglet actif, *bold* pour la coche, couleur héritée du texte. Le jeu est fermé ; une icône s'y ajoute avec un rayon ou un geste, jamais en décoration, et jamais sur une ligne de produit, un titre ou une carte recette.
+
+| Usage | Icônes |
+| --- | --- |
+| Onglets | `ListChecks`, `Basket`, `ChefHat`, `Sliders` |
+| Utilitaires | `MagnifyingGlass`, `Check`, `CaretLeft`, `CaretRight`, `CaretDown`, `Plus`, `X`, `WifiSlash`, `DotsSixVertical` (poignée de l'ordre des rayons), `Envelope` (e-mails du compte) |
+| Recette | `ChefHat` |
+
+Une icône par rayon du jeu par défaut (7.4), indexée par sa clé, plus « À classer » :
+
+| Rayon | Icône |
+| --- | --- |
+| À classer (sans rayon) | `DotsThreeCircle` |
+| `hygiene-beaute` | `HandSoap` |
+| `bebe-animaux` | `Baby` |
+| `entretien-maison` | `SprayBottle` |
+| `fruits-legumes` | `Carrot` |
+| `boulangerie` | `Bread` |
+| `epicerie-salee` | `Package` |
+| `epicerie-sucree` | `Cookie` |
+| `boissons` | `Wine` |
+| `cremerie` | `Egg` |
+| `viande-poisson-traiteur` | `Cow` |
+| `surgeles` | `Snowflake` |
+
+Les noms des rayons sont ceux de 7.4, qui priment sur ceux des planches et de `components.md` (Icons). Les boutons « Continuer avec Google » et « Continuer avec Apple » portent le logo de chaque fournisseur, selon ses règles de marque, hors du jeu Phosphor.
+
+### 11.3 Composants
+
+- Un composant React Native par entrée de `components.md`, sous le même nom, dans `apps/mobile/src/components` : `AddControl`, `Button`, `ConfirmSheet`, `Estimate`, `LineSheet`, `ListRow`, `Pill`, `ProgressBar`, `RecipeCard`, `RecipeChip`, `ScreenHeader`, `SearchField`, `SettingField`, `States`, `SuggestionRow`, `TabBar`, `TextInput`, `Toast`, `Toggle` ; les icônes (`Icons`) sont un module de correspondance (11.2).
+- Les états portent les noms des guides, en propriétés booléennes ou en variantes : `pressed`, `disabled`, `loading`, `pending`, `highlight`, `checked`, `complete`, `selected`, `field`. Les classes CSS des guides (`btn-primary`, `is-pending`…) sont des noms, pas du CSS à porter : les aperçus HTML sont une référence visuelle.
+- Les composants ne contiennent aucun texte métier : l'écran fournit les libellés, pris dans les exemples de la Voix (`design-system.md`) ou écrits dans la même voix.
 
 ## Correspondance des identifiants
 
-Les sections du moteur ont été renumérotées lors de l'alignement sur les maquettes basse fidélité, et des fixtures supprimées ; cette table relie les anciens identifiants, cités dans l'historique du dépôt, aux nouveaux. Les identifiants des spécifications fonctionnelles ont leur propre table, en fin de ce document-là.
+Les sections du moteur ont été renumérotées lors de l'alignement sur les maquettes basse fidélité, et des fixtures supprimées ; cette table relie les anciens identifiants, cités dans l'historique du dépôt, aux nouveaux. Les identifiants des spécifications fonctionnelles ont leur propre table, en fin de ce document-là. L'alignement sur les maquettes haute fidélité n'a renuméroté aucun identifiant ; il a ajouté la fixture T52 et la section 11.
 
 | Ancien | Nouveau |
 | --- | --- |
