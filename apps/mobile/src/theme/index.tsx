@@ -18,7 +18,9 @@ export type TextStyleName =
   | 'title-screen'
   | 'title-hero'
   | 'title-section'
+  | 'title-card'
   | 'sentence'
+  | 'sentence-lg'
   | 'body'
   | 'body-strong'
   | 'body-sm'
@@ -59,11 +61,15 @@ export const space = Object.fromEntries(
 /** Zone de tap portée à `control` (44) autour d'un contrôle de `control-sm` (36) : ENF-1. */
 export const HIT_SLOP = (size.control - size['control-sm']) / 2;
 
-/** Règles communes des états (`docs/design/design-system.md`, États). */
-export const STATE = { pressedScale: 0.97, pressedOpacity: 0.85, disabled: 0.45, pending: 0.55 };
+/** Opacités d'état de `tokens.json` (`docs/design/design-system.md`, États). */
+export const opacity = Object.fromEntries(
+  Object.entries(tokens.opacity).map(([name, value]) => [name, Number(value)]),
+) as Record<keyof typeof tokens.opacity, number>;
 
-/** Taille des icônes : 22 dans les onglets et les en-têtes, 16 dans les pastilles, 14 en en-tête de rayon. */
-export const ICON = { header: size.icon, pill: 16, section: 14, empty: 40 };
+/** Échelles de `tokens.json` : `scale.pressed` sous le doigt. */
+export const scale = Object.fromEntries(
+  Object.entries(tokens.scale).map(([name, value]) => [name, Number(value)]),
+) as Record<keyof typeof tokens.scale, number>;
 
 const VARS = {
   light: vars(

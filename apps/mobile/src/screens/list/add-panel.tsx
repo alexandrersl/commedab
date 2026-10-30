@@ -303,7 +303,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
         {suggestions.length > 0 && (
           <>
             <View className="pb-1 pt-4">
-              <Text variant="title-screen">{"Comme d'hab chef ?"}</Text>
+              <Text variant="sentence-lg">{"Comme d'hab chef ?"}</Text>
             </View>
             <Rows>
               {suggestions.map((suggestion) => {

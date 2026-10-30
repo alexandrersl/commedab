@@ -1,5 +1,5 @@
 import { Check, ChefHat } from 'phosphor-react-native';
-import { ICON } from '../theme';
+import { size } from '../theme';
 import { Glyph } from './icons';
 import { Pressable } from './pressable';
 import { Text } from './text';
@@ -34,11 +34,11 @@ export function RecipeChip({
         complete ? 'bg-action' : 'border-thin border-line bg-surface'
       }`}
     >
-      <Glyph icon={ChefHat} size={ICON.pill} color={tone} />
+      <Glyph icon={ChefHat} size={size['icon-sm']} color={tone} />
       <Text variant="label" tone={tone}>
         {label}
       </Text>
-      {complete && <Glyph icon={Check} size={ICON.pill} color={tone} weight="bold" />}
+      {complete && <Glyph icon={Check} size={size['icon-sm']} color={tone} weight="bold" />}
     </Pressable>
   );
 }

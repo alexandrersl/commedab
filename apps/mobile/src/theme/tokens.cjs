@@ -38,5 +38,7 @@ module.exports = {
   radius: named('radius', 'radius-'),
   size: named('size', ''),
   border: named('border', 'border-'),
+  opacity: named('opacity', 'opacity-'),
+  scale: named('scale', 'scale-'),
   duration: named('duration', 'duration-'),
 };

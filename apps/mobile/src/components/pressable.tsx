@@ -6,7 +6,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { HIT_SLOP, STATE } from '../theme';
+import { HIT_SLOP, opacity, scale } from '../theme';
 
 /**
  * Surface tapable aux états communs : pressé (échelle et fond assombri), désactivé ; `small`
@@ -40,8 +40,8 @@ export function Pressable({
       }}
       style={[
         style,
-        pressed && { transform: [{ scale: STATE.pressedScale }], opacity: STATE.pressedOpacity },
-        disabled === true && { opacity: STATE.disabled },
+        pressed && { transform: [{ scale: scale.pressed }] },
+        disabled === true && { opacity: opacity.disabled },
       ]}
       {...props}
     />

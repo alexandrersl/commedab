@@ -1,7 +1,7 @@
 import { CaretDown } from 'phosphor-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, TextInput, View } from 'react-native';
-import { ICON, STATE, useTheme } from '../theme';
+import { useTheme, opacity, size } from '../theme';
 import { Stepper } from './add-control';
 import { Glyph } from './icons';
 import { Pressable } from './pressable';
@@ -60,7 +60,7 @@ function SelectBox({
       {loading ? (
         <ActivityIndicator size="small" color={colors.action} />
       ) : (
-        !disabled && <Glyph icon={CaretDown} size={ICON.pill} color="ink-muted" />
+        !disabled && <Glyph icon={CaretDown} size={size['icon-sm']} color="ink-muted" />
       )}
     </Pressable>
   );
@@ -150,7 +150,7 @@ export function SettingField({
       disabled={open === undefined}
       accessibilityRole={open === undefined ? 'none' : 'button'}
       className="min-h-row flex-row items-center justify-between gap-3 px-4 py-2"
-      style={disabled ? { opacity: STATE.disabled } : undefined}
+      style={disabled ? { opacity: opacity.disabled } : undefined}
     >
       <View className="flex-1">
         <Text variant="body">{label}</Text>

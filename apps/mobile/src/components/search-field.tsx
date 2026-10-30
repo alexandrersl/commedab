@@ -1,7 +1,7 @@
 import { MagnifyingGlass } from 'phosphor-react-native';
 import { useState } from 'react';
 import { ActivityIndicator, TextInput, View } from 'react-native';
-import { ICON, useTheme } from '../theme';
+import { useTheme, size } from '../theme';
 import { Glyph } from './icons';
 import { Pressable } from './pressable';
 import { Text } from './text';
@@ -34,7 +34,7 @@ export function SearchField({
           focused ? 'border-strong border-action' : 'border-thin border-line-strong'
         }`}
       >
-        <Glyph icon={MagnifyingGlass} color="ink-muted" size={ICON.pill} />
+        <Glyph icon={MagnifyingGlass} color="ink-muted" size={size['icon-sm']} />
         <TextInput
           value={value}
           onChangeText={onChange}

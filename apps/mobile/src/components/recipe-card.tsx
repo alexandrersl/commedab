@@ -29,7 +29,7 @@ export function RecipeCard({
     <View className="gap-3 rounded-card border-thin border-line bg-surface p-4">
       <View className="flex-row items-start gap-3">
         <Pressable onPress={onPress} className="flex-1 gap-1" accessibilityLabel={name}>
-          <Text variant="title-section">{name}</Text>
+          <Text variant="title-card">{name}</Text>
           <Text variant="body-sm" tone={complete ? 'action' : 'muted'}>
             {subtitle}
           </Text>

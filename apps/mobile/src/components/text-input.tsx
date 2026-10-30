@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { TextInput as RNTextInput, View, type TextInputProps } from 'react-native';
-import { STATE, useTheme } from '../theme';
+import { useTheme, opacity } from '../theme';
 import { Pressable } from './pressable';
 import { Text } from './text';
 
@@ -30,7 +30,7 @@ export function TextInput({
       ? 'border-strong border-action'
       : 'border-thin border-line-strong';
   return (
-    <View className="gap-1" style={disabled ? { opacity: STATE.disabled } : undefined}>
+    <View className="gap-1" style={disabled ? { opacity: opacity.disabled } : undefined}>
       <Text variant="label" tone="muted">
         {label}
       </Text>

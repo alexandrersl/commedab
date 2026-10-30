@@ -918,7 +918,7 @@ Les règles de synchro PowerSync sont déployées par le CLI PowerSync dans la m
 
 ### 11.1 Jetons
 
-`docs/design/tokens.json` est la seule source des valeurs : aucune couleur, taille, rayon ni durée n'est écrite en dur ailleurs, et aucune valeur n'en est recopiée à la main. `tailwind.config` de NativeWind lit ce fichier au chargement et en dérive son thème :
+`docs/design/tokens.json` est la seule source des valeurs : aucune couleur, taille, rayon, opacité ni durée n'est écrite en dur ailleurs, et aucune valeur n'en est recopiée à la main. Seule exception : les couleurs du logo Google sur son bouton de connexion (11.2). `tailwind.config` de NativeWind lit ce fichier au chargement et en dérive son thème :
 
 | Groupe de `tokens.json` | Dans NativeWind |
 | --- | --- |
@@ -926,8 +926,9 @@ Les règles de synchro PowerSync sont déployées par le CLI PowerSync dans la m
 | `type` | `fontFamily` : `display` = Fraunces (600, 500), `sans` = Manrope (500, 600, 700), chargées par `@expo-google-fonts/fraunces` et `@expo-google-fonts/manrope` ; une taille de texte par style (`title-screen`, `sentence`, `body`…), avec sa graisse et son espacement de lettres, sans hauteur de ligne |
 | `spacing` | `spacing` : `1`, `2`, `3`, `4`, `6`, `8` |
 | `radius` | `borderRadius` : `field`, `card`, `sheet`, `pill` |
-| `size` | Hauteurs minimales des contrôles (`control-sm`, `control`, `control-lg`, `row`, `tab-bar`), tailles de la case et des icônes |
+| `size` | Hauteurs minimales des contrôles (`control-sm`, `control`, `control-lg`, `row`, `tab-bar`), hauteur de la barre de progression (`progress`), tailles de la case et des icônes (`icon`, `icon-sm`, `icon-xs`, `icon-lg`) |
 | `border`, `duration` | Épaisseurs de bordure ; durées des animations, ramenées à 0 quand le système réduit les animations |
+| `opacity`, `scale` | Lus par `src/theme` (`opacity.disabled`, `opacity.pending`, `opacity.busy`, `scale.pressed`) pour les états des composants |
 
 - **Thème sombre dès le MVP**, piloté par le système : `userInterfaceStyle: automatic` dans `app.json`, aucun réglage dans l'app.
 - **Dynamic Type** (iOS) respecté : les tailles de texte suivent le réglage de l'appareil, aucune hauteur de ligne n'est figée, les tailles de `size` sont des minimums et les contrôles grandissent avec leur texte. Tout contrôle de 36 px (`control-sm`) reçoit un `hitSlop` qui porte sa zone de tap à 44 px (ENF-1).
@@ -939,7 +940,7 @@ Phosphor, par `phosphor-react-native` : graisse *regular* partout, *fill* pour l
 | Usage | Icônes |
 | --- | --- |
 | Onglets | `ListChecks`, `Basket`, `ChefHat`, `Sliders` |
-| Utilitaires | `MagnifyingGlass`, `Check`, `CaretLeft`, `CaretRight`, `CaretDown`, `Plus`, `X`, `WifiSlash`, `DotsSixVertical` (poignée de l'ordre des rayons), `Envelope` (e-mails du compte) |
+| Utilitaires | `MagnifyingGlass`, `Check`, `CaretLeft`, `CaretRight`, `CaretDown`, `Plus`, `Minus` (stepper), `X`, `WifiSlash`, `DotsSixVertical` (poignée de l'ordre des rayons), `EnvelopeSimple` (e-mails du compte) |
 | Recette | `ChefHat` |
 
 Une icône par rayon du jeu par défaut (7.4), indexée par sa clé, plus « À classer » :
@@ -952,7 +953,7 @@ Une icône par rayon du jeu par défaut (7.4), indexée par sa clé, plus « À 
 | `entretien-maison` | `SprayBottle` |
 | `fruits-legumes` | `Carrot` |
 | `boulangerie` | `Bread` |
-| `epicerie-salee` | `Package` |
+| `epicerie-salee` | `Grains` |
 | `epicerie-sucree` | `Cookie` |
 | `boissons` | `Wine` |
 | `cremerie` | `Cheese` |
