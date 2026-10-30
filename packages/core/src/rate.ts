@@ -1,8 +1,10 @@
 import { dayNumber, dayOf } from './date';
-import { checkProduct, checkPurchases } from './guard';
+import { InvalidInputError } from './errors';
+import { checkPositive, checkProduct, checkPurchases } from './guard';
 import { median } from './median';
 import type { LocalDate, Product, Purchase, RateSource } from './model';
 import { sortPurchases, type SortedPurchases } from './purchases';
+import { EPSILON } from './quantity';
 
 const MIN_PURCHASES = 3;
 const MIN_INTERVALS = 2;
@@ -27,6 +29,45 @@ export interface Interval {
 }
 
 const NO_RATE: Rate = { perDay: 0, source: 'none', intervalCount: 0 };
+
+export type RatePeriod = 'day' | 'week' | 'month';
+
+/** Durée des périodes de saisie du rythme, de la plus courte à la plus longue (4.3). */
+export const PERIOD_DAYS: Readonly<Record<RatePeriod, number>> = { day: 1, week: 7, month: 30 };
+const PERIODS: readonly RatePeriod[] = ['day', 'week', 'month'];
+
+/** Rythme tel que la fiche produit le montre et le fait saisir : `quantity` unités par `period`. */
+export interface PerPeriod {
+  quantity: number;
+  period: RatePeriod;
+}
+
+/** Rythme saisi, en jours par unité, seule forme enregistrée : 5 par semaine → 1,4 (4.3). */
+export function toDaysPerUnit({ quantity, period }: PerPeriod): number {
+  checkPositive('quantity', quantity);
+  if (!PERIODS.includes(period)) {
+    throw new InvalidInputError('period', period, `doit être ${PERIODS.join(', ')}`);
+  }
+  return PERIOD_DAYS[period] / quantity;
+}
+
+/**
+ * Rythme de `perDay` unités par jour dans la période où son arrondi à l'entier s'écarte le moins
+ * de la valeur exacte ; à égalité, la plus courte. Un rythme qui n'atteint une unité arrondie dans
+ * aucune période s'affiche « 1 / mois », le plus lent que la feuille permette de saisir (4.3).
+ */
+export function toPerPeriod(perDay: number): PerPeriod {
+  checkPositive('perDay', perDay);
+  let best: { per: PerPeriod; error: number } | null = null;
+  for (const period of PERIODS) {
+    const exact = perDay * PERIOD_DAYS[period];
+    const quantity = Math.round(exact);
+    if (quantity < 1) continue;
+    const error = Math.abs(quantity - exact) / exact;
+    if (best === null || error < best.error - EPSILON) best = { per: { quantity, period }, error };
+  }
+  return best?.per ?? { quantity: 1, period: 'month' };
+}
 
 /** Rythme retenu : déclaré, sinon appris, sinon catalogue (specs techniques 4.3). */
 export function resolveRate(product: Product, purchases: readonly Purchase[]): Rate {
