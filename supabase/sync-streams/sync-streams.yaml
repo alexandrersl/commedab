@@ -1,0 +1,20 @@
+# Synchronisation PowerSync (specs techniques 5.3) : un flux par household, résolu par
+# household_member, avec tout l'historique du compte.
+config:
+  edition: 3
+
+streams:
+  household:
+    auto_subscribe: true
+    with:
+      own_household: SELECT household_id FROM household_member WHERE user_id = auth.user_id()
+    queries:
+      - SELECT * FROM household WHERE id IN own_household
+      - SELECT * FROM household_member WHERE household_id IN own_household
+      - SELECT * FROM category WHERE household_id IN own_household
+      - SELECT * FROM product WHERE household_id IN own_household
+      - SELECT * FROM recipe WHERE household_id IN own_household
+      - SELECT * FROM recipe_ingredient WHERE household_id IN own_household
+      - SELECT * FROM list_line WHERE household_id IN own_household
+      - SELECT * FROM list_recipe WHERE household_id IN own_household
+      - SELECT * FROM stock_event WHERE household_id IN own_household
