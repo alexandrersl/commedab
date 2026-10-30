@@ -535,6 +535,7 @@ streams:
 - `deleted_at` est synchronisé comme les autres colonnes : une suppression logique est une mise à jour ordinaire. La suppression d'un achat est un `DELETE`, répliqué comme tel sur les autres appareils.
 - Le catalogue n'apparaît pas : il est dans le binaire de l'app.
 - Les tables synchronisées sont publiées par la publication Postgres `powersync`, créée par la migration initiale ; les règles sont dans `supabase/sync-streams/sync-streams.yaml`. Le client n'a aucun abonnement à demander : `auto_subscribe` synchronise le flux dès la connexion.
+- PowerSync lit la base avec un rôle qu'il crée lui-même (`powersync_…`), qui a la réplication et la lecture des tables publiées, sans aucune écriture. Une table qui entre dans la synchro doit être ajoutée par migration à la publication et accordée en lecture à ce rôle.
 
 ### 5.4 Connecteur d'envoi
 
