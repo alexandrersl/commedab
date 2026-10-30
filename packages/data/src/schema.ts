@@ -109,6 +109,20 @@ const recipe_ingredient = new Table(
   { indexes: { recipe: ['recipe_id'] } },
 );
 
+// Écritures refusées par le serveur, et celles qui les suivent sur la même ligne : mises de côté
+// hors de la file de PowerSync pour que les autres partent (specs techniques 5.4). Jamais
+// synchronisée.
+const held_write = new Table(
+  {
+    seq: column.integer,
+    entity_table: column.text,
+    entity_id: column.text,
+    op: column.text,
+    data: column.text,
+  },
+  { localOnly: true, indexes: { seq: ['seq'] } },
+);
+
 export const appSchema = new Schema({
   household,
   household_member,
@@ -119,6 +133,7 @@ export const appSchema = new Schema({
   list_recipe,
   recipe,
   recipe_ingredient,
+  held_write,
 });
 
 export type AppTables = (typeof appSchema)['types'];

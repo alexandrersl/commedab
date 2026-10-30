@@ -27,20 +27,20 @@ export default function RootLayout() {
 
 /** Une écriture refusée par le serveur le dit, et se renvoie par « Réessayer » (EF-6.4). */
 function RejectedWrites() {
-  const { rejected } = useSyncStatus();
+  const { rejections } = useSyncStatus();
   const retry = useRetryUpload();
   const toast = useToast();
-  const was = useRef(false);
+  const seen = useRef(rejections);
   useEffect(() => {
-    if (rejected && !was.current) {
+    if (rejections > seen.current) {
       toast.show({
         message: 'Pas enregistré',
         error: true,
         action: { label: 'Réessayer', onPress: retry },
       });
     }
-    was.current = rejected;
-  }, [rejected, retry, toast]);
+    seen.current = rejections;
+  }, [rejections, retry, toast]);
   return null;
 }
 
