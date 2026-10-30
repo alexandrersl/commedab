@@ -1,14 +1,21 @@
+import '../../global.css';
 import { Stack } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SessionProvider, useSession } from '../auth/session';
 import { AppDataProvider } from '../data/provider';
+import { ThemeRoot } from '../theme';
 
 export default function RootLayout() {
   return (
-    <SessionProvider>
-      <AppDataProvider>
-        <Routes />
-      </AppDataProvider>
-    </SessionProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeRoot>
+        <SessionProvider>
+          <AppDataProvider>
+            <Routes />
+          </AppDataProvider>
+        </SessionProvider>
+      </ThemeRoot>
+    </GestureHandlerRootView>
   );
 }
 
