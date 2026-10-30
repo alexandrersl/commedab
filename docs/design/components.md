@@ -52,7 +52,7 @@ Jamais de pourcentage, jamais de « stock », jamais de date brute : un jour de 
 
 Le jeu d'icônes de l'app : Phosphor, importé tel quel depuis `@phosphor-icons/core` (ici) et `phosphor-react-native` (dans l'app). Deux graisses : *regular* partout, *fill* pour l'onglet actif, *bold* pour la coche seulement.
 
-Trois familles d'usage, et rien d'autre : les onglets, les utilitaires, et le jeu fermé des rayons (17, un par rayon du catalogue). Une icône de rayon s'affiche à 22 px dans l'annuaire Produits et à 14 px devant un en-tête de section de la liste, toujours en `currentColor` de son texte.
+Trois familles d'usage, et rien d'autre : les onglets, les utilitaires, et le jeu fermé des rayons (les 11 rayons par défaut des specs techniques 7.4, plus « À classer »). Une icône de rayon s'affiche à 22 px dans l'annuaire Produits et à 14 px devant un en-tête de section de la liste, toujours en `currentColor` de son texte.
 
 Ajouter une icône = ajouter un rayon ou un geste ; on ne met jamais d'icône sur une ligne de produit, un titre ou une carte recette. Les noms des rayons doivent rester alignés sur la liste des rayons des spécifications.
 
@@ -137,10 +137,10 @@ Les champs de réglage d'une fiche produit, des Réglages de l'app et des ingré
 Trois formes, trois interactions :
 
 1. **Sélecteur** (Unité, Rayon, « Tu en prends ») : chevron `CaretDown` à droite. Tap → une feuille monte avec la liste des options (bouton radio, option courante en `action`). Choisir ferme la feuille et enregistre. Pour le rythme, la feuille porte un stepper de quantité, un segment jour / semaine / mois, « Enregistrer » et « Revenir à ce que j'ai appris » quand la valeur est déclarée.
-2. **Saisie numérique** (Contenance, quantité d'ingrédient) : chiffres tabulaires alignés à droite. Tap → le rectangle passe en bordure `action` 1,5 px avec curseur, clavier numérique, barre « OK » au-dessus du clavier. Enregistré en quittant le champ ; erreur en `caption` `alert` sous le libellé, bordure `alert`, valeur conservée.
+2. **Saisie numérique** (Contenance, quantité d'ingrédient) : chiffres tabulaires alignés à droite, toujours accolée à un sélecteur d'unité (cl / L / g / kg) quand la valeur en a une. Tap → le rectangle passe en bordure `action` 1,5 px avec curseur, clavier numérique, barre « Terminé » au-dessus du clavier (le libellé système, jamais « OK »). Enregistré en quittant le champ ; erreur en `caption` `alert` sous le libellé, bordure `alert`, valeur conservée.
 3. **Stepper de valeur** (Acheté par packs de, quantité dans la feuille du rythme ; la feuille du rythme porte aussi un segment jour / semaine / mois, capsule `surface-2` avec l'option active en `surface`) : même mécanique que le stepper d'ajout, mais en **variante champ** : rectangle `radius-field`, fond `surface`, bordure `line-strong`, texte `ink`, − et + en `ink-muted`. Le vert `action` sur un stepper veut toujours dire « sur la liste » ; un réglage n'y a pas droit.
 
-Le rythme porte un indice `appris` / `déclaré` / `à définir` en `ink-muted` devant la valeur : le moteur dit d'où vient le chiffre. Pendant l'enregistrement, un spinner `action` remplace le chevron ; jamais de bouton « Valider ». Désactivé (produit archivé) : toute la ligne à 0,45, pas de chevron. Toute la ligne est tapable, pas seulement le rectangle.
+En tête de la section : le **nom** (saisie texte) et le **rayon** (sélecteur). Le rythme porte un indice `appris` / `déclaré` / `à définir` en `ink-muted` devant la valeur : le moteur dit d'où vient le chiffre. Pendant l'enregistrement, un spinner `action` remplace le chevron ; jamais de bouton « Valider ». Désactivé (produit archivé) : toute la ligne à 0,45, pas de chevron. Toute la ligne est tapable, pas seulement le rectangle.
 
 ## States
 
