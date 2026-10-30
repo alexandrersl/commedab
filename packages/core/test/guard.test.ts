@@ -10,6 +10,8 @@ import {
   productState,
   shoppingSessions,
   suggestForPeriod,
+  toDaysPerUnit,
+  toPerPeriod,
   type ListLine,
   type Product,
   type Purchase,
@@ -164,6 +166,15 @@ describe('gardes des fonctions publiques', () => {
         }),
       'recipe[flan].ingredient[lait].quantity',
     );
+  });
+
+  it.each([0, -5, Number.NaN])('refuse un rythme saisi ou affiché de %s', (value) => {
+    rejects(() => toDaysPerUnit({ quantity: value, period: 'week' }), 'quantity');
+    rejects(() => toPerPeriod(value), 'perDay');
+  });
+
+  it('refuse une période de rythme inconnue', () => {
+    rejects(() => toDaysPerUnit({ quantity: 5, period: 'year' as 'week' }), 'period');
   });
 });
 

@@ -28,6 +28,12 @@ export function checkQuantity(field: string, value: number): void {
   }
 }
 
+export function checkPositive(field: string, value: number): void {
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new InvalidInputError(field, value, 'doit être un nombre fini > 0');
+  }
+}
+
 export function checkInteger(field: string, value: number, min: number): void {
   if (!Number.isInteger(value) || value < min) {
     throw new InvalidInputError(field, value, `doit être un entier ≥ ${min}`);

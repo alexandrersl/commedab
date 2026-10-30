@@ -6,8 +6,18 @@ import {
   observedIntervals,
   resolvePeriod,
   suggestForPeriod,
+  toDaysPerUnit,
+  toPerPeriod,
 } from '../src/index';
-import { ofProduct, quantity, recipeOf, scenario, statesOf, viewOf } from './fixture';
+import {
+  ofProduct,
+  quantity,
+  recipeOf,
+  scenario,
+  statesOf,
+  viewOf,
+  type Quantity,
+} from './fixture';
 import { fixtures } from './fixtures/index';
 
 const all = fixtures.map(scenario);
@@ -136,6 +146,25 @@ describe.each(all)('$fixture.id — $fixture.scenario', (s) => {
         missingIngredients({ recipe: recipeOf(s, recipeId), times, products, states }),
       );
       expect(actual).toEqual(missing);
+    });
+  }
+
+  if (expected.daysPerUnit !== undefined) {
+    const daysPerUnit = expected.daysPerUnit;
+    it('rythme saisi, en jours par unité', () => {
+      const actual = (s.fixture.rateInputs ?? []).map(toDaysPerUnit);
+      expect(actual).toHaveLength(daysPerUnit.length);
+      actual.forEach((days, i) =>
+        expect(days).toBeCloseTo(quantity(daysPerUnit[i] as Quantity), PRECISION),
+      );
+    });
+  }
+
+  if (expected.perPeriod !== undefined) {
+    const perPeriod = expected.perPeriod;
+    it('rythme affiché', () => {
+      const actual = (s.fixture.rateDisplays ?? []).map((perDay) => toPerPeriod(quantity(perDay)));
+      expect(actual).toEqual(perPeriod);
     });
   }
 

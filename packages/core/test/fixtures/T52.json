@@ -1,0 +1,37 @@
+{
+  "id": "T52",
+  "scenario": "Rythmes saisis par jour, par semaine et par mois, enregistrés en jours par unité, et rythmes affichés dans la période la plus juste",
+  "products": [
+    {
+      "id": "yaourts",
+      "declaredDaysPerUnit": 1.4
+    }
+  ],
+  "purchases": [],
+  "now": "2026-10-30T10:00:00",
+  "rateInputs": [
+    { "quantity": 5, "period": "week" },
+    { "quantity": 2, "period": "day" },
+    { "quantity": 7, "period": "month" },
+    { "quantity": 1, "period": "week" }
+  ],
+  "rateDisplays": ["5/7", "8/7", 2, "7/30", "1/42", "1/90", "4/30"],
+  "expected": {
+    "rates": {
+      "yaourts": {
+        "perDay": "5/7",
+        "source": "declared"
+      }
+    },
+    "daysPerUnit": [1.4, 0.5, "30/7", 7],
+    "perPeriod": [
+      { "quantity": 5, "period": "week" },
+      { "quantity": 8, "period": "week" },
+      { "quantity": 2, "period": "day" },
+      { "quantity": 7, "period": "month" },
+      { "quantity": 1, "period": "month" },
+      { "quantity": 1, "period": "month" },
+      { "quantity": 4, "period": "month" }
+    ]
+  }
+}

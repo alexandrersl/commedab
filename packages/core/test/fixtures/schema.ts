@@ -4,6 +4,7 @@ import type {
   ListLine,
   ListRecipe,
   LocalDateTime,
+  PerPeriod,
   Period,
   Product,
   Purchase,
@@ -31,6 +32,10 @@ export interface Fixture {
   /** Ouverture de l'application, pour `listView` ; `now` par défaut. */
   openedAt?: LocalDateTime;
   periodDays?: number;
+  /** Rythmes saisis sur la fiche, convertis par `toDaysPerUnit` (`expected.daysPerUnit`). */
+  rateInputs?: PerPeriod[];
+  /** Rythmes en unités par jour, affichés par `toPerPeriod` (`expected.perPeriod`). */
+  rateDisplays?: Quantity[];
   expected: {
     rates?: Record<string, { perDay?: Quantity; source?: string; intervalCount?: number }>;
     intervals?: Record<string, number[]>;
@@ -53,6 +58,8 @@ export interface Fixture {
     invalidInput?: string;
     missing?: { productId: string; quantity: number }[][];
     recipeChanges?: { productId: string; quantity: number; existing: boolean }[][];
+    daysPerUnit?: Quantity[];
+    perPeriod?: PerPeriod[];
   };
 }
 
@@ -164,6 +171,10 @@ const recipe = object(
   },
   ['id', 'ingredients'],
 );
+const perPeriod = object({ quantity: number, period: oneOf('day', 'week', 'month') }, [
+  'quantity',
+  'period',
+]);
 const lineStates = record(oneOf('pending', 'checked', 'past'));
 const packs = object({ productId: string, quantity: number }, ['productId', 'quantity']);
 const expected = object({
@@ -206,6 +217,8 @@ const expected = object({
       ]),
     ),
   ),
+  daysPerUnit: array(quantity),
+  perPeriod: array(perPeriod),
 });
 const fixture = object(
   {
@@ -223,6 +236,8 @@ const fixture = object(
     now: string,
     openedAt: string,
     periodDays: number,
+    rateInputs: array(perPeriod),
+    rateDisplays: array(quantity),
     expected,
   },
   ['id', 'scenario', 'products', 'purchases', 'now', 'expected'],

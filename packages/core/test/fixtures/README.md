@@ -19,8 +19,11 @@ Champs d'une fixture :
   heure locale sans fuseau (`2026-10-26T18:30:00`, specs techniques 4.1). Les achats forment
   les sessions de courses (4.7).
 - `periodDays` : durée de la liste, pour vérifier les suggestions.
+- `rateInputs` : rythmes saisis sur la fiche (`{ quantity, period }`), convertis en jours par
+  unité ; `rateDisplays` : rythmes en unités par jour, à afficher par période (4.3). Le rythme
+  déclaré d'un produit (`declaredDaysPerUnit`) s'écrit lui aussi en nombre ou en fraction.
 - `expected` : seules les valeurs écrites sont vérifiées (`rates`, `intervals`, `states`,
-  `suggestions`, `sessions`, `lineStates`, `openings`, `period`, `missing`, `recipeChanges`).
+  `suggestions`, `sessions`, `lineStates`, `openings`, `period`, `missing`, `recipeChanges`, `daysPerUnit`, `perPeriod`).
   `openings` vérifie les états des lignes et les pastilles des recettes à plusieurs ouvertures
   de l'application ; `missing` et `recipeChanges` suivent l'ordre de `recipeRequests` et de
   `recipeChanges`. Une quantité s'écrit en nombre ou en fraction (`"1/7"`). `invalidInput`

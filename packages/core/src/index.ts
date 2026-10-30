@@ -6,7 +6,17 @@ export * from './model';
 export { InvalidInputError } from './errors';
 export { addDays, addHours, dayOf, daysBetween } from './date';
 export { packsFor, packUnits } from './quantity';
-export { observedIntervals, resolveRate, type Interval, type Rate } from './rate';
+export {
+  observedIntervals,
+  PERIOD_DAYS,
+  resolveRate,
+  toDaysPerUnit,
+  toPerPeriod,
+  type Interval,
+  type PerPeriod,
+  type Rate,
+  type RatePeriod,
+} from './rate';
 export { estimateStock, type StockEstimate } from './stock';
 export { productState, type ProductState } from './state';
 export { suggestForPeriod, type Justification, type Suggestion } from './suggest';
