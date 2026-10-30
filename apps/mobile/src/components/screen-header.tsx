@@ -39,10 +39,13 @@ export function ScreenHeader({
   onBack,
   actions = [],
   leftAction,
+  metaTone = 'muted',
   form = 'root',
 }: {
   title: string;
   meta?: string | undefined;
+  /** Méta d'une fiche recette : `alert` quand il manque des ingrédients, `action` quand rien. */
+  metaTone?: 'muted' | 'alert' | 'action';
   right?: ReactNode;
   onBack?: (() => void) | undefined;
   actions?: readonly HeaderAction[];
@@ -103,7 +106,7 @@ export function ScreenHeader({
         {title}
       </Text>
       {meta !== undefined && (
-        <Text variant="label" tone="muted">
+        <Text variant="label" tone={metaTone}>
           {meta}
         </Text>
       )}

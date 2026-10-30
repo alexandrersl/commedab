@@ -1,47 +1,65 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { PASSWORD_MIN_LENGTH, setPassword, type AuthFailure } from '../auth/actions';
+import { passwordFailure, setPassword, type AuthFailure } from '../auth/actions';
 import { useSession } from '../auth/session';
-import { Button, Field } from '../components/form';
+import { Button } from '../components/button';
+import { TextInput } from '../components/text-input';
+import { AuthLayout } from '../screens/auth/layout';
 
-/** Ouvert par le lien « mot de passe oublié » (specs techniques 8.3). */
+/**
+ * Nouveau mot de passe (EF-5.10, EF-5.2) : ouvert par le lien de réinitialisation, ou depuis
+ * les Réglages, d'où l'on peut revenir sans rien changer.
+ */
 export default function NewPassword() {
-  const { endRecovery } = useSession();
+  const { recovery, endRecovery } = useSession();
   const [password, setValue] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [confirmation, setConfirmation] = useState('');
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<AuthFailure>(null);
+  const [mismatch, setMismatch] = useState<AuthFailure>(null);
 
   const submit = async () => {
-    setBusy(true);
+    const invalid = passwordFailure(password);
+    const different = confirmation === password ? null : "Ce n'est pas le même mot de passe";
+    setError(invalid);
+    setMismatch(invalid === null ? different : null);
+    if (invalid !== null || different !== null) return;
+    setSaving(true);
     const failure = await setPassword(password);
-    setBusy(false);
+    setSaving(false);
     setError(failure);
     if (failure === null) endRecovery();
   };
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.form}>
-        <Text style={styles.title}>Nouveau mot de passe</Text>
-        <Field
-          label={`Mot de passe (${PASSWORD_MIN_LENGTH} caractères minimum)`}
-          value={password}
-          onChangeText={setValue}
-          secureTextEntry
-          autoComplete="new-password"
-          textContentType="newPassword"
-          onSubmitEditing={submit}
-        />
-        {error !== null && <Text style={styles.error}>{error}</Text>}
-        <Button label="Enregistrer" onPress={submit} disabled={busy} />
-      </View>
-    </View>
+    <AuthLayout
+      title="Nouveau mot de passe"
+      lead="Choisis-en un que tu n'utilises nulle part ailleurs."
+      onBack={recovery === 'settings' ? endRecovery : undefined}
+    >
+      <TextInput
+        label="Nouveau mot de passe"
+        value={password}
+        onChangeText={setValue}
+        placeholder="8 caractères minimum"
+        secureTextEntry
+        autoComplete="new-password"
+        textContentType="newPassword"
+        error={error}
+        disabled={saving}
+      />
+      <TextInput
+        label="Confirme-le"
+        value={confirmation}
+        onChangeText={setConfirmation}
+        placeholder="Le même, pour être sûr"
+        secureTextEntry
+        autoComplete="new-password"
+        textContentType="newPassword"
+        onSubmitEditing={() => void submit()}
+        error={mismatch}
+        disabled={saving}
+      />
+      <Button label="Enregistrer et me connecter" loading={saving} onPress={() => void submit()} />
+    </AuthLayout>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#f8f9fa', justifyContent: 'center', padding: 24 },
-  form: { width: '100%', maxWidth: 400, alignSelf: 'center', gap: 12 },
-  title: { fontSize: 24, fontWeight: '700', color: '#212529' },
-  error: { color: '#c92a2a' },
-});
