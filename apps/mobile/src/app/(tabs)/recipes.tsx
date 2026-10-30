@@ -63,7 +63,7 @@ export default function Recipes() {
           subtitle={subtitle}
           complete={complete}
           ingredients={ingredients.map((i) => ({
-            label: pillLabel(i),
+            label: pillLabel(i, listRecipe?.times ?? 1),
             missing: i.missing !== null,
           }))}
           onPress={() => router.push({ pathname: '/recipe/[id]', params: { id: recipe.id } })}
