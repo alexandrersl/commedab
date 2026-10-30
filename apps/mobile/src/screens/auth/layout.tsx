@@ -1,13 +1,14 @@
 import { router } from 'expo-router';
-import { AppleLogo, CaretLeft, Envelope, GoogleLogo, type Icon } from 'phosphor-react-native';
+import { CaretLeft, EnvelopeSimple } from 'phosphor-react-native';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { PROVIDERS, signInWithProvider, type AuthFailure, type Provider } from '../../auth/actions';
+import { AppleLogo, GoogleLogo } from '../../components/brand-logos';
 import { Glyph } from '../../components/icons';
 import { Pressable } from '../../components/pressable';
 import { Screen } from '../../components/screen';
 import { Text } from '../../components/text';
-import { ICON, useTheme } from '../../theme';
+import { useTheme, size } from '../../theme';
 
 /**
  * Écran du compte (planches Connexion, Inscription, Mot de passe) : titre en Fraunces, phrase
@@ -69,7 +70,7 @@ export function Strong({ children }: { children: ReactNode }) {
 export function MailIcon() {
   return (
     <View className="items-center py-6">
-      <Glyph icon={Envelope} color="action" size={ICON.empty} />
+      <Glyph icon={EnvelopeSimple} color="action" size={size['icon-lg']} />
     </View>
   );
 }
@@ -116,9 +117,9 @@ export function CapsuleButton({
   );
 }
 
-const PROVIDER_LABELS: Record<Provider, { label: string; icon: Icon }> = {
-  google: { label: 'Continuer avec Google', icon: GoogleLogo },
-  apple: { label: 'Continuer avec Apple', icon: AppleLogo },
+const PROVIDER_LABELS: Record<Provider, { label: string; icon: ReactNode }> = {
+  google: { label: 'Continuer avec Google', icon: <GoogleLogo /> },
+  apple: { label: 'Continuer avec Apple', icon: <AppleLogo /> },
 };
 
 /**
@@ -153,13 +154,7 @@ export function ProviderButtons({
         <CapsuleButton
           key={provider}
           label={PROVIDER_LABELS[provider].label}
-          icon={
-            <Glyph
-              icon={PROVIDER_LABELS[provider].icon}
-              size={ICON.header}
-              weight={provider === 'apple' ? 'fill' : 'bold'}
-            />
-          }
+          icon={PROVIDER_LABELS[provider].icon}
           loading={running === provider}
           disabled={disabled && running !== provider}
           onPress={() => void run(provider)}
