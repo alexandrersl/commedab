@@ -1,7 +1,7 @@
 import { isAuthRetryableFetchError, type AuthError } from '@supabase/supabase-js';
 import { redirectUrl, supabase } from './supabase';
 
-export const PASSWORD_MIN_LENGTH = 10;
+export const PASSWORD_MIN_LENGTH = 8;
 
 /** Échec rendu à l'écran, en français ; `null` quand l'action a réussi. */
 export type AuthFailure = string | null;

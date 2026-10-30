@@ -1,4 +1,5 @@
 const { getDefaultConfig } = require('expo/metro-config');
+const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
@@ -6,4 +7,4 @@ const config = getDefaultConfig(__dirname);
 // publie sa version compatible Metro sous `react-native-web`.
 config.resolver.unstable_conditionsByPlatform.web.push('react-native-web');
 
-module.exports = config;
+module.exports = withNativeWind(config, { input: './global.css' });
