@@ -35,7 +35,7 @@ import { opacity } from '../../theme';
 const RATE_HINTS: Record<RateSource, string> = {
   declared: 'déclaré',
   learned: 'appris',
-  catalog: 'appris',
+  catalog: 'habituel',
   none: 'à définir',
 };
 

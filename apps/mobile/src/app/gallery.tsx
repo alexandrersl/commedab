@@ -255,7 +255,7 @@ function Samples({ scheme }: { scheme: Scheme }) {
           actions={[{ label: "Je n'en achète plus", tone: 'alert', onPress: () => {} }]}
         />
         <ScreenHeader
-          form="centered"
+          form="modal"
           title="Nouvelle recette"
           leftAction={{ label: 'Annuler', onPress: () => {} }}
           actions={[{ label: 'Enregistrer', onPress: () => {} }]}

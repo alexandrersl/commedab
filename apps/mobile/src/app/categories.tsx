@@ -100,7 +100,7 @@ export default function Categories() {
 
   return (
     <Screen>
-      <ScreenHeader form="centered" title="Ordre des rayons" onBack={() => router.back()} />
+      <ScreenHeader form="modal" title="Ordre des rayons" onBack={() => router.back()} />
       <Text variant="body-sm" tone="muted">
         Glisse les rayons dans l&apos;ordre de ton magasin. « À classer » reste en tête, les
         surgelés en dernier.

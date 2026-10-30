@@ -140,7 +140,7 @@ export default function RecipeEdit() {
       }
     >
       <ScreenHeader
-        form="centered"
+        form="modal"
         title={existing === undefined ? 'Nouvelle recette' : 'Modifier la recette'}
         leftAction={{ label: 'Annuler', onPress: back }}
         actions={[{ label: 'Enregistrer', onPress: () => void save(), disabled: saving }]}
