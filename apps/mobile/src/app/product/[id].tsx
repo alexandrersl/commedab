@@ -339,8 +339,9 @@ export default function ProductSheet() {
       <PurchaseSheet
         product={product}
         purchase={archived ? null : purchase}
-        onQuantity={(target, quantity) =>
-          void write(() => data.purchases.editPurchase(target.id, { quantity }))
+        now={engine.now}
+        onSave={(target, changes) =>
+          void write(() => data.purchases.editPurchase(target.id, changes))
         }
         onDelete={deletePurchase}
         onClose={() => setPurchase(null)}

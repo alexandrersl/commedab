@@ -19,6 +19,7 @@ export function Stepper({
   value,
   onChange,
   min = 0,
+  max = Number.POSITIVE_INFINITY,
   label,
   field = false,
   disabled = false,
@@ -26,6 +27,7 @@ export function Stepper({
   value: number;
   onChange: (next: number) => void;
   min?: number;
+  max?: number;
   /** Texte du chiffre (« 1 pack ») ; le chiffre seul sinon. */
   label?: string | undefined;
   field?: boolean;
@@ -64,7 +66,7 @@ export function Stepper({
       </Text>
       <Pressable
         small
-        disabled={disabled}
+        disabled={disabled || value >= max}
         onPress={() => step(value + 1)}
         accessibilityLabel="Plus"
         className="min-h-control-sm min-w-control-sm items-center justify-center"
