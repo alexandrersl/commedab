@@ -28,9 +28,10 @@ function ActionButton({ action }: { action: HeaderAction }) {
 }
 
 /**
- * En-tête d'un écran (components.md, ScreenHeader). Racine : titre et méta ou action à droite.
- * Fiche : retour, au plus deux actions, puis le nom et sa méta. `centered` : écran secondaire
- * à titre court (« Tu n'achètes plus », « Nouvelle recette »), comme sur les planches.
+ * En-tête d'un écran (components.md, ScreenHeader). Racine : titre à gauche, méta ou action à
+ * droite. Fiche : retour, au plus deux actions, puis le nom et sa méta. Modal (création, ordre
+ * des rayons, « Tu n'achètes plus ») : « Annuler » ou retour, titre centré, une action ou rien ;
+ * seule forme à titre centré.
  */
 export function ScreenHeader({
   title,
@@ -50,7 +51,7 @@ export function ScreenHeader({
   onBack?: (() => void) | undefined;
   actions?: readonly HeaderAction[];
   leftAction?: HeaderAction | undefined;
-  form?: 'root' | 'sheet' | 'centered';
+  form?: 'root' | 'sheet' | 'modal';
 }) {
   if (form === 'root') {
     return (
@@ -77,7 +78,7 @@ export function ScreenHeader({
       <Glyph icon={CaretLeft} />
     </Pressable>
   );
-  if (form === 'centered') {
+  if (form === 'modal') {
     return (
       <View className="min-h-control flex-row items-center justify-between gap-3 pt-6">
         <View className="flex-1 items-start">

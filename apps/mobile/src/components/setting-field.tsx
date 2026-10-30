@@ -12,7 +12,7 @@ type Field =
   | {
       kind: 'select';
       value: string;
-      /** Origine de la valeur, devant elle : `appris`, `déclaré`, `à définir`. */
+      /** Origine de la valeur, devant elle : `appris`, `habituel`, `déclaré`, `à définir`. */
       hint?: string | undefined;
       onPress: () => void;
       loading?: boolean;

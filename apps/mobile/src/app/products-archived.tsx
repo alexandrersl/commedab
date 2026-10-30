@@ -22,7 +22,7 @@ export default function ProductsArchived() {
   return (
     <Screen>
       <ScreenHeader
-        form="centered"
+        form="modal"
         title="Tu n'achètes plus"
         onBack={() => (router.canGoBack() ? router.back() : router.navigate('/products'))}
       />
