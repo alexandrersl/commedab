@@ -3,5 +3,6 @@ dist
 .expo
 pnpm-lock.yaml
 docs/*.md
+docs/design
 apps/mobile/public/powersync
 apps/mobile/expo-env.d.ts
