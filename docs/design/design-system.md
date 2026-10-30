@@ -23,7 +23,7 @@ Quatre rôles, dans cet ordre de fréquence :
 
 Bordures : `line` pour la décoration (cartes, séparateurs), `line-strong` quand la bordure porte un sens (case vide, champ) — elle tient 3:1. `scrim` sous les feuilles. `skeleton` pour le chargement.
 
-Interdits : une couleur hors tokens ; `action` et `alert` sur la même ligne pour deux actions ; un texte blanc en dur sur `action` (utiliser `on-action`) ; un vert et un rouge qui ne se distingueraient que par la teinte — ici `action` et `alert` diffèrent aussi en luminosité et chaque état porte un mot.
+Interdits : une couleur hors tokens (seule exception : le logo Google sur son bouton) ; `action` et `alert` sur la même ligne pour deux actions ; un texte blanc en dur sur `action` (utiliser `on-action`) ; un vert et un rouge qui ne se distingueraient que par la teinte — ici `action` et `alert` diffèrent aussi en luminosité et chaque état porte un mot.
 
 ## Typographie
 
@@ -82,6 +82,7 @@ Où il y a des icônes, et où il n'y en a pas :
 - **Recette** : `ChefHat` est le seul signe récurrent de la marque ; il marque une recette partout (onglet, pastille, résultat de recherche).
 - **États vides** : une icône du jeu ci-dessus à 40 px en `ink-muted` au-dessus du titre, facultative.
 - **Jamais** : sur une ligne de produit, dans un titre, sur une carte recette, en décoration. Pas d'emoji, pas d'illustration.
+- **Logos de marque** : les boutons « Continuer avec Google / Apple » portent les logos officiels, le G en couleur (exigence de Google), la pomme en `ink`. Ce sont les seules couleurs hors tokens de l'app, et elles ne servent qu'à ça.
 - **Apple** : le bouton « Continuer avec Apple » n'est affiché qu'en natif (iOS/Android), jamais sur la PWA.
 
 En magasin on scanne des noms ; les icônes servent au repérage des groupes, pas à décorer les lignes.
