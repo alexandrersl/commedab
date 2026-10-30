@@ -4,14 +4,12 @@
   "products": [
     {
       "id": "lait",
-      "declaredQty": 1,
-      "declaredPerDays": 1,
+      "declaredDaysPerUnit": 1,
       "archivedAt": "2026-10-05T10:00:00"
     },
     {
       "id": "beurre",
-      "declaredQty": 1,
-      "declaredPerDays": 1
+      "declaredDaysPerUnit": 1
     }
   ],
   "purchases": [

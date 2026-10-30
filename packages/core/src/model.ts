@@ -15,8 +15,8 @@ export interface Product {
   /** Unité comptée : « pièce », « bouteille », « kg »… */
   unitLabel: string;
   packSize: number;
-  declaredQty: number | null;
-  declaredPerDays: number | null;
+  /** Rythme déclaré, en jours par unité : 1,4 pour « 5 par semaine » (4.3). */
+  declaredDaysPerUnit: number | null;
   /** Contenance d'une unité, pour convertir les ingrédients des recettes (4.6). */
   contentsQty: number | null;
   contentsUnit: string | null;

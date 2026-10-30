@@ -251,7 +251,7 @@ Le jeu par défaut (7.4) est créé avec le household (5.6).
 | category\_id | uuid, nullable | nul = « À classer », groupe affiché en tête de liste (EF-1.2, EF-2.8) |
 | unit\_label | text | unité comptée (RG-1) : « pièce » par défaut, « bouteille », « kg »… |
 | pack\_size | numeric | unités par pack, strictement positif, 1 par défaut (5.3 FS) |
-| declared\_days\_per\_unit | numeric, nullable | rythme déclaré, en jours par unité (EF-3.3) : saisi en unités par jour, semaine ou mois, converti par `core` (4.3) ; seule cette forme est enregistrée |
+| declared\_days\_per\_unit | numeric, nullable | rythme déclaré, en jours par unité (EF-3.3) : saisi en unités par jour, semaine ou mois, converti par `core` (4.3) ; seule cette forme est enregistrée, sans échelle pour être relue telle qu'écrite (5 par 7 jours n'a pas d'écriture décimale finie) |
 | contents\_qty, contents\_unit | numeric, text, nullables | contenance d'une unité : 1 et `l`, 500 et `g` (EF-4.4) |
 | catalog\_entry\_id, catalog\_version | text, smallint, nullables | origine catalogue (RG-8) |
 | catalog\_qty, catalog\_per\_days | numeric, smallint, nullables | rythme indicatif pour une personne, copié du catalogue à la création et jamais resynchronisé (RG-8) |
@@ -464,7 +464,7 @@ Les tests sont écrits avant le moteur, sous forme de fixtures JSON (produits, a
 | T15 | Recette dont des ingrédients manquants sont déjà sur la liste, dont un pour une autre recette | une seule ligne par produit, quantités cumulées |
 | T17 | Rythme appris sur 2 intervalles, 4 × la valeur catalogue | borné à 2 × catalogue |
 | T22 | Valeur catalogue 0 ou négative (4.3) | ignorée : rythme appris sans borne, ou aucun rythme |
-| T23 | Rythme déclaré de 0 unité (4.3) | ignoré : rythme catalogue ou appris |
+| T23 | Rythme déclaré de 0 jour par unité, ou négatif (4.3) | ignoré : rythme catalogue ou appris |
 | T25 | Liste de 0 jour (4.5) | `InvalidInputError` sur `periodDays` |
 | T26 | Deux achats le même jour, puis deux achats hebdomadaires (4.3) | un seul achat de quantité cumulée : intervalles 7 et 7 |
 | T29 | Besoin de 0,8 unité en pack de 1, besoin de 7 unités en pack de 6 (4.5) | 1 pack et 2 packs : l'arrondi dépasse le besoin de moins d'un pack |

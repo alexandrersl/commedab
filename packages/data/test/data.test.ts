@@ -89,12 +89,11 @@ describe('produits (EF-2.8, EF-3.7)', () => {
     const id = await data.products.createProduct({ name: 'Chia', entry: null, addToList: false });
     await data.products.updateProduct(id, {
       name: 'Graines de chia',
-      declaredQty: 1,
-      declaredPerDays: 30,
+      declaredDaysPerUnit: 1.4,
     });
     expect(
-      await db.getOptional('SELECT name_normalized, declared_qty, declared_per_days FROM product'),
-    ).toEqual({ name_normalized: 'graines de chia', declared_qty: 1, declared_per_days: 30 });
+      await db.getOptional('SELECT name_normalized, declared_days_per_unit FROM product'),
+    ).toEqual({ name_normalized: 'graines de chia', declared_days_per_unit: 1.4 });
     expect(() => data.products.updateProduct(id, { name: '  ' })).toThrow();
   });
 });

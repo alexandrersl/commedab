@@ -4,22 +4,19 @@
   "products": [
     {
       "id": "pain-de-mie",
-      "declaredQty": 0.8,
-      "declaredPerDays": 7
+      "declaredDaysPerUnit": 8.75
     },
     {
       "id": "eau",
       "unitLabel": "bouteille",
       "packSize": 6,
-      "declaredQty": 1,
-      "declaredPerDays": 1
+      "declaredDaysPerUnit": 1
     },
     {
       "id": "lait",
       "unitLabel": "bouteille",
       "packSize": 6,
-      "declaredQty": 6,
-      "declaredPerDays": 7
+      "declaredDaysPerUnit": "7/6"
     }
   ],
   "purchases": [],

@@ -4,28 +4,23 @@
   "products": [
     {
       "id": "pain",
-      "declaredQty": 1,
-      "declaredPerDays": 1
+      "declaredDaysPerUnit": 1
     },
     {
       "id": "beurre",
-      "declaredQty": 1,
-      "declaredPerDays": 1
+      "declaredDaysPerUnit": 1
     },
     {
       "id": "jambon",
-      "declaredQty": 1,
-      "declaredPerDays": 1
+      "declaredDaysPerUnit": 1
     },
     {
       "id": "lait",
-      "declaredQty": 1,
-      "declaredPerDays": 1
+      "declaredDaysPerUnit": 1
     },
     {
       "id": "oeufs",
-      "declaredQty": 1,
-      "declaredPerDays": 1
+      "declaredDaysPerUnit": 1
     }
   ],
   "purchases": [

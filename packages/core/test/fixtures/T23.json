@@ -1,18 +1,16 @@
 {
   "id": "T23",
-  "scenario": "Rythme déclaré de 0 unité : pas de rythme déclaré, on passe au rythme appris ou au catalogue",
+  "scenario": "Rythme déclaré de 0 jour par unité, ou négatif : pas de rythme déclaré, on passe au rythme appris ou au catalogue",
   "products": [
     {
       "id": "yaourt",
-      "declaredQty": 0,
-      "declaredPerDays": 7,
+      "declaredDaysPerUnit": 0,
       "catalogQty": 0.5,
       "catalogPerDays": 1
     },
     {
       "id": "cafe",
-      "declaredQty": 0,
-      "declaredPerDays": 7
+      "declaredDaysPerUnit": -7
     }
   ],
   "purchases": [

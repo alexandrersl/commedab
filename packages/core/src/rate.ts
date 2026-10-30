@@ -36,7 +36,7 @@ export function resolveRate(product: Product, purchases: readonly Purchase[]): R
 }
 
 export function rateOf(product: Product, purchases: SortedPurchases): Rate {
-  const declared = ratio(product.declaredQty, product.declaredPerDays);
+  const declared = ratio(1, product.declaredDaysPerUnit);
   if (declared !== null) return { perDay: declared, source: 'declared', intervalCount: 0 };
 
   const catalog = ratio(product.catalogQty, product.catalogPerDays);
