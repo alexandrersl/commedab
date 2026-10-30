@@ -594,7 +594,7 @@ repo/
 | --- | --- | --- |
 | Langage | TypeScript strict partout, `noUncheckedIndexedAccess` | Erreurs attrapées avant l'exécution ; indispensable quand le code est généré |
 | Framework | Expo, SDK courant au démarrage, nouvelle architecture React Native | Section 1 |
-| Navigation | Expo Router (fichiers = routes), onglets natifs | Même navigation sur web et natif, liens profonds gratuits |
+| Navigation | Expo Router (fichiers = routes), onglets JavaScript (`expo-router/js-tabs`) ; écrans du compte protégés par `Stack.Protected` selon la session | Même navigation sur web et natif, liens profonds gratuits. Les onglets natifs n'ont sur le web qu'une barre de repli : à reconsidérer en phase B |
 | Composants | Primitives React Native + composants maison, pas de kit UI lourd | Expo UI (SwiftUI, Compose) est natif seulement : incompatible avec la phase A web. Un kit tiers ajouterait une dépendance pour cinq écrans |
 | Styles | NativeWind (Tailwind pour React Native) | Même syntaxe sur les trois cibles, bien connue des modèles de génération de code |
 | Listes | FlashList | Longues listes de produits sans saccade (ENF-3) |
