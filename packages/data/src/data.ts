@@ -102,12 +102,42 @@ async function productOf(tx: SqlContext, productId: string) {
   return toProduct(row);
 }
 
+/** Les deux opérations du compte qui passent par le serveur (specs techniques 5.6). */
+export interface AccountServer {
+  /** Fait envoyer l'export par e-mail ; rend quand la demande est acceptée. */
+  requestExport(): Promise<void>;
+  /** Supprime le compte et ses données sur le serveur, puis vide la base de l'appareil. */
+  deleteAccount(): Promise<void>;
+}
+
+const OFFLINE_SERVER: AccountServer = {
+  requestExport: () => Promise.reject(new Error('Aucun serveur')),
+  deleteAccount: () => Promise.reject(new Error('Aucun serveur')),
+};
+
+async function checkNotArchived(tx: SqlContext, productId: string): Promise<void> {
+  const row = await tx.getOptional<{ archived_at: string | null }>(
+    'SELECT archived_at FROM product WHERE id = ?',
+    [productId],
+  );
+  if (row === null) throw new Error(`Produit inconnu : ${productId}`);
+  if (row.archived_at !== null) {
+    throw new Error(`Produit archivé, réglages en lecture seule : ${productId}`);
+  }
+}
+
 /**
  * Couche d'accès aux données (specs techniques 6.2) : un dépôt par entité, chacun avec ses
  * requêtes réactives et ses commandes. Chaque commande s'exécute dans une transaction et tire
  * tout calcul de `core`.
  */
-export function createData(db: Database, { now = () => new Date() }: { now?: () => Date } = {}) {
+export function createData(
+  db: Database,
+  {
+    now = () => new Date(),
+    server = OFFLINE_SERVER,
+  }: { now?: () => Date; server?: AccountServer } = {},
+) {
   /** Met le produit sur la liste : incrémente sa ligne non cochée ou en crée une (EF-2.9, EF-2.10). */
   async function addToList(
     tx: SqlContext,
@@ -429,7 +459,7 @@ export function createData(db: Database, { now = () => new Date() }: { now?: () 
       });
     },
 
-    /** Modifie la fiche (EF-3.3, EF-3.6) ; seul le nom est obligatoire. */
+    /** Modifie la fiche (EF-3.3, EF-3.6) ; seul le nom est obligatoire. Refusé sur un produit archivé (EF-3.5). */
     updateProduct(productId: string, changes: ProductChanges): Promise<void> {
       const clean: ProductChanges = { ...changes };
       if (clean.name !== undefined) clean.name = cleanName(clean.name);
@@ -445,6 +475,7 @@ export function createData(db: Database, { now = () => new Date() }: { now?: () 
         values.push(normalizeName(clean.name));
       }
       return db.writeTransaction(async (tx) => {
+        await checkNotArchived(tx, productId);
         await tx.execute(`UPDATE product SET ${columns.join(', ')}, updated_at = ? WHERE id = ?`, [
           ...values,
           stored(now()),
@@ -462,6 +493,17 @@ export function createData(db: Database, { now = () => new Date() }: { now?: () 
           at,
           productId,
         ]);
+      });
+    },
+
+    /** « Reprendre » : réactive le produit, sans l'ajouter à la liste (EF-3.8). */
+    resumeBuying(productId: string): Promise<void> {
+      const at = stored(now());
+      return db.writeTransaction(async (tx) => {
+        await tx.execute(
+          'UPDATE product SET archived_at = NULL, updated_at = ? WHERE id = ? AND archived_at IS NOT NULL',
+          [at, productId],
+        );
       });
     },
   };
@@ -531,16 +573,6 @@ export function createData(db: Database, { now = () => new Date() }: { now?: () 
       });
     },
   };
-
-  async function setRecipeDeleted(recipeId: string, deletedAt: string | null): Promise<void> {
-    await db.writeTransaction(async (tx) => {
-      await tx.execute('UPDATE recipe SET deleted_at = ?, updated_at = ? WHERE id = ?', [
-        deletedAt,
-        stored(now()),
-        recipeId,
-      ]);
-    });
-  }
 
   const recipes = {
     watch(subscription: Subscription<Awaited<ReturnType<typeof readRecipes>>>) {
@@ -614,13 +646,16 @@ export function createData(db: Database, { now = () => new Date() }: { now?: () 
       });
     },
 
-    /** Supprime la recette ; ses lignes restent sur la liste (EF-4.6). */
+    /** Supprime la recette, après confirmation à l'écran ; ses lignes restent sur la liste (EF-4.6). */
     deleteRecipe(recipeId: string): Promise<void> {
-      return setRecipeDeleted(recipeId, stored(now()));
-    },
-
-    restoreRecipe(recipeId: string): Promise<void> {
-      return setRecipeDeleted(recipeId, null);
+      const at = stored(now());
+      return db.writeTransaction(async (tx) => {
+        await tx.execute('UPDATE recipe SET deleted_at = ?, updated_at = ? WHERE id = ?', [
+          at,
+          at,
+          recipeId,
+        ]);
+      });
     },
   };
 
@@ -673,27 +708,14 @@ export function createData(db: Database, { now = () => new Date() }: { now?: () 
       });
     },
 
-    /**
-     * Contenu de « Exporter mes données » (EF-5.5, 5.6) : rayons dans leur ordre, produits,
-     * achats, recettes et ingrédients, liste entière, lignes passées comprises.
-     */
-    async exportData(): Promise<Record<string, unknown>> {
-      const rows = (table: string, order: string) =>
-        db.getAll<Record<string, unknown>>(`SELECT * FROM ${table} ORDER BY ${order}`);
-      const strip = (list: Record<string, unknown>[]) =>
-        list.map((row) =>
-          Object.fromEntries(Object.entries(row).filter(([k]) => k !== 'household_id')),
-        );
-      return {
-        exported_at: stored(now()),
-        categories: strip(await rows('category', 'position')),
-        products: strip(await rows('product', 'name_normalized')),
-        purchases: strip(await rows('stock_event', 'occurred_at')),
-        recipes: strip(await rows('recipe', 'name')),
-        recipe_ingredients: strip(await rows('recipe_ingredient', 'created_at')),
-        list_lines: strip(await rows('list_line', 'created_at')),
-        list_recipes: strip(await rows('list_recipe', 'created_at')),
-      };
+    /** « Exporter mes données » : envoyé par e-mail par le serveur (EF-5.5, 5.6). */
+    requestExport(): Promise<void> {
+      return server.requestExport();
+    },
+
+    /** « Supprimer mon compte », après confirmation (EF-5.6). */
+    deleteAccount(): Promise<void> {
+      return server.deleteAccount();
     },
   };
 
