@@ -1,5 +1,184 @@
-import { Placeholder } from '../../components/placeholder';
+import { router } from 'expo-router';
+import { ListChecks } from 'phosphor-react-native';
+import { useMemo, useRef, useState } from 'react';
+import { ScrollView, View, type ScrollViewInstance } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button } from '../../components/button';
+import { LineSheet } from '../../components/line-sheet';
+import { Divider, ListRow, RowGroup, SectionHeader } from '../../components/list-row';
+import { ProgressBar } from '../../components/progress-bar';
+import { RecipeChip } from '../../components/recipe-chip';
+import { ScreenHeader } from '../../components/screen-header';
+import { EmptyState, OfflineBanner, Skeleton, SkeletonRows } from '../../components/states';
+import { stepHaptic } from '../../components/add-control';
+import { packsLabel } from '../../copy/words';
+import { useEngine } from '../../data/engine';
+import { useData, usePendingIds, useSyncStatus } from '../../data/provider';
+import { useWrite } from '../../data/use-write';
+import { AddPanel } from '../../screens/list/add-panel';
+import { groupLines, type ShownLine } from '../../screens/list/groups';
 
-export default function List() {
-  return <Placeholder text="Ta liste est vide." />;
+/**
+ * La Liste, écran d'accueil (EF-1.1 à EF-1.12) : groupée par rayon, toujours cochable, sans
+ * confirmation ni message après un geste. En bas, le champ qui ouvre le panneau Ajouter.
+ */
+export default function ListScreen() {
+  const engine = useEngine();
+  const data = useData();
+  const write = useWrite();
+  const pending = usePendingIds();
+  const { online, synced } = useSyncStatus();
+  const [panel, setPanel] = useState(false);
+  const [held, setHeld] = useState<ShownLine | null>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
+  const headerHeight = useRef(0);
+
+  const groups = useMemo(() => groupLines(engine), [engine]);
+  const total = groups.reduce((n, g) => n + g.lines.length, 0);
+  const checked = groups.reduce((n, g) => n + g.lines.filter((l) => l.checked).length, 0);
+  const loading = engine.loading || (!synced && engine.products.length === 0);
+
+  const toggle = (item: ShownLine) => {
+    stepHaptic();
+    write(() =>
+      item.checked ? data.list.uncheckLine(item.line.id) : data.list.checkLine(item.line.id),
+    );
+  };
+  const openPanel = () => {
+    // Le haut de la liste sort de l'écran, ses premières lignes restent sous le voile (EF-2.1).
+    scroll.current?.scrollTo({ y: headerHeight.current, animated: true });
+    setPanel(true);
+  };
+  const closePanel = () => {
+    setPanel(false);
+    scroll.current?.scrollTo({ y: 0, animated: true });
+  };
+
+  return (
+    <SafeAreaView edges={['top']} className="flex-1 bg-ground">
+      <ScrollView ref={scroll} className="flex-1" contentContainerClassName="gap-3 px-4 pb-8">
+        <View
+          className="gap-3"
+          onLayout={(event) => {
+            headerHeight.current = event.nativeEvent.layout.height;
+          }}
+        >
+          <ScreenHeader title="Ma liste" meta={loading ? '…' : `${checked} sur ${total}`} />
+          <ProgressBar value={total === 0 ? 0 : checked / total} indeterminate={loading} />
+          {loading ? (
+            <View className="flex-row gap-2">
+              <Skeleton width="third" tall />
+              <Skeleton width="third" tall />
+            </View>
+          ) : (
+            engine.view.recipes.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerClassName="gap-2"
+              >
+                {engine.view.recipes.map((badge) => {
+                  const recipe = engine.recipeById.get(badge.listRecipe.recipeId);
+                  if (recipe === undefined) return null;
+                  return (
+                    <RecipeChip
+                      key={badge.listRecipe.id}
+                      name={recipe.name}
+                      times={badge.listRecipe.times}
+                      checked={badge.checked}
+                      total={badge.total}
+                      complete={badge.full}
+                      onPress={() => router.push(`/recipe/${recipe.id}`)}
+                    />
+                  );
+                })}
+              </ScrollView>
+            )
+          )}
+          {!online && (
+            <OfflineBanner text="Hors ligne · tes modifications seront envoyées plus tard" />
+          )}
+        </View>
+
+        {loading ? (
+          <SkeletonRows count={5} />
+        ) : engine.error !== null ? (
+          <EmptyState
+            title="Impossible de charger ta liste"
+            body="Ça ne devrait pas arriver. Réessaie, et si ça continue, dis-le nous depuis les Réglages."
+            action={{ label: 'Réessayer', onPress: engine.retry }}
+          />
+        ) : total === 0 ? (
+          <EmptyState
+            icon={ListChecks}
+            title="Rien sur ta liste"
+            body="Ajoute un produit, ou laisse-moi te proposer ce qui manque d'habitude."
+          />
+        ) : (
+          <RowGroup>
+            {groups.map((group) => (
+              <View key={group.category?.id ?? 'none'}>
+                <SectionHeader
+                  name={group.category?.name ?? 'À classer'}
+                  categoryKey={group.category?.key ?? null}
+                />
+                {group.lines.map((item, i) => (
+                  <View key={item.line.id}>
+                    {i > 0 && <Divider />}
+                    <ListRow
+                      name={item.product.name}
+                      subtitle={item.subtitle}
+                      quantityLabel={packsLabel(item.product, item.line.quantity)}
+                      checked={item.checked}
+                      highlight={held?.line.id === item.line.id}
+                      pending={pending.has(item.line.id)}
+                      onPress={() => toggle(item)}
+                      onLongPress={() => setHeld(item)}
+                      onRemove={() => write(() => data.list.removeLine(item.line.id))}
+                    />
+                  </View>
+                ))}
+              </View>
+            ))}
+          </RowGroup>
+        )}
+      </ScrollView>
+
+      <View className="px-4 pb-3 pt-2">
+        <Button
+          label="Ajouter un produit ou une recette"
+          align="start"
+          badge={engine.suggestions.length}
+          disabled={loading}
+          onPress={openPanel}
+        />
+      </View>
+
+      {panel && <AddPanel onClose={closePanel} />}
+
+      {held !== null && (
+        <LineSheet
+          visible
+          name={held.product.name}
+          subtitle={held.subtitle?.split(' · ')[0]}
+          quantity={held.line.quantity}
+          quantityLabel={packsLabel(held.product, held.line.quantity)}
+          onQuantity={(next) => {
+            write(() => data.list.setLineQuantity(held.line.id, next));
+            if (next === 0) setHeld(null);
+            else setHeld({ ...held, line: { ...held.line, quantity: next } });
+          }}
+          onOpenProduct={() => {
+            setHeld(null);
+            router.push(`/product/${held.product.id}`);
+          }}
+          onRemove={() => {
+            write(() => data.list.removeLine(held.line.id));
+            setHeld(null);
+          }}
+          onClose={() => setHeld(null)}
+        />
+      )}
+    </SafeAreaView>
+  );
 }

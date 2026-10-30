@@ -23,4 +23,5 @@ export type {
   SettingsRecord,
 } from './records';
 export type { Subscription } from './reads';
+export { local as localDateTime } from './time';
 export { runStorageCheck, type StorageCheckResult } from './diagnostic/storage-check';
