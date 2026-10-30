@@ -135,6 +135,20 @@ export async function verifyEmailLink(tokenHash: string, type: string): Promise<
   return error === null;
 }
 
+/**
+ * Lien d'e-mail au modèle par défaut de Supabase, revenu avec un `code` PKCE : sur le web,
+ * `detectSessionInUrl` l'a déjà échangé au chargement. Ne marche que dans le navigateur qui a
+ * demandé le lien, d'où les modèles à `token_hash` (specs techniques 5.2).
+ */
+export async function exchangeEmailCode(code: string): Promise<boolean> {
+  if (Platform.OS === 'web') {
+    const { data } = await supabase.auth.getSession();
+    return data.session !== null;
+  }
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  return error === null;
+}
+
 /** Déconnecte cet appareil seulement ; la base locale est vidée par `AppDataProvider`. */
 export async function signOut(): Promise<void> {
   await supabase.auth.signOut({ scope: 'local' });
