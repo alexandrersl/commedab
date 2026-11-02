@@ -40,17 +40,12 @@ export function ListRow({
   accessory?: ReactNode;
   checkbox?: boolean;
 }) {
-  const row = (
-    <Pressable
-      onPress={onPress}
-      onLongPress={onLongPress}
-      accessibilityRole={checkbox ? 'checkbox' : 'button'}
-      accessibilityState={{ checked }}
-      className={`min-h-row flex-row items-center gap-3 px-4 py-2 ${
-        highlight ? 'border-l-focus border-action bg-surface-2' : 'bg-surface'
-      }`}
-      style={pending ? { opacity: opacity.pending } : undefined}
-    >
+  const className = `min-h-row flex-row items-center gap-3 px-4 py-2 ${
+    highlight ? 'border-l-focus border-action bg-surface-2' : 'bg-surface'
+  }`;
+  const style = pending ? { opacity: opacity.pending } : undefined;
+  const content = (
+    <>
       {checkbox && (
         <View
           className={`h-checkbox w-checkbox items-center justify-center rounded-pill ${
@@ -80,8 +75,26 @@ export function ListRow({
             {quantityLabel}
           </Text>
         ))}
-    </Pressable>
+    </>
   );
+  // Sans geste, la ligne n'est pas un bouton : son `accessory` (AddControl) en est un.
+  const row =
+    onPress === undefined && onLongPress === undefined ? (
+      <View className={className} style={style}>
+        {content}
+      </View>
+    ) : (
+      <Pressable
+        onPress={onPress}
+        onLongPress={onLongPress}
+        accessibilityRole={checkbox ? 'checkbox' : 'button'}
+        accessibilityState={{ checked }}
+        className={className}
+        style={style}
+      >
+        {content}
+      </Pressable>
+    );
   if (onRemove === undefined) return row;
   return (
     <ReanimatedSwipeable

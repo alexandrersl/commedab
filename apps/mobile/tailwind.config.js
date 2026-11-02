@@ -10,6 +10,10 @@ const colors = Object.fromEntries(tokens.colorNames.map((name) => [name, `var(--
 module.exports = {
   content: ['./src/**/*.{ts,tsx}'],
   presets: [require('nativewind/preset')],
+  // Le thème suit le système par les variables de ThemeRoot, pas par `dark:`. En `media`,
+  // react-native-css-interop lève une erreur en développement web quand la feuille arrive
+  // après le JS ; `class` l'évite sans rien changer au rendu.
+  darkMode: 'class',
   safelist: tokens.textStyles.map((style) => `type-${style.name}`),
   theme: {
     colors: { transparent: 'transparent', ...colors },

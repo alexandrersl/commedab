@@ -40,17 +40,14 @@ function SelectBox({
   value: string;
   hint?: string | undefined;
   loading?: boolean;
-  onPress: () => void;
+  /** Absent : la ligne entière ouvre le sélecteur, le rectangle n'est pas un bouton de plus. */
+  onPress?: () => void;
   disabled: boolean;
 }) {
   const { colors } = useTheme();
-  return (
-    <Pressable
-      small
-      onPress={onPress}
-      disabled={disabled}
-      className={`${BOX} border-thin border-line-strong`}
-    >
+  const box = `${BOX} border-thin border-line-strong`;
+  const content = (
+    <>
       {hint !== undefined && (
         <Text variant="body-sm" tone="muted">
           {hint}
@@ -62,6 +59,13 @@ function SelectBox({
       ) : (
         !disabled && <Glyph icon={CaretDown} size={size['icon-sm']} color="ink-muted" />
       )}
+    </>
+  );
+  return onPress === undefined ? (
+    <View className={box}>{content}</View>
+  ) : (
+    <Pressable small onPress={onPress} disabled={disabled} className={box}>
+      {content}
     </Pressable>
   );
 }
@@ -92,7 +96,6 @@ export function SettingField({
           value={field.value}
           hint={field.hint}
           loading={field.loading ?? false}
-          onPress={field.onPress}
           disabled={disabled}
         />
       );
