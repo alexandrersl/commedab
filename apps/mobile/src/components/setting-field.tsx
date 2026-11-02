@@ -118,8 +118,8 @@ export function SettingField({
           ? 'border-strong border-action'
           : 'border-thin border-line-strong';
       control = (
-        <View className="flex-row gap-2">
-          <View className={`${BOX} ${border}`}>
+        <View className={`flex-row gap-2 ${field.kind === 'text' ? 'flex-1' : ''}`}>
+          <View className={`${BOX} ${border} ${field.kind === 'text' ? 'flex-1' : ''}`}>
             <TextInput
               value={field.value}
               onChangeText={field.onChangeText}
@@ -135,7 +135,9 @@ export function SettingField({
               }}
               onSubmitEditing={field.onCommit}
               accessibilityLabel={label}
-              className={`type-button-sm min-w-control text-ink ${field.kind === 'number' ? 'text-right' : ''}`}
+              className={`type-button-sm text-ink ${
+                field.kind === 'number' ? 'w-control-lg text-right' : 'min-w-0 flex-1'
+              }`}
               style={field.kind === 'number' ? { fontVariant: ['tabular-nums'] } : undefined}
             />
           </View>
@@ -146,15 +148,10 @@ export function SettingField({
       );
     }
   }
-  const open = field.kind === 'select' && !disabled ? field.onPress : undefined;
-  return (
-    <Pressable
-      onPress={open}
-      disabled={open === undefined}
-      accessibilityRole={open === undefined ? 'none' : 'button'}
-      className="min-h-row flex-row items-center justify-between gap-3 px-4 py-2"
-      style={disabled ? { opacity: opacity.disabled } : undefined}
-    >
+  const className = 'min-h-row flex-row items-center justify-between gap-3 px-4 py-2';
+  const style = disabled ? { opacity: opacity.disabled } : undefined;
+  const labelled = (
+    <>
       <View className="flex-1">
         <Text variant="body">{label}</Text>
         {error ? (
@@ -164,7 +161,17 @@ export function SettingField({
         ) : null}
       </View>
       {control}
+    </>
+  );
+  // Un sélecteur s'ouvre d'un tap n'importe où sur sa ligne ; les autres champs ont leur contrôle.
+  return field.kind === 'select' && !disabled ? (
+    <Pressable onPress={field.onPress} className={className} style={style}>
+      {labelled}
     </Pressable>
+  ) : (
+    <View className={className} style={style}>
+      {labelled}
+    </View>
   );
 }
 

@@ -62,15 +62,14 @@ function resultKey(result: SearchResult): string {
 
 /** Une entrée du panneau : un titre, ou une ligne et le séparateur qui la précède. */
 type Entry =
-  | { kind: 'title'; node: ReactNode }
-  | { kind: 'row'; node: ReactNode; divider: boolean; inset: boolean };
+  { kind: 'title'; node: ReactNode } | { kind: 'row'; node: ReactNode; divider: boolean };
 
-function rowsOf(prefix: string, rows: { key: string; node: ReactNode }[], inset: boolean) {
+function rowsOf(prefix: string, rows: { key: string; node: ReactNode }[]) {
   return rows.map(({ key, node }, i): CardEntry<Entry> => ({
     key: `${prefix}-${key}`,
     type: 'row',
     card: false,
-    item: { kind: 'row', node, divider: i > 0, inset },
+    item: { kind: 'row', node, divider: i > 0 },
   }));
 }
 
@@ -153,6 +152,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
         const listRecipe = engine.listRecipeOf(result.recipe.id);
         return (
           <ListRow
+            card={false}
             checkbox={false}
             name={result.recipe.name}
             subtitle={
@@ -182,6 +182,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
       case 'product':
         return (
           <ListRow
+            card={false}
             checkbox={false}
             name={result.product.name}
             subtitle={productSubtitle(result.product.id)}
@@ -191,6 +192,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
       case 'catalog':
         return (
           <ListRow
+            card={false}
             checkbox={false}
             name={result.entry.name}
             subtitle="Catalogue"
@@ -302,7 +304,6 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
     entries = rowsOf(
       'result',
       results.map((result) => ({ key: resultKey(result), node: renderResult(result) })),
-      false,
     );
   } else if (engine.loading) {
     header = (
@@ -354,7 +355,6 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
                   },
                 ];
               }),
-              true,
             ),
           ]
         : []),
@@ -370,6 +370,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
                 key: product.id,
                 node: (
                   <ListRow
+                    card={false}
                     checkbox={false}
                     name={product.name}
                     subtitle={productSubtitle(product.id)}
@@ -377,7 +378,6 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
                   />
                 ),
               })),
-              true,
             ),
           ]
         : []),
@@ -402,6 +402,9 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
           className="flex-1 overflow-hidden rounded-t-sheet bg-ground"
         >
           <CardList
+            // Une requête, une liste : FlashList 2.3 perd ses mesures quand des résultats sans
+            // rapport remplacent les précédents à la frappe (« index out of bounds »).
+            key={query.trim()}
             gutter={false}
             entries={entries}
             header={header}
@@ -409,10 +412,10 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
               entry.kind === 'title' ? (
                 <View className="px-4">{entry.node}</View>
               ) : (
-                <View className={entry.inset ? 'px-4' : ''}>
+                <>
                   {entry.divider && <Divider />}
                   {entry.node}
-                </View>
+                </>
               )
             }
           />

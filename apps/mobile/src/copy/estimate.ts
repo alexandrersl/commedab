@@ -1,6 +1,6 @@
 import { toPerPeriod, type LocalDateTime, type Product, type ProductState } from '@commedab/core';
 import type { EstimatePart } from '../components/estimate';
-import { age, daysSince, since, until } from './dates';
+import { age, daysSince, since, until, untilPhrase } from './dates';
 import { count, format } from './words';
 
 // La voix du moteur (components.md, Estimate ; EF-2.5, EF-3.2). Jamais « stock » ni « rythme »
@@ -41,12 +41,12 @@ export function estimateParts(
     case 'left': {
       const s = state as ProductState;
       const end =
-        s.depletionDate === null ? '' : `, de quoi tenir jusqu'à ${until(s.depletionDate, now)}`;
+        s.depletionDate === null ? '' : `, de quoi tenir ${untilPhrase(s.depletionDate, now)}`;
       return {
         parts: [
           { text: "Il t'en reste environ " },
           { text: count(left(s), product.unitLabel), emphasis: 'action' },
-          { text: `${end}.` },
+          { text: end.endsWith('.') ? end : `${end}.` },
         ],
         muted: false,
       };
@@ -129,7 +129,7 @@ export function suggestionReason(
 ): string {
   const remaining = left(state);
   if (remaining >= 1 && state.depletionDate !== null) {
-    return `Il doit t'en rester ${format(remaining)}, de quoi tenir jusqu'à ${until(state.depletionDate, now)}`;
+    return `Il doit t'en rester ${format(remaining)}, de quoi tenir ${untilPhrase(state.depletionDate, now)}`;
   }
   const last = state.lastPurchaseAt;
   if (last !== null && state.rate.source === 'learned' && state.rate.perDay > 0) {

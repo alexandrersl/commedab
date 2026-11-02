@@ -14,6 +14,7 @@ export function TextInput({
   help,
   multiline = false,
   disabled = false,
+  labelHidden = false,
   ...input
 }: Omit<TextInputProps, 'editable'> & {
   label: string;
@@ -21,6 +22,8 @@ export function TextInput({
   /** Lien d'aide aligné à droite sous la boîte (« Mot de passe oublié ? »). */
   help?: { label: string; onPress: () => void } | undefined;
   disabled?: boolean;
+  /** Le titre de section le dit déjà (« Notes ») : le libellé reste pour les lecteurs d'écran. */
+  labelHidden?: boolean;
 }) {
   const { colors } = useTheme();
   const [focused, setFocused] = useState(false);
@@ -31,9 +34,11 @@ export function TextInput({
       : 'border-thin border-line-strong';
   return (
     <View className="gap-1" style={disabled ? { opacity: opacity.disabled } : undefined}>
-      <Text variant="label" tone="muted">
-        {label}
-      </Text>
+      {!labelHidden && (
+        <Text variant="label" tone="muted">
+          {label}
+        </Text>
+      )}
       <RNTextInput
         accessibilityLabel={label}
         editable={!disabled}

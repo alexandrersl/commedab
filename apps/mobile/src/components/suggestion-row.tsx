@@ -26,6 +26,7 @@ export function SuggestionRow({
 }) {
   return (
     <ListRow
+      card={false}
       checkbox={false}
       name={name}
       subtitle={reason}

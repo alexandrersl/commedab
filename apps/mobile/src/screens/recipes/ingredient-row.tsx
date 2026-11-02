@@ -41,7 +41,7 @@ export function IngredientRow({
           placeholderTextColor={colors['ink-muted']}
           selectionColor={colors.action}
           accessibilityLabel={`Quantité de ${name}`}
-          className="type-button-sm min-w-control text-right text-ink"
+          className="type-button-sm w-control-lg text-right text-ink"
           style={{ fontVariant: ['tabular-nums'] }}
         />
       </View>
