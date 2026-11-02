@@ -56,6 +56,8 @@ export function CardList<T>({
       keyExtractor={(entry) => entry.key}
       getItemType={(entry) => entry.type}
       keyboardShouldPersistTaps="handled"
+      // Une ligne qui monte en tête (produit ajouté, ligne décochée) ne fait pas défiler la liste.
+      maintainVisibleContentPosition={{ disabled: true }}
       ListHeaderComponent={
         header === undefined ? undefined : <View className={`gap-3 pb-3 ${side}`}>{header}</View>
       }

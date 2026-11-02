@@ -24,6 +24,7 @@ export function ListRow({
   onRemove,
   accessory,
   checkbox = true,
+  card = true,
 }: {
   name: string;
   subtitle?: string | null | undefined;
@@ -39,9 +40,11 @@ export function ListRow({
   onRemove?: (() => void) | undefined;
   accessory?: ReactNode;
   checkbox?: boolean;
+  /** Faux : posée à même le fond du panneau Ajouter, comme sur sa planche. */
+  card?: boolean;
 }) {
   const className = `min-h-row flex-row items-center gap-3 px-4 py-2 ${
-    highlight ? 'border-l-focus border-action bg-surface-2' : 'bg-surface'
+    highlight ? 'border-l-focus border-action bg-surface-2' : card ? 'bg-surface' : 'bg-transparent'
   }`;
   const style = pending ? { opacity: opacity.pending } : undefined;
   const content = (
@@ -88,7 +91,7 @@ export function ListRow({
         onPress={onPress}
         onLongPress={onLongPress}
         accessibilityRole={checkbox ? 'checkbox' : 'button'}
-        accessibilityState={{ checked }}
+        aria-checked={checkbox ? checked : undefined}
         className={className}
         style={style}
       >

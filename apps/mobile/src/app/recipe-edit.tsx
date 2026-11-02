@@ -76,6 +76,7 @@ export default function RecipeEdit() {
   const pick = async (choice: IngredientPick) => {
     if (choice.kind === 'product') {
       append(choice.productId);
+      setQuery('');
       return;
     }
     const productName = choice.kind === 'catalog' ? choice.entry.name : choice.name;
@@ -89,7 +90,7 @@ export default function RecipeEdit() {
     });
     if (ok && created !== null) {
       append(created);
-      if (choice.kind === 'create') setQuery('');
+      setQuery('');
     }
   };
 
@@ -199,6 +200,7 @@ export default function RecipeEdit() {
           </Text>
           <TextInput
             label="Notes"
+            labelHidden
             multiline
             value={notes}
             onChangeText={setNotes}

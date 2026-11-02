@@ -127,16 +127,13 @@ export default function RecipeSheet() {
                   subtitle={estimate.text}
                   subtitleTone={estimate.tone}
                   accessory={
-                    missingPacks === null ? undefined : (
+                    // Planche Fiche recette : une ligne déjà sur la liste le dit, sans stepper.
+                    missingPacks === null || line !== undefined ? undefined : (
                       <AddControl
-                        quantity={line?.quantity ?? null}
+                        quantity={null}
                         suggested={missingPacks}
                         onChange={(packs) =>
-                          void write(() =>
-                            line === undefined
-                              ? data.list.addProduct(ingredient.productId, packs)
-                              : data.list.setLineQuantity(line.id, packs),
-                          )
+                          void write(() => data.list.addProduct(ingredient.productId, packs))
                         }
                       />
                     )
@@ -154,7 +151,7 @@ export default function RecipeSheet() {
           <Text variant="body-sm" tone="muted" className="text-center">
             {missingNames.length === 0
               ? 'Rien ne manque : la recette sera juste comptée sur ta liste.'
-              : `${namesSentence(missingNames)} partiront sur la liste, le reste tu l'as déjà.`}
+              : `${namesSentence(missingNames)} ${missingNames.length > 1 ? 'partiront' : 'partira'} sur la liste, le reste tu l'as déjà.`}
           </Text>
         </View>
       ) : (

@@ -49,20 +49,16 @@ function Row({
   chevron?: boolean;
 }) {
   const { colors } = useTheme();
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled || onPress === undefined}
-      accessibilityLabel={action === undefined ? label : `${action} ${label}`}
-      className="min-h-row flex-row items-center justify-between gap-3 px-4"
-      style={disabled ? { opacity: opacity.disabled } : undefined}
-    >
+  const className = 'min-h-row flex-row items-center justify-between gap-3 px-4';
+  const style = disabled ? { opacity: opacity.disabled } : undefined;
+  const content = (
+    <>
       <Text variant={tone === 'action' ? 'button' : 'body'} tone={tone}>
         {label}
       </Text>
       <View className="flex-row items-center gap-3">
         {value !== undefined && (
-          <Text variant="caption" tone="muted">
+          <Text variant="body-sm" tone="muted">
             {value}
           </Text>
         )}
@@ -74,6 +70,21 @@ function Row({
         {loading && <ActivityIndicator size="small" color={colors.action} />}
         {chevron && <Glyph icon={CaretRight} color="ink-muted" />}
       </View>
+    </>
+  );
+  return onPress === undefined ? (
+    <View className={className} style={style}>
+      {content}
+    </View>
+  ) : (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityLabel={action === undefined ? label : `${action} ${label}`}
+      className={className}
+      style={style}
+    >
+      {content}
     </Pressable>
   );
 }

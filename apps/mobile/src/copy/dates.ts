@@ -34,6 +34,12 @@ export function until(day: LocalDate, now: LocalDateTime): string {
   return `le ${date.getDate()} ${MONTHS[date.getMonth()]}`;
 }
 
+/** « jusqu'à mardi », « jusqu'au 12 nov. » ; sans point final, le mois abrégé en porte un. */
+export function untilPhrase(day: LocalDate, now: LocalDateTime): string {
+  const when = until(day, now);
+  return when.startsWith('le ') ? `jusqu'au ${when.slice(3)}` : `jusqu'à ${when}`;
+}
+
 /** Jour passé : « aujourd'hui », « hier », « avant-hier », « il y a 5 jours », « il y a 3 semaines ». */
 export function since(at: LocalDate | LocalDateTime, now: LocalDateTime): string {
   const days = daysBetween(at, now);

@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Web : le champ porte son propre état de focus (bordure `action`), pas le contour du navigateur. */
+input:focus,
+textarea:focus {
+  outline: none;
+}
