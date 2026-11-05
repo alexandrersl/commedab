@@ -860,6 +860,8 @@ Le moteur est la seule partie où la couverture est exigée ; ailleurs, les test
 
 Les deux projets gratuits sont dans la limite de Supabase (2 projets actifs) et de PowerSync (2 instances).
 
+Projets Supabase : `commedab-dev` (`crflkgpbfapygnsgpvgm`) et `commedab-prod` (`stxqttrhkvvlgnywgevr`), tous deux en `eu-west-1`. `supabase/config.toml` décrit la production ; le développement n'en diffère que par ses adresses (serveur de développement Expo), dans `[remotes.development]`. `supabase/deploy.sh <référence>` applique au projet les migrations, la configuration Auth, la fonction d'export et ses secrets ; la PWA de `commedab.app` utilise la production, le serveur de développement Expo le projet de développement.
+
 ### 9.4 Intégration et livraison continues
 
 GitHub Actions, un seul flux :

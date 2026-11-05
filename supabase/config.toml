@@ -162,14 +162,12 @@ site_url = "https://commedab.app"
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = [
-  # Liens des e-mails du compte et retours OAuth (specs techniques 5.2) : PWA de phase A,
-  # schéma de l'application native, serveur de développement Expo.
+  # Liens des e-mails du compte et retours OAuth (specs techniques 5.2) : PWA de phase A et
+  # schéma de l'application native. Le développement a les siens, en fin de fichier.
   "https://commedab.app/auth/confirm",
   "https://commedab.app",
   "commedab://auth/confirm",
   "commedab://",
-  "http://localhost:8081/auth/confirm",
-  "http://localhost:8081",
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
@@ -446,3 +444,18 @@ enabled = true
 # Export des données envoyé par e-mail (specs techniques 5.6) : appelé avec le JWT de la session.
 [functions.export-data]
 verify_jwt = true
+
+# Ce fichier décrit la production (commedab-prod) ; le projet de développement (commedab-dev)
+# n'en diffère que par ses adresses : il ne sert que le serveur de développement Expo
+# (specs techniques 9.3).
+[remotes.development]
+project_id = "crflkgpbfapygnsgpvgm"
+
+[remotes.development.auth]
+site_url = "http://localhost:8081"
+additional_redirect_urls = [
+  "http://localhost:8081/auth/confirm",
+  "http://localhost:8081",
+  "commedab://auth/confirm",
+  "commedab://",
+]

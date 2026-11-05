@@ -13,3 +13,7 @@ Pas d'instance locale : le développement utilise le projet cloud `commedab-dev`
 - `functions/export-data/` : export des données envoyé par e-mail (5.6), déployé par
   `supabase functions deploy export-data`.
 - `.env.example` : secrets attendus ; copié en `supabase/.env`, jamais commité.
+- `deploy.sh <référence>` : migrations, configuration Auth, fonction d'export et ses secrets,
+  appliqués au projet `commedab-prod` (`stxqttrhkvvlgnywgevr`) ou `commedab-dev`
+  (`crflkgpbfapygnsgpvgm`). `config.toml` décrit la production ; `[remotes.development]` ne
+  change que les adresses du développement (specs techniques 9.3).
