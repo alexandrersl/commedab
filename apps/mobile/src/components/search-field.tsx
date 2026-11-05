@@ -1,6 +1,6 @@
 import { MagnifyingGlass } from 'phosphor-react-native';
-import { useState } from 'react';
-import { ActivityIndicator, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Platform, TextInput, View, type TextInputInstance } from 'react-native';
 import { useTheme, size } from '../theme';
 import { Glyph } from './icons';
 import { Pressable } from './pressable';
@@ -27,6 +27,14 @@ export function SearchField({
 }) {
   const { colors } = useTheme();
   const [focused, setFocused] = useState(false);
+  const input = useRef<TextInputInstance>(null);
+  // Sur le web, le champ n'est pas encore focusable quand il se monte dans un panneau qui
+  // glisse (animation d'entrée de Reanimated) : `autoFocus` y reste sans effet.
+  useEffect(() => {
+    if (!autoFocus || Platform.OS !== 'web') return;
+    const frame = requestAnimationFrame(() => input.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, [autoFocus]);
   return (
     <View className="flex-row items-center gap-3">
       <View
@@ -36,6 +44,7 @@ export function SearchField({
       >
         <Glyph icon={MagnifyingGlass} color="ink-muted" size={size['icon-sm']} />
         <TextInput
+          ref={input}
           value={value}
           onChangeText={onChange}
           placeholder={placeholder}
