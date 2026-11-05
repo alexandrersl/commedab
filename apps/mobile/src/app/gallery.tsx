@@ -56,6 +56,7 @@ function Samples({ scheme }: { scheme: Scheme }) {
   const [quantity, setQuantity] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
   const [toggle, setToggle] = useState(true);
+  const [packs, setPacks] = useState(6);
   const [period, setPeriod] = useState<'day' | 'week' | 'month'>('week');
   const [search, setSearch] = useState('');
   const [contents, setContents] = useState('1');
@@ -78,7 +79,7 @@ function Samples({ scheme }: { scheme: Scheme }) {
           <AddControl quantity={1} onChange={() => {}} quantityLabel={(n) => `${n} pack`} />
           <AddControl quantity={null} addLabel="Ajouter 1 pack (6)" onChange={() => {}} pending />
           <AddControl quantity={null} onChange={() => {}} disabled />
-          <Stepper field value={6} min={1} onChange={() => {}} />
+          <Stepper field value={packs} min={1} onChange={setPacks} />
         </View>
       </Entry>
 

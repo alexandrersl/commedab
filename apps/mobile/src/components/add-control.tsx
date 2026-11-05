@@ -1,7 +1,8 @@
 import * as Haptics from 'expo-haptics';
 import { Minus, Plus } from 'phosphor-react-native';
+import { useEffect, useRef } from 'react';
 import { Platform, View } from 'react-native';
-import { opacity, size } from '../theme';
+import { opacity, size, tokens } from '../theme';
 import { Button } from './button';
 import { Glyph } from './icons';
 import { Pressable } from './pressable';
@@ -12,8 +13,34 @@ function tick() {
 }
 
 /**
+ * Cadence des pas répétés sous un appui maintenu : celle du changement de chiffre
+ * (`duration-fast`), gardée quand le système réduit les animations.
+ */
+const REPEAT_MS = Number.parseFloat(tokens.duration.fast);
+
+/** Pas répétés tant que le doigt reste sur `−` ou `+` : un mois d'écart sans trente taps. */
+function useRepeat() {
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stop = () => {
+    if (timer.current !== null) clearInterval(timer.current);
+    timer.current = null;
+  };
+  useEffect(() => stop, []);
+  return {
+    start(step: () => boolean) {
+      stop();
+      timer.current = setInterval(() => {
+        if (!step()) stop();
+      }, REPEAT_MS);
+    },
+    stop,
+  };
+}
+
+/**
  * `− N +`. Variante liste : fond `action-soft`, « sur la liste », le `−` à `min` passe en
- * `alert` parce qu'il retire. Variante champ (`field`) : un réglage, jamais en vert.
+ * `alert` parce qu'il retire. Variante champ (`field`) : un réglage, jamais en vert. Un appui
+ * maintenu répète le pas, sans jamais retirer : il s'arrête à 1 sur la liste.
  */
 export function Stepper({
   value,
@@ -38,6 +65,20 @@ export function Stepper({
     tick();
     onChange(next);
   };
+  const current = useRef(value);
+  useEffect(() => {
+    current.current = value;
+  }, [value]);
+  const repeat = useRepeat();
+  const floor = field ? min : Math.max(min, 1);
+  const hold = (delta: 1 | -1) => () =>
+    repeat.start(() => {
+      const next = current.current + delta;
+      if (next < floor || next > max) return false;
+      current.current = next;
+      step(next);
+      return true;
+    });
   const tone = field ? 'ink-muted' : 'action';
   return (
     <View
@@ -52,6 +93,8 @@ export function Stepper({
         small
         disabled={disabled || (field && value <= min)}
         onPress={() => step(value - 1)}
+        onLongPress={hold(-1)}
+        onPressOut={repeat.stop}
         accessibilityLabel={removes ? 'Retirer' : 'Moins'}
         className="min-h-control-sm min-w-control-sm items-center justify-center"
       >
@@ -68,6 +111,8 @@ export function Stepper({
         small
         disabled={disabled || value >= max}
         onPress={() => step(value + 1)}
+        onLongPress={hold(1)}
+        onPressOut={repeat.stop}
         accessibilityLabel="Plus"
         className="min-h-control-sm min-w-control-sm items-center justify-center"
       >
