@@ -5,7 +5,7 @@ import { createData, type AccountServer, type Data } from './data';
 import { fromPowerSync } from './database';
 import { heldStore } from './held';
 import { appSchema } from './schema';
-import { openDatabase } from './storage/open';
+import { openDatabase, syncOptions } from './storage/open';
 
 const DB_FILENAME = 'commedab.db';
 /** Plus que n'en accumule un appareil hors ligne pendant des courses. */
@@ -60,6 +60,7 @@ export function openAppDatabase(options: {
   const held = heldStore(fromPowerSync(db));
   let rejections = 0;
   let holding = false;
+  let closed = false;
   /** Étapes en échec ou bloquées (ouverture, connexion, première synchro, effacement). */
   const failures = new Map<string, string>();
   const connector = new SupabaseConnector(options.supabase, options.powersyncUrl, held, (write) => {
@@ -92,9 +93,14 @@ export function openAppDatabase(options: {
     return new Set([...(batch?.crud ?? []), ...kept].map((entry) => entry.id));
   }
   function publishPending() {
-    void pendingIds().then((ids) => {
-      for (const listener of pendingListeners) listener(ids);
-    });
+    if (closed) return;
+    pendingIds().then(
+      (ids) => {
+        for (const listener of pendingListeners) listener(ids);
+      },
+      // Fermée entre-temps (déconnexion) : plus personne n'écoute.
+      () => undefined,
+    );
   }
   function retry() {
     void connector.retry().then(publishPending, publishPending);
@@ -125,7 +131,7 @@ export function openAppDatabase(options: {
   }
   watched('Ouverture de la base locale', db.waitForReady()).catch(() => undefined);
 
-  db.registerListener({
+  const stopStatus = db.registerListener({
     statusChanged: (status) => {
       // Le retour du réseau renvoie les écritures refusées (specs techniques 5.4).
       if (status.connected && !online) retry();
@@ -134,7 +140,7 @@ export function openAppDatabase(options: {
       publishPending();
     },
   });
-  db.onChange(
+  const stopChanges = db.onChange(
     { onChange: publishPending },
     { tables: appSchema.tables.map((table) => table.name), throttleMs: 100 },
   );
@@ -154,14 +160,19 @@ export function openAppDatabase(options: {
   return {
     data: createData(fromPowerSync(db), { server }),
     async connect() {
-      await watched('Connexion à la synchro', db.connect(connector));
+      await watched('Connexion à la synchro', db.connect(connector, syncOptions));
       watched('Première synchro', db.waitForFirstSync()).catch(() => undefined);
     },
     clear: () => {
       failures.clear();
       return watched('Effacement de la base locale', db.disconnectAndClear());
     },
-    close: () => db.close(),
+    async close() {
+      closed = true;
+      stopStatus();
+      stopChanges();
+      await db.close();
+    },
     onStatus(listener) {
       statusListeners.add(listener);
       listener(statusOf());
@@ -169,7 +180,7 @@ export function openAppDatabase(options: {
     },
     onPending(listener) {
       pendingListeners.add(listener);
-      void pendingIds().then(listener);
+      pendingIds().then(listener, () => undefined);
       return () => pendingListeners.delete(listener);
     },
     retryUpload: retry,
