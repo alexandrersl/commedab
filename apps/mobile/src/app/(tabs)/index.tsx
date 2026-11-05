@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { ListChecks } from 'phosphor-react-native';
 import { useMemo, useRef, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/button';
 import { CardList, type CardEntry, type CardListRef } from '../../components/card-list';
@@ -128,11 +128,15 @@ export default function ListScreen() {
         footer={
           loading && failure !== null ? (
             // Rien à montrer tant que la base ne s'ouvre pas ou que la première synchro échoue :
-            // le message technique dit pourquoi, en l'absence de console sur iPhone.
+            // le message technique dit pourquoi, en l'absence de console sur iPhone. Sur le web,
+            // recharger la page repart d'une synchro neuve.
             <EmptyState
               title="Impossible de charger ta liste"
               body={`Tes données ne s'ouvrent pas sur cet appareil. Détail : ${failure}`}
-              action={{ label: 'Réessayer', onPress: engine.retry }}
+              action={{
+                label: 'Réessayer',
+                onPress: Platform.OS === 'web' ? () => globalThis.location.reload() : engine.retry,
+              }}
             />
           ) : loading ? (
             <SkeletonRows count={5} />

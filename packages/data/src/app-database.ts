@@ -10,8 +10,8 @@ import { openDatabase } from './storage/open';
 const DB_FILENAME = 'commedab.db';
 /** Plus que n'en accumule un appareil hors ligne pendant des courses. */
 const PENDING_SCAN = 10_000;
-/** Au-delà, une base qui ne s'ouvre pas est signalée plutôt qu'attendue sans fin. */
-const OPEN_TIMEOUT_MS = 15_000;
+/** Au-delà, une étape qui n'aboutit pas est signalée plutôt qu'attendue sans fin. */
+const STALL_MS = 15_000;
 
 /** Ce que les écrans montrent de la synchro (specs techniques 6.5). */
 export interface SyncStatus {
@@ -58,7 +58,8 @@ export function openAppDatabase(options: {
   const held = heldStore(fromPowerSync(db));
   let rejections = 0;
   let holding = false;
-  let openFailure: string | null = null;
+  /** Étapes en échec ou bloquées (ouverture, connexion, première synchro, effacement). */
+  const failures = new Map<string, string>();
   const connector = new SupabaseConnector(options.supabase, options.powersyncUrl, held, (write) => {
     options.onRejected?.(write);
     rejections += 1;
@@ -72,7 +73,7 @@ export function openAppDatabase(options: {
     synced: db.currentStatus.hasSynced === true,
     rejected: holding,
     rejections,
-    failure: openFailure ?? describe(db.currentStatus.downloadError),
+    failure: [...failures.values()][0] ?? describe(db.currentStatus.downloadError),
   });
   function publishStatus() {
     const status = statusOf();
@@ -97,22 +98,30 @@ export function openAppDatabase(options: {
     void connector.retry().then(publishPending, publishPending);
   }
 
-  const timer = setTimeout(() => {
-    openFailure = `Base locale toujours fermée après ${OPEN_TIMEOUT_MS / 1000} s`;
-    publishStatus();
-  }, OPEN_TIMEOUT_MS);
-  db.waitForReady().then(
-    () => {
-      clearTimeout(timer);
-      openFailure = null;
+  /**
+   * Suit une étape : bloquée au-delà de `STALL_MS` ou en échec, elle devient la `failure` du
+   * statut, jusqu'à ce qu'elle aboutisse.
+   */
+  function watched<T>(step: string, run: Promise<T>): Promise<T> {
+    const timer = setTimeout(() => {
+      failures.set(step, `${step} toujours en cours après ${STALL_MS / 1000} s`);
       publishStatus();
-    },
-    (error: unknown) => {
-      clearTimeout(timer);
-      openFailure = describe(error);
-      publishStatus();
-    },
-  );
+    }, STALL_MS);
+    return run.then(
+      (value) => {
+        clearTimeout(timer);
+        if (failures.delete(step)) publishStatus();
+        return value;
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        failures.set(step, `${step} : ${describe(error) ?? 'échec'}`);
+        publishStatus();
+        throw error;
+      },
+    );
+  }
+  watched('Ouverture de la base locale', db.waitForReady()).catch(() => undefined);
 
   db.registerListener({
     statusChanged: (status) => {
@@ -142,13 +151,14 @@ export function openAppDatabase(options: {
 
   return {
     data: createData(fromPowerSync(db), { server }),
-    connect: () =>
-      db.connect(connector).catch((error: unknown) => {
-        openFailure = describe(error);
-        publishStatus();
-        throw error;
-      }),
-    clear: () => db.disconnectAndClear(),
+    async connect() {
+      await watched('Connexion à la synchro', db.connect(connector));
+      watched('Première synchro', db.waitForFirstSync()).catch(() => undefined);
+    },
+    clear: () => {
+      failures.clear();
+      return watched('Effacement de la base locale', db.disconnectAndClear());
+    },
     onStatus(listener) {
       statusListeners.add(listener);
       listener(statusOf());
