@@ -78,6 +78,7 @@ function Row({
     </View>
   ) : (
     <Pressable
+      feedback="highlight"
       onPress={onPress}
       disabled={disabled}
       accessibilityLabel={action === undefined ? label : `${action} ${label}`}

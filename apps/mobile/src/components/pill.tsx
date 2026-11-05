@@ -20,6 +20,7 @@ export function Pill({
   if (kind === 'choice') {
     return (
       <Pressable
+        feedback="scale"
         onPress={onPress}
         small
         accessibilityState={{ selected }}

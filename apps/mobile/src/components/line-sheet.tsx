@@ -41,13 +41,14 @@ export function LineSheet({
         <Stepper value={quantity} onChange={onQuantity} label={quantityLabel} />
       </View>
       <Pressable
+        feedback="highlight"
         onPress={onOpenProduct}
         className="min-h-control flex-row items-center justify-between"
       >
         <Text variant="body">Voir la fiche</Text>
         <Glyph icon={CaretRight} color="ink-muted" />
       </Pressable>
-      <Pressable onPress={onRemove} className="min-h-control justify-center">
+      <Pressable feedback="highlight" onPress={onRemove} className="min-h-control justify-center">
         <Text variant="body" tone="alert">
           Retirer de la liste
         </Text>

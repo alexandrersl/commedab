@@ -103,6 +103,7 @@ export function IngredientSearch({
               <View key="create">
                 {divider}
                 <Pressable
+                  feedback="highlight"
                   onPress={() => onPick({ kind: 'create', name: result.name, entry: result.entry })}
                   className="min-h-row flex-row items-center justify-between gap-3 px-4 py-2"
                 >

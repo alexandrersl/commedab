@@ -97,6 +97,7 @@ export function CapsuleButton({
   const { colors } = useTheme();
   return (
     <Pressable
+      feedback="scale"
       onPress={onPress}
       disabled={disabled || loading}
       accessibilityLabel={label}

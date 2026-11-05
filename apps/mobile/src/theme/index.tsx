@@ -66,6 +66,9 @@ export const opacity = Object.fromEntries(
   Object.entries(tokens.opacity).map(([name, value]) => [name, Number(value)]),
 ) as Record<keyof typeof tokens.opacity, number>;
 
+/** La courbe unique des animations (`tokens.json`, `easing`), en CSS. */
+export const EASE_OUT = tokens.easing['ease-out'];
+
 /** Échelles de `tokens.json` : `scale.pressed` sous le doigt. */
 export const scale = Object.fromEntries(
   Object.entries(tokens.scale).map(([name, value]) => [name, Number(value)]),

@@ -41,4 +41,5 @@ module.exports = {
   opacity: named('opacity', 'opacity-'),
   scale: named('scale', 'scale-'),
   duration: named('duration', 'duration-'),
+  easing: named('easing', ''),
 };

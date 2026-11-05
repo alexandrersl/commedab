@@ -47,6 +47,7 @@ declare const tokens: {
   opacity: Record<'disabled' | 'pending' | 'busy' | 'pressed' | 'pulse', string>;
   scale: Record<'pressed', string>;
   duration: Record<'fast' | 'base' | 'slow', string>;
+  easing: Record<'ease-out', string>;
 };
 
 export = tokens;

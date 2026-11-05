@@ -27,6 +27,7 @@ export function RecipeChip({
   const label = `${name}${times > 1 ? ` ×${times}` : ''}${complete ? '' : ` · ${checked} sur ${total}`}`;
   return (
     <Pressable
+      feedback="scale"
       small
       onPress={onPress}
       accessibilityLabel={label}

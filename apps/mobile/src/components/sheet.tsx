@@ -1,13 +1,25 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Modal, Pressable as RNPressable, View } from 'react-native';
-import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, {
+  FadeIn,
+  SlideInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { scheduleOnRN } from 'react-native-worklets';
 import { space, useTheme } from '../theme';
 import { Text } from './text';
 
+/** Glissement vertical qui fait d'un appui une traction de la feuille, comme pour un tap. */
+const DRAG_SLOP = space['2'];
+
 /**
  * Feuille montant du bas sur un `scrim` (components.md : ConfirmSheet, LineSheet, sélecteurs
- * de SettingField) : poignée, contenu ; un tap hors de la feuille la ferme.
+ * de SettingField) : poignée, contenu. Un tap hors de la feuille la ferme, comme la tirer vers
+ * le bas au-delà du quart de sa hauteur ; en deçà, elle revient en place.
  */
 export function Sheet({
   visible,
@@ -22,9 +34,35 @@ export function Sheet({
 }) {
   const { duration, vars } = useTheme();
   const insets = useSafeAreaInsets();
+  const offset = useSharedValue(0);
+  const height = useSharedValue(0);
+
+  useEffect(() => {
+    if (visible) offset.set(0);
+  }, [visible, offset]);
+
+  const drag = Gesture.Pan()
+    .activeOffsetY(DRAG_SLOP)
+    .failOffsetX([-DRAG_SLOP, DRAG_SLOP])
+    .onUpdate((event) => {
+      offset.set(Math.max(0, event.translationY));
+    })
+    .onEnd((event) => {
+      if (event.translationY > height.get() / 4) {
+        offset.set(
+          withTiming(height.get(), { duration: duration.base }, (finished) => {
+            if (finished === true) scheduleOnRN(onClose);
+          }),
+        );
+      } else {
+        offset.set(withTiming(0, { duration: duration.base }));
+      }
+    });
+  const dragged = useAnimatedStyle(() => ({ transform: [{ translateY: offset.get() }] }));
+
   return (
     <Modal transparent visible={visible} onRequestClose={onClose} animationType="none">
-      <View style={[{ flex: 1 }, vars]}>
+      <GestureHandlerRootView style={[{ flex: 1 }, vars]}>
         <Animated.View
           entering={FadeIn.duration(duration.base)}
           className="flex-1 justify-end bg-scrim"
@@ -35,19 +73,25 @@ export function Sheet({
             className="absolute bottom-0 left-0 right-0 top-0"
             onPress={onClose}
           />
-          <Animated.View
-            entering={SlideInDown.duration(duration.base)}
-            className="gap-3 rounded-t-sheet bg-surface px-4 pt-2"
-            style={{ paddingBottom: Math.max(insets.bottom, space['4']) }}
-          >
-            <View className="items-center pb-1">
-              <View className="h-1 w-8 rounded-pill bg-line-strong" />
-            </View>
-            {title !== undefined && <Text variant="title-section">{title}</Text>}
-            {children}
+          <Animated.View entering={SlideInDown.duration(duration.base)}>
+            <GestureDetector gesture={drag}>
+              <Animated.View
+                className="gap-3 rounded-t-sheet bg-surface px-4 pt-2"
+                style={[{ paddingBottom: insets.bottom + space['6'] }, dragged]}
+                onLayout={(event) => {
+                  height.set(event.nativeEvent.layout.height);
+                }}
+              >
+                <View className="items-center pb-1">
+                  <View className="h-1 w-8 rounded-pill bg-line-strong" />
+                </View>
+                {title !== undefined && <Text variant="title-section">{title}</Text>}
+                {children}
+              </Animated.View>
+            </GestureDetector>
           </Animated.View>
         </Animated.View>
-      </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }

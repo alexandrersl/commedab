@@ -92,6 +92,7 @@ export function ListRow({
       </View>
     ) : (
       <Pressable
+        feedback="highlight"
         onPress={onPress}
         onLongPress={onLongPress}
         accessibilityRole={checkbox ? 'checkbox' : 'button'}

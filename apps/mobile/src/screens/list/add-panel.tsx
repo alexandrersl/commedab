@@ -207,6 +207,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
       case 'create':
         return (
           <Pressable
+            feedback="highlight"
             onPress={() => create(result.name, result.entry, true)}
             accessibilityLabel={`Créer « ${result.name} »`}
             className="min-h-row flex-row items-center gap-3 px-4 py-2"

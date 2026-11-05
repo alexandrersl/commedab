@@ -54,7 +54,7 @@ Bordures `border-thin` 1 px décoratives, `border-strong` 1,5 px sur les contrô
 
 Chaque composant documente ses états ; les règles communes :
 
-- **Pressé** : échelle 0,97 et opacité 0,85 (`scale-pressed`, `opacity-pressed`), `duration-fast`.
+- **Pressé**, en `duration-fast` sur la courbe `ease-out` : un bouton (plein, contour, stepper, pastille) passe à l'échelle 0,97 et à l'opacité 0,85 (`scale-pressed`, `opacity-pressed`) ; une ligne (liste, résultat, réglage, option de feuille) prend le fond `surface-2` sans changer de taille ; un lien ou un titre tapable passe seulement à l'opacité 0,85. Un doigt qui glisse de plus de `space-2` avant de se relever annule l'appui.
 - **Désactivé** : opacité 0,45, aucune interaction, jamais de texte « indisponible » à côté.
 - **Chargement** : local au composant (spinner dans le bouton, dans le champ) ; pour un écran, des squelettes qui reprennent la silhouette du contenu. Jamais de spinner plein écran, jamais de « Chargement… ».
 - **En attente** (`is-pending`) : une ligne écrite en local pas encore synchronisée, opacité 0,55, utilisable.
@@ -65,7 +65,7 @@ Chaque composant documente ses états ; les règles communes :
 
 ## Mouvement
 
-Une seule courbe, ease-out `cubic-bezier(0.2, 0, 0, 1)`. Trois durées : `duration-fast` 150 (coche, pression, chiffre du stepper), `duration-base` 220 (feuille, panneau, toast, glissement), `duration-slow` 320 (ligne qui part, réordonnancement, base du pulse des squelettes × 4). Haptique légère à la coche et à chaque pas de stepper. `prefers-reduced-motion` : durées à 0, états conservés.
+Une seule courbe, `ease-out` `cubic-bezier(0.2, 0, 0, 1)` (jeton `easing`). Trois durées : `duration-fast` 150 (coche, pression, chiffre du stepper), `duration-base` 220 (feuille, panneau, toast, glissement), `duration-slow` 320 (ligne qui part, réordonnancement, base du pulse des squelettes × 4). Haptique légère à la coche et à chaque pas de stepper. `prefers-reduced-motion` : durées à 0, états conservés.
 
 ## Retours
 

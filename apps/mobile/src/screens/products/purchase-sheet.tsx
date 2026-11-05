@@ -80,6 +80,7 @@ export function PurchaseSheet({
         </>
       )}
       <Pressable
+        feedback="highlight"
         onPress={() => {
           if (purchase !== null) onDelete(purchase);
           onClose();

@@ -284,6 +284,7 @@ export default function ProductSheet() {
             <Fragment key={entry.id}>
               {i > 0 && <Divider />}
               <Pressable
+                feedback="highlight"
                 onPress={() => setPurchase(entry)}
                 accessibilityLabel={`${historyDate(entry.occurredAt)}, ${purchaseLabel(product, entry.quantity)}`}
                 className="min-h-control flex-row items-center justify-between px-4"

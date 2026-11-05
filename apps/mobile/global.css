@@ -7,3 +7,22 @@ input:focus,
 textarea:focus {
   outline: none;
 }
+
+/*
+ * Web sur iOS : l'app dessine son propre état pressé. Pas de voile gris du navigateur au tap,
+ * ni de sélection de texte ou de menu contextuel à l'appui long sur ce qui se touche (l'appui
+ * long d'une ligne ouvre sa feuille).
+ */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+[role='button'],
+[role='checkbox'],
+[role='switch'],
+[role='radio'],
+[role='tab'],
+[role='link'] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}

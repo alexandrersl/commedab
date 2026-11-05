@@ -91,6 +91,7 @@ export function Stepper({
     >
       <Pressable
         small
+        feedback="scale"
         disabled={disabled || (field && value <= min)}
         onPress={() => step(value - 1)}
         onLongPress={hold(-1)}
@@ -109,6 +110,7 @@ export function Stepper({
       </Text>
       <Pressable
         small
+        feedback="scale"
         disabled={disabled || value >= max}
         onPress={() => step(value + 1)}
         onLongPress={hold(1)}

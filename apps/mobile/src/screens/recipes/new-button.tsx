@@ -5,6 +5,7 @@ import { Text } from '../../components/text';
 export function NewRecipeButton({ onPress }: { onPress: () => void }) {
   return (
     <Pressable
+      feedback="scale"
       small
       onPress={onPress}
       accessibilityLabel="Nouvelle recette"

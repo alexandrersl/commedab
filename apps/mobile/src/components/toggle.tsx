@@ -35,6 +35,7 @@ export function Toggle({
 
   return (
     <Pressable
+      feedback="highlight"
       accessibilityRole="switch"
       accessibilityLabel={label}
       accessibilityState={{ checked: value, disabled }}

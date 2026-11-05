@@ -55,6 +55,7 @@ export function Button({
       onPress={onPress}
       disabled={locked}
       small={variant === 'outline' || variant === 'text'}
+      feedback={variant === 'text' ? 'fade' : 'scale'}
       accessibilityLabel={label}
       accessibilityState={{ disabled: locked, busy: loading }}
       className={`flex-row items-center gap-2 ${align === 'center' ? 'justify-center' : 'justify-between'} ${container}`}

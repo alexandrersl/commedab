@@ -165,7 +165,7 @@ export function SettingField({
   );
   // Un sélecteur s'ouvre d'un tap n'importe où sur sa ligne ; les autres champs ont leur contrôle.
   return field.kind === 'select' && !disabled ? (
-    <Pressable onPress={field.onPress} className={className} style={style}>
+    <Pressable feedback="highlight" onPress={field.onPress} className={className} style={style}>
       {labelled}
     </Pressable>
   ) : (
@@ -199,6 +199,7 @@ export function OptionSheet<T extends string>({
           return (
             <Pressable
               key={option.value}
+              feedback="highlight"
               accessibilityRole="radio"
               accessibilityState={{ checked: active }}
               onPress={() => {
@@ -244,6 +245,7 @@ export function Segmented<T extends string>({
         return (
           <Pressable
             key={option.value}
+            feedback="highlight"
             accessibilityRole="radio"
             accessibilityState={{ checked: active }}
             onPress={() => onChange(option.value)}
