@@ -23,7 +23,19 @@
       "favicon": "./assets/favicon.png",
       "output": "single"
     },
-    "plugins": ["expo-router", "expo-status-bar", "expo-font"],
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-font",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "organization": "alexandre-roussel",
+          "project": "commedab"
+        }
+      ]
+    ],
     "scheme": "commedab",
     "experiments": {
       "typedRoutes": true

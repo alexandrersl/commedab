@@ -9,8 +9,8 @@
     "web": "pnpm web:assets && expo start --web",
     "ios": "expo start --ios",
     "android": "expo start --android",
-    "build:web": "pnpm web:assets && expo export --platform web",
-    "deploy:web": "pnpm build:web && wrangler deploy",
+    "build:web": "pnpm web:assets && expo export --platform web --source-maps",
+    "deploy:web": "pnpm build:web && node scripts/upload-sourcemaps.mjs && wrangler deploy",
     "web:assets": "node scripts/web-assets.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
@@ -20,6 +20,7 @@
     "@commedab/data": "workspace:*",
     "@expo-google-fonts/fraunces": "^0.4.1",
     "@expo-google-fonts/manrope": "^0.4.3",
+    "@sentry/react-native": "~8.28.0",
     "@shopify/flash-list": "2.3.2",
     "@supabase/supabase-js": "^2.118.0",
     "expo": "~58.0.19",

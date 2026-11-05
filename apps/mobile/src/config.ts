@@ -10,4 +10,7 @@ export const config = {
   supabaseUrl: required('EXPO_PUBLIC_SUPABASE_URL', process.env.EXPO_PUBLIC_SUPABASE_URL),
   supabaseKey: required('EXPO_PUBLIC_SUPABASE_ANON_KEY', process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY),
   powersyncUrl: required('EXPO_PUBLIC_POWERSYNC_URL', process.env.EXPO_PUBLIC_POWERSYNC_URL),
+  /** Vide : aucune erreur n'est envoyée (développement sans compte Sentry). */
+  sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN ?? '',
+  appEnv: process.env.EXPO_PUBLIC_APP_ENV ?? 'dev',
 };

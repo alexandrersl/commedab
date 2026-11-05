@@ -872,7 +872,7 @@ Les règles de synchro PowerSync sont déployées par le CLI PowerSync dans la m
 
 ### 9.5 Exploitation
 
-- **Erreurs** : Sentry (plan gratuit) sur l'app et le web, sans données personnelles dans les événements (noms de produits exclus des messages d'erreur).
+- **Erreurs** : Sentry (plan gratuit) sur l'app et le web, sans données personnelles dans les événements (noms de produits exclus des messages d'erreur, ni adresse IP ni e-mail : `sendDefaultPii` faux), erreurs seulement, sans suivi de performance ni rejeu de session. Le DSN est public (`EXPO_PUBLIC_SENTRY_DSN`) ; vide, rien n'est envoyé. Remontent les exceptions, les écritures refusées (5.4) et une base de l'appareil qui ne s'ouvre pas ou une synchro qui échoue. Le déploiement web envoie les source maps du build quand le jeton `SENTRY_AUTH_TOKEN` est présent (`apps/mobile/.env.sentry-build-plugin`, ignoré par git).
 - **Sauvegardes** : plan gratuit Supabase sans sauvegarde automatique ; un script hebdomadaire (`pg_dump` par le CLI, lancé par GitHub Actions) archive la base dans un stockage privé. Supprimé si passage au plan Pro.
 - **Surveillance** : tableau de bord PowerSync (usage, erreurs de synchro) et Supabase (requêtes lentes) ; aucune alerte au MVP au-delà des e-mails des deux services.
 - **Pause hebdomadaire** des projets gratuits (2.6) : une action planifiée GitHub Actions envoie une requête quotidienne triviale aux deux services pour éviter la mise en pause. Supprimée au passage en Pro.

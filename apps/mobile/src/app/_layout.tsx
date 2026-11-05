@@ -7,9 +7,14 @@ import { SessionProvider, useSession } from '../auth/session';
 import { ToastProvider, useToast } from '../components/toast';
 import { EngineProvider } from '../data/engine';
 import { AppDataProvider, useRetryUpload, useSyncStatus } from '../data/provider';
+import { reportIncident, startMonitoring, withMonitoring } from '../monitoring';
 import { ThemeRoot } from '../theme';
 
-export default function RootLayout() {
+startMonitoring();
+
+export default withMonitoring(RootLayout);
+
+function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeRoot>
@@ -41,6 +46,15 @@ function RejectedWrites() {
     }
     seen.current = rejections;
   }, [rejections, retry, toast]);
+  return null;
+}
+
+/** Une base qui ne s'ouvre pas ou une synchro qui échoue part dans Sentry, une fois par cause. */
+function ReportFailures() {
+  const { failure } = useSyncStatus();
+  useEffect(() => {
+    if (failure !== null) reportIncident('Données inaccessibles sur l’appareil', { failure });
+  }, [failure]);
   return null;
 }
 
@@ -84,6 +98,7 @@ function Routes() {
   return (
     <EngineProvider>
       <RejectedWrites />
+      <ReportFailures />
       {stack}
     </EngineProvider>
   );

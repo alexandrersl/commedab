@@ -5,6 +5,7 @@ allowBuilds:
   esbuild: true
   # Le binaire natif arrive par une dépendance optionnelle ; le script ne sert que de repli.
   unrs-resolver: false
+  '@sentry/cli': false
   # Runtime local de wrangler (`wrangler dev`), inutile pour `wrangler deploy`.
   workerd: false
 auditConfig:

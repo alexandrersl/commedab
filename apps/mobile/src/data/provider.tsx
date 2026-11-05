@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { useSession } from '../auth/session';
 import { supabase } from '../auth/supabase';
 import { config } from '../config';
+import { captureError, reportIncident } from '../monitoring';
 
 let appDatabase: AppDatabase | null = null;
 
@@ -10,7 +11,10 @@ function getAppDatabase(): AppDatabase {
   appDatabase ??= openAppDatabase({
     supabase,
     powersyncUrl: config.powersyncUrl,
-    onRejected: (rejected) => console.warn('Écriture refusée par le serveur', rejected),
+    onRejected: (rejected) => {
+      console.warn('Écriture refusée par le serveur', rejected);
+      reportIncident('Écriture refusée par le serveur', { ...rejected });
+    },
   });
   return appDatabase;
 }
@@ -37,7 +41,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         if (before !== null && before !== userId) await db.clear();
         if (userId !== null) await db.connect();
       })
-      .catch((error: unknown) => console.error('Synchronisation impossible', error));
+      .catch((error: unknown) => {
+        console.error('Synchronisation impossible', error);
+        captureError(error);
+      });
   }, [userId]);
 
   return (
