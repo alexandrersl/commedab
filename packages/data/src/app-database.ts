@@ -10,6 +10,8 @@ import { openDatabase } from './storage/open';
 const DB_FILENAME = 'commedab.db';
 /** Plus que n'en accumule un appareil hors ligne pendant des courses. */
 const PENDING_SCAN = 10_000;
+/** Au-delà, une base qui ne s'ouvre pas est signalée plutôt qu'attendue sans fin. */
+const OPEN_TIMEOUT_MS = 15_000;
 
 /** Ce que les écrans montrent de la synchro (specs techniques 6.5). */
 export interface SyncStatus {
@@ -21,6 +23,11 @@ export interface SyncStatus {
   rejected: boolean;
   /** Nombre de refus depuis l'ouverture : chacun affiche « Pas enregistré » (EF-6.4). */
   rejections: number;
+  /**
+   * Pourquoi la base de l'appareil ne s'ouvre pas, ou pourquoi la synchro échoue : le message
+   * technique, que l'écran montre quand il n'a rien d'autre à afficher (EF-6.4).
+   */
+  failure: string | null;
 }
 
 export interface AppDatabase {
@@ -51,6 +58,7 @@ export function openAppDatabase(options: {
   const held = heldStore(fromPowerSync(db));
   let rejections = 0;
   let holding = false;
+  let openFailure: string | null = null;
   const connector = new SupabaseConnector(options.supabase, options.powersyncUrl, held, (write) => {
     options.onRejected?.(write);
     rejections += 1;
@@ -64,6 +72,7 @@ export function openAppDatabase(options: {
     synced: db.currentStatus.hasSynced === true,
     rejected: holding,
     rejections,
+    failure: openFailure ?? describe(db.currentStatus.downloadError),
   });
   function publishStatus() {
     const status = statusOf();
@@ -87,6 +96,23 @@ export function openAppDatabase(options: {
   function retry() {
     void connector.retry().then(publishPending, publishPending);
   }
+
+  const timer = setTimeout(() => {
+    openFailure = `Base locale toujours fermée après ${OPEN_TIMEOUT_MS / 1000} s`;
+    publishStatus();
+  }, OPEN_TIMEOUT_MS);
+  db.waitForReady().then(
+    () => {
+      clearTimeout(timer);
+      openFailure = null;
+      publishStatus();
+    },
+    (error: unknown) => {
+      clearTimeout(timer);
+      openFailure = describe(error);
+      publishStatus();
+    },
+  );
 
   db.registerListener({
     statusChanged: (status) => {
@@ -116,7 +142,12 @@ export function openAppDatabase(options: {
 
   return {
     data: createData(fromPowerSync(db), { server }),
-    connect: () => db.connect(connector),
+    connect: () =>
+      db.connect(connector).catch((error: unknown) => {
+        openFailure = describe(error);
+        publishStatus();
+        throw error;
+      }),
     clear: () => db.disconnectAndClear(),
     onStatus(listener) {
       statusListeners.add(listener);
@@ -130,4 +161,9 @@ export function openAppDatabase(options: {
     },
     retryUpload: retry,
   };
+}
+
+function describe(error: unknown): string | null {
+  if (error === undefined || error === null) return null;
+  return error instanceof Error ? `${error.name} : ${error.message}` : String(error);
 }

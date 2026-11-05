@@ -57,7 +57,13 @@ export function useData(): Data {
   return useAppDatabase().data;
 }
 
-const INITIAL: SyncStatus = { online: true, synced: false, rejected: false, rejections: 0 };
+const INITIAL: SyncStatus = {
+  online: true,
+  synced: false,
+  rejected: false,
+  rejections: 0,
+  failure: null,
+};
 
 export function useSyncStatus(): SyncStatus {
   const db = useAppDatabase();

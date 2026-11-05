@@ -31,7 +31,7 @@ export default function ListScreen() {
   const data = useData();
   const write = useWrite();
   const pending = usePendingIds();
-  const { online, synced } = useSyncStatus();
+  const { online, synced, failure } = useSyncStatus();
   const [panel, setPanel] = useState(false);
   const [held, setHeld] = useState<ShownLine | null>(null);
   const scroll = useRef<CardListRef<Entry>>(null);
@@ -126,7 +126,15 @@ export default function ListScreen() {
           </View>
         }
         footer={
-          loading ? (
+          loading && failure !== null ? (
+            // Rien à montrer tant que la base ne s'ouvre pas ou que la première synchro échoue :
+            // le message technique dit pourquoi, en l'absence de console sur iPhone.
+            <EmptyState
+              title="Impossible de charger ta liste"
+              body={`Tes données ne s'ouvrent pas sur cet appareil. Détail : ${failure}`}
+              action={{ label: 'Réessayer', onPress: engine.retry }}
+            />
+          ) : loading ? (
             <SkeletonRows count={5} />
           ) : engine.error !== null ? (
             <EmptyState
