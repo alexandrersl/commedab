@@ -9,6 +9,7 @@ import { ConfirmSheet } from '../../components/confirm-sheet';
 import { Glyph } from '../../components/icons';
 import { Divider, RowGroup } from '../../components/list-row';
 import { Pressable } from '../../components/pressable';
+import { OptionSheet } from '../../components/setting-field';
 import { Screen } from '../../components/screen';
 import { ScreenHeader } from '../../components/screen-header';
 import { OfflineBanner } from '../../components/states';
@@ -18,7 +19,13 @@ import { Toggle } from '../../components/toggle';
 import { useData, useSyncStatus } from '../../data/provider';
 import { useWatch } from '../../data/use-watch';
 import { useWrite } from '../../data/use-write';
-import { useTheme, opacity } from '../../theme';
+import { useTheme, opacity, type ThemePreference } from '../../theme';
+
+const THEMES: readonly { value: ThemePreference; label: string }[] = [
+  { value: 'system', label: "Comme l'appareil" },
+  { value: 'light', label: 'Clair' },
+  { value: 'dark', label: 'Sombre' },
+];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -91,8 +98,8 @@ function Row({
 }
 
 /**
- * Réglages (EF-5.1 à EF-5.7) : rayons, compte, données, version. Hors ligne, le compte et les
- * données attendent le réseau (EF-6.3).
+ * Réglages (EF-5.1 à EF-5.7) : rayons, affichage, compte, données, version. Hors ligne, le
+ * compte et les données attendent le réseau (EF-6.3).
  */
 export default function Settings() {
   const { session, beginRecovery } = useSession();
@@ -104,6 +111,8 @@ export default function Settings() {
   const [exporting, setExporting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [choosingTheme, setChoosingTheme] = useState(false);
+  const { preference, setPreference } = useTheme();
   const offline = !online;
 
   const exportData = async () => {
@@ -150,6 +159,15 @@ export default function Settings() {
           label="Ordre des rayons en magasin"
           chevron
           onPress={() => router.push('/categories')}
+        />
+      </Section>
+
+      <Section title="Affichage">
+        <Row
+          label="Thème"
+          value={THEMES.find((theme) => theme.value === preference)?.label ?? ''}
+          chevron
+          onPress={() => setChoosingTheme(true)}
         />
       </Section>
 
@@ -210,6 +228,14 @@ export default function Settings() {
         </Pressable>
       )}
 
+      <OptionSheet
+        visible={choosingTheme}
+        title="Thème"
+        options={THEMES}
+        selected={preference}
+        onSelect={setPreference}
+        onClose={() => setChoosingTheme(false)}
+      />
       <ConfirmSheet
         visible={confirmDelete}
         question="Supprimer ton compte ?"

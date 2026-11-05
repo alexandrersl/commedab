@@ -2,8 +2,9 @@
 // - les workers du SDK web de PowerSync, que Metro ne sait pas empaqueter, dans
 //   public/powersync (pas de « @ » dans le chemin : Cloudflare redirige /@… vers /%40…) ;
 // - le manifeste, dont les couleurs viennent de docs/design/tokens.json (specs techniques 11.1) ;
-// - theme.css, le fond `ground` de la page selon le thème du système, avant que l'app ne se
-//   peigne : sans lui, la page reste blanche le temps du chargement, même en sombre.
+// - theme.css, le fond `ground` de la page selon le thème du système, ou celui choisi dans les
+//   Réglages (`data-theme`, posé par index.html), avant que l'app ne se peigne : sans lui, la
+//   page reste blanche le temps du chargement, même en sombre.
 import { cpSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -49,6 +50,16 @@ body {
   body {
     background-color: ${tokens.colors.dark.ground};
   }
+}
+html[data-theme='light'],
+html[data-theme='light'] body {
+  color-scheme: light;
+  background-color: ${tokens.colors.light.ground};
+}
+html[data-theme='dark'],
+html[data-theme='dark'] body {
+  color-scheme: dark;
+  background-color: ${tokens.colors.dark.ground};
 }
 `;
 writeFileSync(join(here, '../public/theme.css'), theme);

@@ -242,7 +242,7 @@ L'application doit être utile dès la première liste et s'améliorer à chaque
 | ENF-6 | Interface en français ; libellés d'unités et formats de date localisés. |
 | ENF-7 | Le catalogue par défaut est versionné et livré avec l'application ; sa mise à jour ne modifie jamais les produits de l'utilisateur (RG-8). |
 | ENF-8 | Divulgation progressive (2.3) : la Liste, le panneau Ajouter et l'onglet Produits n'emploient jamais les mots « rythme » ni « stock » ; ces paramètres ne se règlent que dans la section Réglages de la fiche produit. Aucun formulaire n'impose d'autre champ que le nom. Un geste est une action, sans confirmation ; seules la suppression d'une recette et celle du compte en demandent une, dans une feuille dont le bouton répète l'action. Sur la Liste, on annule par le geste inverse ; ailleurs, supprimer un achat de l'historique affiche un message éphémère qui permet d'annuler. |
-| ENF-9 | L'apparence suit `docs/design/` : thème clair ou sombre selon le réglage du système, dès le MVP ; taille de texte choisie sur l'appareil respectée (Dynamic Type sur iOS). |
+| ENF-9 | L'apparence suit `docs/design/` : thème clair ou sombre selon le réglage du système, ou celui choisi dans les Réglages (section Affichage : « Comme l'appareil », « Clair », « Sombre », gardé sur l'appareil), dès le MVP ; taille de texte choisie sur l'appareil respectée (Dynamic Type sur iOS). |
 
 ## 10. Risques et points de vigilance
 

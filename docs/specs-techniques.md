@@ -640,7 +640,7 @@ Les écrans n'écrivent jamais de SQL et n'importent jamais PowerSync (2.9). Un 
 
 ### 6.3 Écrans du MVP
 
-Quatre onglets, Liste · Produits · Recettes · Réglages, le panneau Ajouter, une fiche produit et une fiche recette. Il n'y a ni écran d'accueil distinct, ni mode magasin, ni écran de suggestions : la Liste, onglet par défaut, sert à préparer et à faire les courses (EF-1.1).
+Quatre onglets, Liste · Produits · Recettes · Réglages, le panneau Ajouter, une fiche produit et une fiche recette. Les deux fiches s'ouvrent dans les onglets, la barre restant visible (Produits ou Recettes allumé), et « retour » suit l'historique ; les écrans de saisie (nouvelle recette, ordre des rayons, produits archivés) passent par-dessus. Il n'y a ni écran d'accueil distinct, ni mode magasin, ni écran de suggestions : la Liste, onglet par défaut, sert à préparer et à faire les courses (EF-1.1).
 
 | Écran | Contenu | Gestes clés |
 | --- | --- | --- |
@@ -652,7 +652,7 @@ Quatre onglets, Liste · Produits · Recettes · Réglages, le panneau Ajouter, 
 | **Recettes** | Cartes : nom, « 5 ingrédients · il te manque 2 », composant d'ajout en haut à droite, pastilles d'ingrédients manquants puis possédés (barrés) ; « + Nouvelle » (EF-4.1) | Composant d'ajout : ajouter la recette, puis la compter N fois (EF-4.5) ; tap sur une carte : fiche recette |
 | **Fiche recette** | Ingrédients manquants d'abord, avec quantité, estimation et composant d'ajout ; « Ajouter à la liste » et la phrase de ce qui partira ; notes ; « Modifier », « Supprimer » (EF-4.3) | « Modifier » : écran d'édition ; « Supprimer » : feuille de confirmation (EF-4.6) |
 | **Nouvelle recette, Modifier la recette** | « Annuler », « Enregistrer » ; nom, ingrédients par la recherche du panneau Ajouter avec quantité et unité en ligne, notes (EF-4.2) | Enregistrer sans nom : erreur sous le champ |
-| **Réglages** | Rayons (lien vers « Ordre des rayons ») ; Compte (e-mail, mot de passe, déconnexion) ; Mes données (« Aider à améliorer le catalogue », activé par défaut ; « Exporter mes données » ; « Supprimer mon compte ») ; pied de page « Commedab 0.1 · AGPL-3.0 » (EF-5.1 à EF-5.7). Hors ligne : Compte et Mes données désactivés (EF-6.3) | Chaque réglage s'applique dès qu'il change ; export par e-mail et message éphémère ; seule la suppression du compte demande confirmation |
+| **Réglages** | Rayons (lien vers « Ordre des rayons ») ; Affichage (thème, ENF-9) ; Compte (e-mail, mot de passe, déconnexion) ; Mes données (« Aider à améliorer le catalogue », activé par défaut ; « Exporter mes données » ; « Supprimer mon compte ») ; pied de page « Commedab 0.1 · AGPL-3.0 » (EF-5.1 à EF-5.7). Hors ligne : Compte et Mes données désactivés (EF-6.3) | Chaque réglage s'applique dès qu'il change ; export par e-mail et message éphémère ; seule la suppression du compte demande confirmation |
 | **Ordre des rayons** | Rayons à glisser-déposer, « À classer » fixé en tête, frais puis surgelés en dernier (EF-5.1, RG-9) | Glisser une poignée : déplacer le rayon |
 | **Compte** (hors onglets, sans session) | Connexion, inscription, « Vérifie ta boîte mail », mot de passe oublié, « C'est envoyé », nouveau mot de passe, lien expiré (EF-5.8 à EF-5.10) ; « Nouveau mot de passe » sert aussi depuis les Réglages | Routes protégées par la session (`Stack.Protected`) ; les liens des e-mails y mènent (5.2) |
 
@@ -932,7 +932,7 @@ Les règles de synchro PowerSync sont déployées par le CLI PowerSync dans la m
 | `border`, `duration` | Épaisseurs de bordure ; durées des animations, ramenées à 0 quand le système réduit les animations |
 | `opacity`, `scale` | Lus par `src/theme` (`opacity.disabled`, `opacity.pending`, `opacity.busy`, `opacity.pressed`, `opacity.pulse`, `scale.pressed`) pour les états des composants |
 
-- **Thème sombre dès le MVP**, piloté par le système : `userInterfaceStyle: automatic` dans `app.json`, aucun réglage dans l'app.
+- **Thème sombre dès le MVP** : il suit le système (`userInterfaceStyle: automatic` dans `app.json`), ou le choix fait dans les Réglages (« Comme l'appareil », « Clair », « Sombre »), gardé sur l'appareil hors de toute session (`localStorage` sur le web, trousseau en natif). Sur le web, `public/theme.css`, écrit depuis `tokens.json`, peint le fond `ground` de la page avant l'app, et le thème de navigation d'Expo Router prend les couleurs des jetons : aucun écran ne passe par du blanc.
 - **Dynamic Type** (iOS) respecté : les tailles de texte suivent le réglage de l'appareil, aucune hauteur de ligne n'est figée, les tailles de `size` sont des minimums et les contrôles grandissent avec leur texte. Tout contrôle de 36 px (`control-sm`) reçoit un `hitSlop` qui porte sa zone de tap à 44 px (ENF-1).
 
 ### 11.2 Icônes

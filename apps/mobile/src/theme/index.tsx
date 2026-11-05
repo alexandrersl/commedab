@@ -8,10 +8,13 @@ import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { vars } from 'nativewind';
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useColorScheme, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
+import { loadThemePreference, saveThemePreference, type ThemePreference } from './preference';
 import tokens from './tokens.cjs';
+
+export type { ThemePreference } from './preference';
 
 export type ColorName = (typeof tokens.colorNames)[number];
 export type Scheme = 'light' | 'dark';
@@ -90,6 +93,9 @@ interface Theme {
   colors: Record<ColorName, string>;
   /** Durées en ms, nulles quand le système réduit les animations. */
   duration: Record<keyof typeof tokens.duration, number>;
+  /** Thème choisi dans les Réglages, gardé sur l'appareil. */
+  preference: ThemePreference;
+  setPreference: (preference: ThemePreference) => void;
 }
 
 const ThemeContext = createContext<Theme | null>(null);
@@ -101,12 +107,20 @@ export function useTheme(): Theme {
 }
 
 /**
- * Thème clair ou sombre selon le système (ENF-9) : variables de couleur posées à la racine,
- * polices chargées avant le premier rendu.
+ * Thème clair ou sombre, celui de l'appareil ou celui choisi dans les Réglages (ENF-9) :
+ * variables de couleur posées à la racine, polices et préférence chargées avant le premier
+ * rendu. `scheme` force un thème (galerie) et ignore la préférence.
  */
 export function ThemeRoot({ children, scheme: forced }: { children: ReactNode; scheme?: Scheme }) {
   const system = useColorScheme();
-  const scheme: Scheme = forced ?? (system === 'dark' ? 'dark' : 'light');
+  const [preference, setPreferenceState] = useState<ThemePreference | null>(null);
+  useEffect(() => {
+    if (forced !== undefined) return;
+    void loadThemePreference().then(setPreferenceState);
+  }, [forced]);
+  const chosen = preference ?? 'system';
+  const scheme: Scheme =
+    forced ?? (chosen === 'system' ? (system === 'dark' ? 'dark' : 'light') : chosen);
   const reduced = useReducedMotion();
   const [loaded, error] = useFonts(
     Object.fromEntries(tokens.fontNames.map((name) => [name, fontFile(name)])),
@@ -119,8 +133,13 @@ export function ThemeRoot({ children, scheme: forced }: { children: ReactNode; s
       duration: Object.fromEntries(
         Object.entries(tokens.duration).map(([name, value]) => [name, reduced ? 0 : pixels(value)]),
       ) as Theme['duration'],
+      preference: chosen,
+      setPreference: (next) => {
+        setPreferenceState(next);
+        void saveThemePreference(next);
+      },
     }),
-    [scheme, reduced],
+    [scheme, reduced, chosen],
   );
 
   // Les écrans de la navigation se posent sur `ground` : sans ce thème, la pile et les onglets
@@ -147,7 +166,9 @@ export function ThemeRoot({ children, scheme: forced }: { children: ReactNode; s
       <ThemeProvider value={navigation}>
         <View style={[{ flex: 1 }, VARS[scheme]]} className="bg-ground">
           {forced === undefined && <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />}
-          {loaded || error !== null ? children : null}
+          {(loaded || error !== null) && (preference !== null || forced !== undefined)
+            ? children
+            : null}
         </View>
       </ThemeProvider>
     </ThemeContext.Provider>
