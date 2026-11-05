@@ -16,9 +16,16 @@ export function startMonitoring(): void {
   });
 }
 
-/** Un incident sans exception à remonter : son message seul, sans donnée de l'utilisateur. */
-export function reportIncident(message: string, context?: Record<string, unknown>): void {
-  Sentry.captureMessage(message, { level: 'error', ...(context && { extra: context }) });
+/**
+ * Un incident sans exception à remonter : son message seul, sans donnée de l'utilisateur. Un
+ * incident par message et par contexte dans Sentry, plutôt qu'un seul pour tous.
+ */
+export function reportIncident(message: string, context: Record<string, unknown> = {}): void {
+  Sentry.captureMessage(message, {
+    level: 'error',
+    extra: context,
+    fingerprint: [message, ...Object.values(context).map(String)],
+  });
 }
 
 export function captureError(error: unknown): void {
