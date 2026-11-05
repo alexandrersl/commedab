@@ -59,12 +59,27 @@ export const CONTENTS_UNITS = ['cl', 'l', 'g', 'kg'] as const;
 /** Unités d'un ingrédient ; nulle : celle du produit. */
 export const INGREDIENT_UNITS = ['g', 'kg', 'cl', 'l', 'pièce'] as const;
 
-/** Quantité d'un ingrédient : « 200 g », « 4 ». */
+/** Mesure qui passe à l'unité au-dessus quand elle s'y écrit juste : 1 000 g → 1 kg. */
+const LARGER: Record<string, { unit: string; factor: number }> = {
+  g: { unit: 'kg', factor: 1000 },
+  cl: { unit: 'l', factor: 100 },
+};
+
+function readable(quantity: number, unit: string): { quantity: number; unit: string } {
+  const larger = LARGER[unit.toLowerCase()];
+  if (larger === undefined || quantity < larger.factor) return { quantity, unit };
+  const converted = quantity / larger.factor;
+  return Number.isInteger(converted * 10)
+    ? { quantity: converted, unit: larger.unit }
+    : { quantity, unit };
+}
+
+/** Quantité d'un ingrédient : « 200 g », « 4 », « 1,5 kg » plutôt que « 1 500 g ». */
 export function ingredientQuantity(quantity: number | null, unit: string | null): string | null {
   if (quantity === null) return null;
-  return unit === null || unit === 'pièce'
-    ? format(quantity)
-    : `${format(quantity)} ${displayUnit(unit)}`;
+  if (unit === null || unit === 'pièce') return format(quantity);
+  const shown = readable(quantity, unit);
+  return `${format(shown.quantity)} ${displayUnit(shown.unit)}`;
 }
 
 /** « Lardons et crème », « Lardons, crème et parmesan ». */
