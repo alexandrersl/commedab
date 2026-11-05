@@ -157,13 +157,16 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "https://commedab.commedab-mobile.workers.dev"
+site_url = "https://commedab.app"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = [
-  # Liens des e-mails du compte et retours OAuth (specs techniques 5.2) : PWA de phase A,
-  # schéma de l'application native, serveur de développement Expo.
+  # Liens des e-mails du compte et retours OAuth (specs techniques 5.2) : PWA de phase A, sur
+  # son domaine et sur son adresse workers.dev, schéma de l'application native, serveur de
+  # développement Expo.
+  "https://commedab.app/auth/confirm",
+  "https://commedab.app",
   "https://commedab.commedab-mobile.workers.dev/auth/confirm",
   "https://commedab.commedab-mobile.workers.dev",
   "commedab://auth/confirm",
