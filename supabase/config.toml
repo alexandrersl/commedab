@@ -243,11 +243,10 @@ otp_length = 8
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# Resend, palier gratuit (specs techniques 5.2) ; secrets dans l'environnement, voir .env.example.
-# Éteint tant que la clé manque : Supabase envoie alors par son service intégré, réservé aux
-# membres du projet, et refuse les modèles ci-dessous ; `config push` échoue sur ces modèles.
+# Resend, palier gratuit, depuis bonjour@commedab.app (specs techniques 5.2) ; secrets dans
+# l'environnement, voir .env.example.
 [auth.email.smtp]
-enabled = false
+enabled = true
 host = "smtp.resend.com"
 port = 465
 user = "resend"
