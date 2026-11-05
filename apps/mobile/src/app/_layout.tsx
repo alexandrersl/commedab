@@ -6,7 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SessionProvider, useSession } from '../auth/session';
 import { ToastProvider, useToast } from '../components/toast';
 import { EngineProvider } from '../data/engine';
-import { AppDataProvider, useRetryUpload, useSyncStatus } from '../data/provider';
+import { AppDataProvider, useDataReady, useRetryUpload, useSyncStatus } from '../data/provider';
 import { reportIncident, startMonitoring, withMonitoring } from '../monitoring';
 import { ThemeRoot } from '../theme';
 
@@ -60,6 +60,7 @@ function ReportFailures() {
 
 function Routes() {
   const { session, recovery } = useSession();
+  const dataReady = useDataReady();
   if (session === undefined) return null;
   const signedIn = session !== null;
 
@@ -95,6 +96,7 @@ function Routes() {
     </Stack>
   );
   if (!signedIn) return stack;
+  if (!dataReady) return null;
   return (
     <EngineProvider>
       <RejectedWrites />

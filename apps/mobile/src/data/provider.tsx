@@ -5,10 +5,8 @@ import { supabase } from '../auth/supabase';
 import { config } from '../config';
 import { captureError, reportIncident } from '../monitoring';
 
-let appDatabase: AppDatabase | null = null;
-
-function getAppDatabase(): AppDatabase {
-  appDatabase ??= openAppDatabase({
+function openForSession(): AppDatabase {
+  return openAppDatabase({
     supabase,
     powersyncUrl: config.powersyncUrl,
     onRejected: (rejected) => {
@@ -16,30 +14,41 @@ function getAppDatabase(): AppDatabase {
       reportIncident('Écriture refusée par le serveur', { ...rejected });
     },
   });
-  return appDatabase;
 }
 
 const DataContext = createContext<AppDatabase | null>(null);
 
 /**
- * Base de l'appareil, synchronisée avec le compte connecté. Une déconnexion ou un changement
- * de compte la vide avant toute nouvelle synchro (EF-5.2).
+ * Base de l'appareil, synchronisée avec le compte connecté. Elle n'est ouverte que pendant une
+ * session : une déconnexion ou un changement de compte la vide puis la ferme (EF-5.2). Une page
+ * sans session ne tient donc aucun verrou sur son fichier ; sinon, Safari garde la page quittée
+ * pour la connexion Google en mémoire, figée avec son verrou, et la page de retour attend
+ * indéfiniment d'ouvrir la base.
  */
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const { session } = useSession();
   const userId = session === undefined ? undefined : (session?.user.id ?? null);
-  const previous = useRef<string | null>(null);
+  const [db, setDb] = useState<AppDatabase | null>(null);
+  const opened = useRef<{ userId: string; db: AppDatabase } | null>(null);
   const queue = useRef(Promise.resolve());
 
   useEffect(() => {
     if (userId === undefined) return;
-    const before = previous.current;
-    previous.current = userId;
-    const db = getAppDatabase();
     queue.current = queue.current
       .then(async () => {
-        if (before !== null && before !== userId) await db.clear();
-        if (userId !== null) await db.connect();
+        const current = opened.current;
+        if (current !== null && current.userId !== userId) {
+          opened.current = null;
+          setDb(null);
+          await current.db.clear();
+          await current.db.close();
+        }
+        if (userId !== null && opened.current === null) {
+          const next = openForSession();
+          opened.current = { userId, db: next };
+          setDb(next);
+          await next.connect();
+        }
       })
       .catch((error: unknown) => {
         console.error('Synchronisation impossible', error);
@@ -48,10 +57,15 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }, [userId]);
 
   return (
-    <DataContext.Provider value={typeof userId === 'string' ? getAppDatabase() : null}>
+    <DataContext.Provider value={typeof userId === 'string' ? db : null}>
       {children}
     </DataContext.Provider>
   );
+}
+
+/** Vrai dès que la base de la session est ouverte : les écrans de données attendent ce moment. */
+export function useDataReady(): boolean {
+  return useContext(DataContext) !== null;
 }
 
 function useAppDatabase(): AppDatabase {

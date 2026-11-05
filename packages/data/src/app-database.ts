@@ -36,6 +36,8 @@ export interface AppDatabase {
   connect(): Promise<void>;
   /** Déconnexion ou suppression du compte : vide la base de l'appareil (EF-5.2, EF-5.6). */
   clear(): Promise<void>;
+  /** Ferme la base et rend son fichier : l'objet ne sert plus ensuite. */
+  close(): Promise<void>;
   onStatus(listener: (status: SyncStatus) => void): () => void;
   /** Identifiants des lignes dont une écriture attend l'envoi (`pending`). */
   onPending(listener: (ids: ReadonlySet<string>) => void): () => void;
@@ -159,6 +161,7 @@ export function openAppDatabase(options: {
       failures.clear();
       return watched('Effacement de la base locale', db.disconnectAndClear());
     },
+    close: () => db.close(),
     onStatus(listener) {
       statusListeners.add(listener);
       listener(statusOf());
