@@ -13,6 +13,7 @@ import { Text } from './text';
  */
 export function ListRow({
   name,
+  nameDetail,
   subtitle,
   subtitleTone = 'muted',
   quantityLabel,
@@ -27,6 +28,8 @@ export function ListRow({
   card = true,
 }: {
   name: string;
+  /** Après le nom, en graisse normale : la quantité d'un ingrédient (« Lardons 200 g »). */
+  nameDetail?: string | null | undefined;
   subtitle?: string | null | undefined;
   subtitleTone?: 'muted' | 'alert' | 'action';
   quantityLabel?: string | undefined;
@@ -65,6 +68,7 @@ export function ListRow({
           className={checked ? 'line-through' : ''}
         >
           {name}
+          {nameDetail ? <Text variant="body"> {nameDetail}</Text> : null}
         </Text>
         {subtitle ? (
           <Text variant="caption" tone={subtitleTone}>

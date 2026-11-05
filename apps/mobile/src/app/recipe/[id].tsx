@@ -119,11 +119,8 @@ export default function RecipeSheet() {
                 {index > 0 && <Divider />}
                 <ListRow
                   checkbox={false}
-                  name={
-                    ingredient.quantity === null
-                      ? ingredient.name
-                      : `${ingredient.name} ${ingredient.quantity}`
-                  }
+                  name={ingredient.name}
+                  nameDetail={ingredient.quantity}
                   subtitle={estimate.text}
                   subtitleTone={estimate.tone}
                   accessory={
