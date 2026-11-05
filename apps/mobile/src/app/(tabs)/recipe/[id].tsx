@@ -1,20 +1,20 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { AddControl, Stepper } from '../../components/add-control';
-import { Button } from '../../components/button';
-import { ConfirmSheet } from '../../components/confirm-sheet';
-import { Divider, ListRow, RowGroup } from '../../components/list-row';
-import { Screen } from '../../components/screen';
-import { ScreenHeader } from '../../components/screen-header';
-import { EmptyState, SkeletonRows } from '../../components/states';
-import { Text } from '../../components/text';
-import { useToast } from '../../components/toast';
-import { ingredientEstimate } from '../../copy/estimate';
-import { useEngine } from '../../data/engine';
-import { useData } from '../../data/provider';
-import { ingredientsOf, missingCount, namesSentence } from '../../screens/recipes/model';
-import { useWrite } from '../../data/use-write';
+import { AddControl, Stepper } from '../../../components/add-control';
+import { Button } from '../../../components/button';
+import { ConfirmSheet } from '../../../components/confirm-sheet';
+import { Divider, ListRow, RowGroup } from '../../../components/list-row';
+import { Screen } from '../../../components/screen';
+import { ScreenHeader } from '../../../components/screen-header';
+import { EmptyState, SkeletonRows } from '../../../components/states';
+import { Text } from '../../../components/text';
+import { useToast } from '../../../components/toast';
+import { ingredientEstimate } from '../../../copy/estimate';
+import { useEngine } from '../../../data/engine';
+import { useData } from '../../../data/provider';
+import { ingredientsOf, missingCount, namesSentence } from '../../../screens/recipes/model';
+import { useWrite } from '../../../data/use-write';
 
 /** Fiche recette (EF-4.3 à EF-4.6) : ce qui manque, l'ajout à la liste, les notes. */
 export default function RecipeSheet() {

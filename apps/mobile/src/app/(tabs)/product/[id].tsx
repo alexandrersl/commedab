@@ -3,18 +3,18 @@ import type { PurchaseRecord } from '@commedab/data';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Fragment, useState } from 'react';
 import { View } from 'react-native';
-import { AddControl } from '../../components/add-control';
-import { Estimate } from '../../components/estimate';
-import { Divider, RowGroup } from '../../components/list-row';
-import { Pressable } from '../../components/pressable';
-import { Screen } from '../../components/screen';
-import { ScreenHeader } from '../../components/screen-header';
-import { OptionSheet, SettingField } from '../../components/setting-field';
-import { EmptyState, OfflineBanner, SkeletonRows } from '../../components/states';
-import { Text } from '../../components/text';
-import { useToast } from '../../components/toast';
-import { historyDate } from '../../copy/dates';
-import { estimateParts, rateLabel } from '../../copy/estimate';
+import { AddControl } from '../../../components/add-control';
+import { Estimate } from '../../../components/estimate';
+import { Divider, RowGroup } from '../../../components/list-row';
+import { Pressable } from '../../../components/pressable';
+import { Screen } from '../../../components/screen';
+import { ScreenHeader } from '../../../components/screen-header';
+import { OptionSheet, SettingField } from '../../../components/setting-field';
+import { EmptyState, OfflineBanner, SkeletonRows } from '../../../components/states';
+import { Text } from '../../../components/text';
+import { useToast } from '../../../components/toast';
+import { historyDate } from '../../../copy/dates';
+import { estimateParts, rateLabel } from '../../../copy/estimate';
 import {
   addOneLabel,
   capitalize,
@@ -23,14 +23,14 @@ import {
   format,
   packsLabel,
   UNITS,
-} from '../../copy/words';
-import { useEngine } from '../../data/engine';
-import { useData, usePendingIds, useSyncStatus } from '../../data/provider';
-import { categoryName, productMeta, purchaseLabel } from '../../screens/products/labels';
-import { PurchaseSheet } from '../../screens/products/purchase-sheet';
-import { RateSheet } from '../../screens/products/rate-sheet';
-import { useWrite } from '../../data/use-write';
-import { opacity } from '../../theme';
+} from '../../../copy/words';
+import { useEngine } from '../../../data/engine';
+import { useData, usePendingIds, useSyncStatus } from '../../../data/provider';
+import { categoryName, productMeta, purchaseLabel } from '../../../screens/products/labels';
+import { PurchaseSheet } from '../../../screens/products/purchase-sheet';
+import { RateSheet } from '../../../screens/products/rate-sheet';
+import { useWrite } from '../../../data/use-write';
+import { opacity } from '../../../theme';
 
 const RATE_HINTS: Record<RateSource, string> = {
   declared: 'déclaré',

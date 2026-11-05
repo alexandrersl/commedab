@@ -4,7 +4,13 @@ import { TabBar, type TabName } from '../../components/tab-bar';
 import { useToast } from '../../components/toast';
 import { size } from '../../theme';
 
-/** Quatre onglets, la Liste par défaut (specs techniques 6.3). */
+/** L'onglet allumé sous une fiche : celui de l'annuaire d'où elle vient. */
+const TAB_OF: Record<string, TabName> = { 'product/[id]': 'products', 'recipe/[id]': 'recipes' };
+
+/**
+ * Quatre onglets, la Liste par défaut (specs techniques 6.3). Les fiches produit et recette
+ * s'ouvrent dans les onglets, la barre restant visible ; « retour » suit l'historique.
+ */
 export default function TabsLayout() {
   const toast = useToast();
   useEffect(() => {
@@ -14,10 +20,14 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      backBehavior="history"
       screenOptions={{ headerShown: false }}
       tabBar={({ state, navigateToTab }) => (
         <TabBar
-          active={(state.routes[state.index]?.name ?? 'index') as TabName}
+          active={(() => {
+            const name = state.routes[state.index]?.name ?? 'index';
+            return TAB_OF[name] ?? (name as TabName);
+          })()}
           onSelect={(name) => {
             const route = state.routes.find((r) => r.name === name);
             if (route !== undefined) navigateToTab(route.key);
@@ -29,6 +39,8 @@ export default function TabsLayout() {
       <Tabs.Screen name="products" options={{ title: 'Produits' }} />
       <Tabs.Screen name="recipes" options={{ title: 'Recettes' }} />
       <Tabs.Screen name="settings" options={{ title: 'Réglages' }} />
+      <Tabs.Screen name="product/[id]" />
+      <Tabs.Screen name="recipe/[id]" />
     </Tabs>
   );
 }

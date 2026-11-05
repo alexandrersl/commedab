@@ -44,7 +44,7 @@ export default function ProductsArchived() {
                     last === null ? 'Jamais acheté' : `Dernier achat ${since(last, engine.now)}`
                   }
                   pending={pending.has(product.id)}
-                  onPress={() => router.push(`/product/${product.id}`)}
+                  onPress={() => router.navigate(`/product/${product.id}`)}
                   accessory={
                     <View>
                       <Button
