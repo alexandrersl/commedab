@@ -179,7 +179,7 @@ function Samples({ scheme }: { scheme: Scheme }) {
           <Divider />
           <ListRow name="Pâtes" subtitle="Carbonara" quantityLabel="2" highlight />
           <Divider />
-          <ListRow name="Lait" quantityLabel="1 pack" pending />
+          <ListRow name="Lait" quantityLabel="1 pack" pending checked onRemove={() => {}} />
           <SectionHeader name="Viande, poisson, traiteur" categoryKey="viande-poisson-traiteur" />
           <ListRow name="Lardons" subtitle="Carbonara · 200 g" quantityLabel="1" checked />
         </RowGroup>

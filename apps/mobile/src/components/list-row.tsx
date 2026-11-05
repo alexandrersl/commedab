@@ -46,12 +46,16 @@ export function ListRow({
   /** Faux : posée à même le fond du panneau Ajouter, comme sur sa planche. */
   card?: boolean;
 }) {
-  const className = `min-h-row flex-row items-center gap-3 px-4 py-2 ${
+  const className = `min-h-row flex-row items-center px-4 py-2 ${
     highlight ? 'border-l-focus border-action bg-surface-2' : card ? 'bg-surface' : 'bg-transparent'
   }`;
-  const style = pending ? { opacity: opacity.pending } : undefined;
+  // L'attente atténue le contenu, pas le fond : opaque, la ligne cache l'action « Retirer »
+  // dessinée dessous pour le glissement.
   const content = (
-    <>
+    <View
+      className="flex-1 flex-row items-center gap-3"
+      style={pending ? { opacity: opacity.pending } : undefined}
+    >
       {checkbox && (
         <View
           className={`h-checkbox w-checkbox items-center justify-center rounded-pill ${
@@ -82,14 +86,12 @@ export function ListRow({
             {quantityLabel}
           </Text>
         ))}
-    </>
+    </View>
   );
   // Sans geste, la ligne n'est pas un bouton : son `accessory` (AddControl) en est un.
   const row =
     onPress === undefined && onLongPress === undefined ? (
-      <View className={className} style={style}>
-        {content}
-      </View>
+      <View className={className}>{content}</View>
     ) : (
       <Pressable
         feedback="highlight"
@@ -98,7 +100,6 @@ export function ListRow({
         accessibilityRole={checkbox ? 'checkbox' : 'button'}
         aria-checked={checkbox ? checked : undefined}
         className={className}
-        style={style}
       >
         {content}
       </Pressable>
@@ -112,7 +113,7 @@ export function ListRow({
         <Pressable
           onPress={onRemove}
           accessibilityLabel={`Retirer ${name}`}
-          className="flex-1 items-center justify-center bg-alert px-6"
+          className="items-center justify-center bg-alert px-6"
         >
           <Text variant="button-sm" tone="on-action">
             Retirer
