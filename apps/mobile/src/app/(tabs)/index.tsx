@@ -15,6 +15,7 @@ import { stepHaptic } from '../../components/add-control';
 import { packsLabel } from '../../copy/words';
 import { useEngine } from '../../data/engine';
 import { useData, usePendingIds, useSyncStatus } from '../../data/provider';
+import { InstallHint } from '../../pwa/install-hint';
 import { useWrite } from '../../data/use-write';
 import { AddPanel } from '../../screens/list/add-panel';
 import { groupLines, type LineGroup, type ShownLine } from '../../screens/list/groups';
@@ -123,6 +124,7 @@ export default function ListScreen() {
             {!online && (
               <OfflineBanner text="Hors ligne · tes modifications seront envoyées plus tard" />
             )}
+            <InstallHint />
           </View>
         }
         footer={
