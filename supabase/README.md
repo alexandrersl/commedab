@@ -16,4 +16,5 @@ Pas d'instance locale : le développement utilise le projet cloud `commedab-dev`
 - `deploy.sh <référence>` : migrations, configuration Auth, fonction d'export et ses secrets,
   appliqués au projet `commedab-prod` (`stxqttrhkvvlgnywgevr`) ou `commedab-dev`
   (`crflkgpbfapygnsgpvgm`). `config.toml` décrit la production ; `[remotes.development]` ne
-  change que les adresses du développement (specs techniques 9.3).
+  change que les adresses du développement : `dev.commedab.app` et `localhost:8081`
+  (specs techniques 9.3).

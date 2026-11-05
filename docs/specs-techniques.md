@@ -860,7 +860,7 @@ Le moteur est la seule partie où la couverture est exigée ; ailleurs, les test
 
 Les deux projets gratuits sont dans la limite de Supabase (2 projets actifs) et de PowerSync (2 instances).
 
-Projets Supabase : `commedab-dev` (`crflkgpbfapygnsgpvgm`) et `commedab-prod` (`stxqttrhkvvlgnywgevr`), tous deux en `eu-west-1`. `supabase/config.toml` décrit la production ; le développement n'en diffère que par ses adresses (serveur de développement Expo), dans `[remotes.development]`. `supabase/deploy.sh <référence>` applique au projet les migrations, la configuration Auth, la fonction d'export et ses secrets ; la PWA de `commedab.app` utilise la production, le serveur de développement Expo le projet de développement.
+Projets Supabase : `commedab-dev` (`crflkgpbfapygnsgpvgm`) et `commedab-prod` (`stxqttrhkvvlgnywgevr`), tous deux en `eu-west-1`. `supabase/config.toml` décrit la production ; le développement n'en diffère que par ses adresses (`dev.commedab.app` et le serveur de développement Expo), dans `[remotes.development]`. `supabase/deploy.sh <référence>` applique au projet les migrations, la configuration Auth, la fonction d'export et ses secrets. Deux PWA, deux Workers Cloudflare : `commedab.app` sur la production (`.env.production`, `pnpm deploy:web`), et `dev.commedab.app`, version de test sur le projet de développement (`.env`, `pnpm deploy:web:dev`), où l'on essaie tout sans toucher aux données réelles ; le serveur de développement Expo utilise aussi le projet de développement.
 
 ### 9.4 Intégration et livraison continues
 

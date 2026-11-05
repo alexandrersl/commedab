@@ -446,14 +446,16 @@ enabled = true
 verify_jwt = true
 
 # Ce fichier décrit la production (commedab-prod) ; le projet de développement (commedab-dev)
-# n'en diffère que par ses adresses : il ne sert que le serveur de développement Expo
-# (specs techniques 9.3).
+# n'en diffère que par ses adresses : la version de test dev.commedab.app et le serveur de
+# développement Expo (specs techniques 9.3).
 [remotes.development]
 project_id = "crflkgpbfapygnsgpvgm"
 
 [remotes.development.auth]
-site_url = "http://localhost:8081"
+site_url = "https://dev.commedab.app"
 additional_redirect_urls = [
+  "https://dev.commedab.app/auth/confirm",
+  "https://dev.commedab.app",
   "http://localhost:8081/auth/confirm",
   "http://localhost:8081",
   "commedab://auth/confirm",

@@ -13,7 +13,9 @@
     "deploy:web": "pnpm build:web && node scripts/upload-sourcemaps.mjs && wrangler deploy",
     "web:assets": "node scripts/web-assets.mjs",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "build:web:dev": "pnpm web:assets && set -a && . ./.env && set +a && expo export --platform web --source-maps && node scripts/service-worker.mjs",
+    "deploy:web:dev": "pnpm build:web:dev && node scripts/upload-sourcemaps.mjs && wrangler deploy --env dev"
   },
   "dependencies": {
     "@commedab/core": "workspace:*",

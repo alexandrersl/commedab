@@ -1,4 +1,5 @@
-// PWA de phase A servie comme fichiers statiques (specs techniques 6.4), sans code serveur.
+// PWA de phase A servie comme fichiers statiques (specs techniques 6.4), sans code serveur :
+// commedab.app sur commedab-prod, dev.commedab.app sur commedab-dev.
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "commedab",
@@ -8,5 +9,16 @@
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application",
+  },
+  // Version de test, sur commedab-dev : `wrangler deploy --env dev` (specs techniques 9.3).
+  "env": {
+    "dev": {
+      "name": "commedab-dev",
+      "routes": [{ "pattern": "dev.commedab.app", "custom_domain": true }],
+      "assets": {
+        "directory": "./dist",
+        "not_found_handling": "single-page-application",
+      },
+    },
   },
 }
