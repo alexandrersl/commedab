@@ -3,7 +3,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "commedab",
   "compatibility_date": "2026-10-01",
-  // Domaine de la PWA ; l'adresse workers.dev reste servie.
+  // Domaine de la PWA ; sans `workers_dev`, l'adresse workers.dev n'est plus servie.
   "routes": [{ "pattern": "commedab.app", "custom_domain": true }],
   "assets": {
     "directory": "./dist",
