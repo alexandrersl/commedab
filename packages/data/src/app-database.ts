@@ -4,6 +4,7 @@ import { SupabaseConnector, type RejectedWrite } from './connector';
 import { createData, type AccountServer, type Data } from './data';
 import { fromPowerSync } from './database';
 import { heldStore } from './held';
+import { ownedByAnotherAccount } from './owner';
 import { appSchema } from './schema';
 import { openDatabase, syncOptions } from './storage/open';
 
@@ -32,8 +33,11 @@ export interface SyncStatus {
 
 export interface AppDatabase {
   data: Data;
-  /** Synchronise avec le compte de la session Supabase en cours. */
-  connect(): Promise<void>;
+  /**
+   * Synchronise avec le compte `userId`, celui de la session Supabase en cours. Une base laissée
+   * par un autre compte (session expirée sans déconnexion) est d'abord vidée.
+   */
+  connect(userId: string): Promise<void>;
   /** Déconnexion ou suppression du compte : vide la base de l'appareil (EF-5.2, EF-5.6). */
   clear(): Promise<void>;
   /** Ferme la base et rend son fichier : l'objet ne sert plus ensuite. */
@@ -159,7 +163,16 @@ export function openAppDatabase(options: {
 
   return {
     data: createData(fromPowerSync(db), { server }),
-    async connect() {
+    async connect(userId) {
+      const members = await db.getAll<{ user_id: string }>('SELECT user_id FROM household_member');
+      if (
+        ownedByAnotherAccount(
+          members.map((member) => member.user_id),
+          userId,
+        )
+      ) {
+        await watched('Effacement de la base locale', db.disconnectAndClear());
+      }
       await watched('Connexion à la synchro', db.connect(connector, syncOptions));
       watched('Première synchro', db.waitForFirstSync()).catch(() => undefined);
     },

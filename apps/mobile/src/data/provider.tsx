@@ -47,7 +47,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
           const next = openForSession();
           opened.current = { userId, db: next };
           setDb(next);
-          await next.connect();
+          await next.connect(userId);
         }
       })
       .catch((error: unknown) => {
