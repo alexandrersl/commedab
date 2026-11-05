@@ -8,9 +8,11 @@ import { ToastProvider, useToast } from '../components/toast';
 import { EngineProvider } from '../data/engine';
 import { AppDataProvider, useDataReady, useRetryUpload, useSyncStatus } from '../data/provider';
 import { reportIncident, startMonitoring, withMonitoring } from '../monitoring';
+import { registerServiceWorker } from '../pwa/service-worker';
 import { ThemeRoot } from '../theme';
 
 startMonitoring();
+registerServiceWorker();
 
 export default withMonitoring(RootLayout);
 
