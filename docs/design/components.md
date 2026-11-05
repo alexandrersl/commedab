@@ -137,7 +137,7 @@ L'en-tête d'un écran. Deux formes :
 - **Racine** (onglet) : titre `title-screen` à gauche, une méta ou une action à droite (« 2 sur 12 », « + Nouvelle »). Marge haute `space-6`.
 - **Fiche** : flèche retour Phosphor `CaretLeft` à gauche, actions texte à droite (« Modifier », « Supprimer » en `alert`, « Je n'en achète plus »), puis le nom en `title-hero` sur la ligne suivante avec sa méta en `label`.
 
-- **Modal** (création, ordre des rayons) : « Annuler » à gauche, titre centré en `title-section`, action à droite (« Enregistrer »), ou retour à gauche et titre centré sans action.
+- **Modal** (création, ordre des rayons, produits archivés) : « Annuler » à gauche, titre centré en `title-section`, action à droite (« Enregistrer »), ou retour à gauche et titre centré sans action.
 
 Jamais plus de deux actions à droite, pas d'icône dans le titre. Le titre centré n'existe que sur les écrans modaux.
 
