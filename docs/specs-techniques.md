@@ -926,9 +926,9 @@ Les règles de synchro PowerSync sont déployées par le CLI PowerSync dans la m
 | `type` | `fontFamily` : `display` = Fraunces (600, 500), `sans` = Manrope (500, 600, 700), chargées par `@expo-google-fonts/fraunces` et `@expo-google-fonts/manrope` ; une taille de texte par style (`title-screen`, `sentence`, `body`…), avec sa graisse et son espacement de lettres, sans hauteur de ligne |
 | `spacing` | `spacing` : `1`, `2`, `3`, `4`, `6`, `8` |
 | `radius` | `borderRadius` : `field`, `card`, `sheet`, `pill` |
-| `size` | Hauteurs minimales des contrôles (`control-sm`, `control`, `control-lg`, `row`, `tab-bar`), hauteur de la barre de progression (`progress`), tailles de la case et des icônes (`icon`, `icon-sm`, `icon-xs`, `icon-lg`) |
+| `size` | Hauteurs minimales des contrôles (`control-sm`, `control`, `control-lg`, `row`, `tab-bar`), hauteur de la barre de progression (`progress`), tailles de la case et des icônes (`icon`, `icon-sm`, `icon-xs`, `icon-lg`), de l'interrupteur et de son pouce (`toggle-w`, `toggle-h`, `toggle-thumb`) |
 | `border`, `duration` | Épaisseurs de bordure ; durées des animations, ramenées à 0 quand le système réduit les animations |
-| `opacity`, `scale` | Lus par `src/theme` (`opacity.disabled`, `opacity.pending`, `opacity.busy`, `scale.pressed`) pour les états des composants |
+| `opacity`, `scale` | Lus par `src/theme` (`opacity.disabled`, `opacity.pending`, `opacity.busy`, `opacity.pressed`, `opacity.pulse`, `scale.pressed`) pour les états des composants |
 
 - **Thème sombre dès le MVP**, piloté par le système : `userInterfaceStyle: automatic` dans `app.json`, aucun réglage dans l'app.
 - **Dynamic Type** (iOS) respecté : les tailles de texte suivent le réglage de l'appareil, aucune hauteur de ligne n'est figée, les tailles de `size` sont des minimums et les contrôles grandissent avec leur texte. Tout contrôle de 36 px (`control-sm`) reçoit un `hitSlop` qui porte sa zone de tap à 44 px (ENF-1).

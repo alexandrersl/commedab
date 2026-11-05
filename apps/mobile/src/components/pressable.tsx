@@ -9,7 +9,7 @@ import {
 import { HIT_SLOP, opacity, scale } from '../theme';
 
 /**
- * Surface tapable aux états communs : pressé (échelle et fond assombri), désactivé ; `small`
+ * Surface tapable aux états communs : pressé (échelle et opacité), désactivé ; `small`
  * étend la zone de tap d'un contrôle de 36 à 44 (ENF-1).
  */
 export function Pressable({
@@ -40,7 +40,7 @@ export function Pressable({
       }}
       style={[
         style,
-        pressed && { transform: [{ scale: scale.pressed }] },
+        pressed && { transform: [{ scale: scale.pressed }], opacity: opacity.pressed },
         disabled === true && { opacity: opacity.disabled },
       ]}
       {...props}

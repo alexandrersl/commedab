@@ -48,13 +48,13 @@ Bordures `border-thin` 1 px décoratives, `border-strong` 1,5 px sur les contrô
 
 ## Tailles et zones de tap
 
-`control-sm` 36 (bouton contour, stepper, pastille recette), `control` 44 (champs), `control-lg` 48 (bouton plein), `row` 54 (ligne), `checkbox` 22, `icon` 22, `tab-bar` 84. Tout ce qui est plus petit que 44 px reçoit une zone de tap de 44 px (`hitSlop`). En magasin, on tape avec le pouce et un caddie dans l'autre main.
+`control-sm` 36 (bouton contour, stepper, pastille recette), `control` 44 (champs), `control-lg` 48 (bouton plein), `row` 54 (ligne), `checkbox` 22, `icon` 22, `tab-bar` 84, interrupteur `toggle-w` × `toggle-h` 46 × 28. Tout ce qui est plus petit que 44 px reçoit une zone de tap de 44 px (`hitSlop`). En magasin, on tape avec le pouce et un caddie dans l'autre main.
 
 ## États
 
 Chaque composant documente ses états ; les règles communes :
 
-- **Pressé** : échelle 0,97 et fond assombri, `duration-fast`.
+- **Pressé** : échelle 0,97 et opacité 0,85 (`scale-pressed`, `opacity-pressed`), `duration-fast`.
 - **Désactivé** : opacité 0,45, aucune interaction, jamais de texte « indisponible » à côté.
 - **Chargement** : local au composant (spinner dans le bouton, dans le champ) ; pour un écran, des squelettes qui reprennent la silhouette du contenu. Jamais de spinner plein écran, jamais de « Chargement… ».
 - **En attente** (`is-pending`) : une ligne écrite en local pas encore synchronisée, opacité 0,55, utilisable.
