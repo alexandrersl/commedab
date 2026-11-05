@@ -124,7 +124,7 @@ describe('connecteur d’envoi (specs techniques 5.4)', () => {
         [entry(UpdateType.PUT, 'product', 'p1', { name: 'Lait' })],
         [
           entry(UpdateType.PATCH, 'product', 'p1', { name: 'Lait demi-écrémé' }),
-          entry(UpdateType.PUT, 'list_line', 'l1', { product_id: 'p1' }),
+          entry(UpdateType.PUT, 'list_line', 'l2', { product_id: 'p2' }),
         ],
       ],
       [REFUSED],
@@ -132,9 +132,50 @@ describe('connecteur d’envoi (specs techniques 5.4)', () => {
     await t.drain();
     expect(t.calls).toEqual([
       'upsert product {"name":"Lait","id":"p1"}',
-      'upsert list_line {"product_id":"p1","id":"l1"}',
+      'upsert list_line {"product_id":"p2","id":"l2"}',
     ]);
     expect(t.held()).toEqual(['PUT product p1', 'PATCH product p1']);
+  });
+
+  it('retient une ligne qui désigne une ligne refusée, et ce qui la suit', async () => {
+    const t = setup(
+      [
+        [entry(UpdateType.PUT, 'product', 'p1', { name: 'Lait' })],
+        [entry(UpdateType.PUT, 'list_line', 'l1', { product_id: 'p1', quantity: 1 })],
+        [entry(UpdateType.PATCH, 'list_line', 'l1', { quantity: 2 })],
+      ],
+      [REFUSED],
+    );
+    await t.drain();
+    expect(t.calls).toEqual(['upsert product {"name":"Lait","id":"p1"}']);
+    expect(t.rejected).toHaveLength(1);
+    expect(t.held()).toEqual(['PUT product p1', 'PUT list_line l1', 'PATCH list_line l1']);
+    t.calls.length = 0;
+    t.respond(REFUSED);
+    await t.retry();
+    expect(t.calls).toEqual(['upsert product {"name":"Lait","id":"p1"}']);
+    expect(t.held()).toHaveLength(3);
+    t.calls.length = 0;
+    await t.retry();
+    expect(t.calls).toEqual([
+      'upsert product {"name":"Lait","id":"p1"}',
+      'upsert list_line {"product_id":"p1","quantity":1,"id":"l1"}',
+      'update list_line l1 {"quantity":2}',
+    ]);
+    expect(t.held()).toEqual([]);
+  });
+
+  it('ne retient pas les lignes qui désignent une modification refusée', async () => {
+    const t = setup(
+      [
+        [entry(UpdateType.PATCH, 'household', 'h1', { catalog_contribution: false })],
+        [entry(UpdateType.PUT, 'list_line', 'l1', { household_id: 'h1' })],
+      ],
+      [REFUSED],
+    );
+    await t.drain();
+    expect(t.calls).toHaveLength(2);
+    expect(t.held()).toEqual(['PATCH household h1']);
   });
 
   it('renvoie la réserve dans l’ordre ; une ligne refusée de nouveau y reste avec ce qui la suit', async () => {

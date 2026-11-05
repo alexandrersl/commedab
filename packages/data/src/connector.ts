@@ -27,7 +27,10 @@ export interface RejectedWrite {
   code: string | undefined;
 }
 
-/** Écriture mise de côté : refusée, ou derrière un refus sur la même ligne (specs techniques 5.4). */
+/**
+ * Écriture mise de côté : refusée, derrière un refus sur la même ligne, ou sur une ligne qui
+ * désigne une ligne refusée (specs techniques 5.4).
+ */
 export interface HeldWrite {
   /** Ordre d'écriture sur l'appareil (`CrudEntry.clientId`). */
   seq: number;
@@ -47,6 +50,37 @@ export interface HeldStore {
 }
 
 const entityOf = (write: { table: string; id: string }) => `${write.table}/${write.id}`;
+
+/**
+ * Lignes retenues derrière un refus. Une écriture sur l'une d'elles est retenue, comme celle
+ * dont une colonne `*_id` désigne une ligne dont la création est retenue : une ligne de liste
+ * ne part pas avant son produit, elle serait refusée à son tour. Une modification retenue (le
+ * foyer, un rayon) ne retient pas les lignes qui la désignent. Les identifiants sont des UUID :
+ * uniques entre tables.
+ */
+class Blocked {
+  private readonly entities = new Set<string>();
+  private readonly created = new Set<string>();
+
+  constructor(writes: readonly Omit<HeldWrite, 'seq'>[] = []) {
+    for (const write of writes) this.add(write);
+  }
+
+  add(write: Omit<HeldWrite, 'seq'>): void {
+    this.entities.add(entityOf(write));
+    if (write.op === UpdateType.PUT) this.created.add(write.id);
+  }
+
+  holds(write: Omit<HeldWrite, 'seq'>): boolean {
+    return (
+      this.entities.has(entityOf(write)) ||
+      Object.entries(write.opData ?? {}).some(
+        ([column, value]) =>
+          column.endsWith('_id') && typeof value === 'string' && this.created.has(value),
+      )
+    );
+  }
+}
 
 export function supabaseBackend(client: SupabaseClient): Backend {
   return {
@@ -82,8 +116,8 @@ function interrupted(status: number, message: string): Error {
 
 /**
  * Rejoue la plus ancienne transaction en file ; rend faux quand la file est vide. Une écriture
- * refusée, et toute écriture sur une ligne qui en a une de côté, est mise de côté au lieu
- * d'être envoyée : jamais abandonnée (EF-6.4), elle ne retient pas les autres lignes.
+ * refusée, et toute écriture qu'elle retient (`Blocked`), est mise de côté au lieu d'être
+ * envoyée : jamais abandonnée (EF-6.4), elle ne retient pas les autres lignes.
  */
 export async function uploadNextTransaction(
   db: Pick<CommonPowerSyncDatabase, 'getNextCrudTransaction'>,
@@ -93,17 +127,16 @@ export async function uploadNextTransaction(
 ): Promise<boolean> {
   const transaction = await db.getNextCrudTransaction();
   if (transaction === null) return false;
-  const blocked = new Set((await held.list()).map(entityOf));
+  const blocked = new Blocked(await held.list());
   const setAside: HeldWrite[] = [];
   for (const entry of transaction.crud) {
-    const entity = entityOf(entry);
-    if (!blocked.has(entity)) {
+    if (!blocked.holds(entry)) {
       const { status, error } = await write(backend, entry);
       if (error === null) continue;
       if (!isRejection(status)) throw interrupted(status, error.message);
       onRejected({ table: entry.table, op: entry.op, status, code: error.code });
-      blocked.add(entity);
     }
+    blocked.add(entry);
     const { clientId: seq, table, id, op, opData } = entry;
     setAside.push({ seq, table, id, op, opData });
   }
@@ -114,17 +147,19 @@ export async function uploadNextTransaction(
 
 /**
  * Renvoie les écritures mises de côté, dans l'ordre : une acceptée quitte la réserve, une
- * refusée de nouveau y reste avec celles qui la suivent sur la même ligne.
+ * refusée de nouveau y reste avec celles qu'elle retient.
  */
 export async function retryHeld(
   backend: Backend,
   held: HeldStore,
   onRejected: (rejected: RejectedWrite) => void,
 ): Promise<void> {
-  const blocked = new Set<string>();
+  const blocked = new Blocked();
   for (const entry of await held.list()) {
-    const entity = entityOf(entry);
-    if (blocked.has(entity)) continue;
+    if (blocked.holds(entry)) {
+      blocked.add(entry);
+      continue;
+    }
     const { status, error } = await write(backend, entry);
     if (error === null) {
       await held.remove(entry.seq);
@@ -132,7 +167,7 @@ export async function retryHeld(
     }
     if (!isRejection(status)) throw interrupted(status, error.message);
     onRejected({ table: entry.table, op: entry.op, status, code: error.code });
-    blocked.add(entity);
+    blocked.add(entry);
   }
 }
 
