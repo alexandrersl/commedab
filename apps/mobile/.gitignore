@@ -43,5 +43,6 @@ yarn-error.*
 # workers PowerSync, copiés par `pnpm web:assets`
 public/powersync/
 
-# manifeste, écrit par `pnpm web:assets` depuis docs/design/tokens.json
+# manifeste et fond de page, écrits par `pnpm web:assets` depuis docs/design/tokens.json
 public/manifest.webmanifest
+public/theme.css

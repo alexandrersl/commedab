@@ -5,6 +5,7 @@ import { Manrope_500Medium } from '@expo-google-fonts/manrope/500Medium';
 import { Manrope_600SemiBold } from '@expo-google-fonts/manrope/600SemiBold';
 import { Manrope_700Bold } from '@expo-google-fonts/manrope/700Bold';
 import { useFonts } from 'expo-font';
+import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { vars } from 'nativewind';
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
@@ -122,12 +123,33 @@ export function ThemeRoot({ children, scheme: forced }: { children: ReactNode; s
     [scheme, reduced],
   );
 
+  // Les écrans de la navigation se posent sur `ground` : sans ce thème, la pile et les onglets
+  // peignent leur blanc par défaut à chaque transition, même en sombre.
+  const navigation = useMemo(() => {
+    const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
+    const colors = tokens.colors[scheme];
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        primary: colors.action,
+        background: colors.ground,
+        card: colors.surface,
+        text: colors.ink,
+        border: colors.line,
+        notification: colors.alert,
+      },
+    };
+  }, [scheme]);
+
   return (
     <ThemeContext.Provider value={theme}>
-      <View style={[{ flex: 1 }, VARS[scheme]]} className="bg-ground">
-        {forced === undefined && <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />}
-        {loaded || error !== null ? children : null}
-      </View>
+      <ThemeProvider value={navigation}>
+        <View style={[{ flex: 1 }, VARS[scheme]]} className="bg-ground">
+          {forced === undefined && <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />}
+          {loaded || error !== null ? children : null}
+        </View>
+      </ThemeProvider>
     </ThemeContext.Provider>
   );
 }

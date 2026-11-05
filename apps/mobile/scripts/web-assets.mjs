@@ -1,7 +1,9 @@
 // Fichiers de la PWA que Metro ne produit pas, écrits dans public/ avant le build web :
 // - les workers du SDK web de PowerSync, que Metro ne sait pas empaqueter, dans
 //   public/powersync (pas de « @ » dans le chemin : Cloudflare redirige /@… vers /%40…) ;
-// - le manifeste, dont les couleurs viennent de docs/design/tokens.json (specs techniques 11.1).
+// - le manifeste, dont les couleurs viennent de docs/design/tokens.json (specs techniques 11.1) ;
+// - theme.css, le fond `ground` de la page selon le thème du système, avant que l'app ne se
+//   peigne : sans lui, la page reste blanche le temps du chargement, même en sombre.
 import { cpSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -33,3 +35,21 @@ writeFileSync(
   `${JSON.stringify(manifest, null, 2)}\n`,
 );
 console.log('Manifeste écrit dans public/manifest.webmanifest');
+
+const theme = `/* Généré par scripts/web-assets.mjs depuis docs/design/tokens.json. */
+:root {
+  color-scheme: light dark;
+}
+html,
+body {
+  background-color: ${tokens.colors.light.ground};
+}
+@media (prefers-color-scheme: dark) {
+  html,
+  body {
+    background-color: ${tokens.colors.dark.ground};
+  }
+}
+`;
+writeFileSync(join(here, '../public/theme.css'), theme);
+console.log('Fond de page écrit dans public/theme.css');
