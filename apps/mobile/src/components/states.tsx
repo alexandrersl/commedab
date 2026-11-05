@@ -16,7 +16,7 @@ const WIDTHS = { full: 'w-full', half: 'w-1/2', third: 'w-1/3' } as const;
 
 /**
  * Pulse des squelettes : `duration-slow` × 4 par battement (tokens.json, `skeleton`), jusqu'à
- * l'opacité d'attente ; immobile quand le système réduit les animations.
+ * `opacity-pulse` ; immobile quand le système réduit les animations.
  */
 export function usePulse() {
   const { duration } = useTheme();
@@ -25,7 +25,7 @@ export function usePulse() {
     value.value =
       duration.slow === 0
         ? 1
-        : withRepeat(withTiming(opacity.pending, { duration: duration.slow * 4 }), -1, true);
+        : withRepeat(withTiming(opacity.pulse, { duration: duration.slow * 4 }), -1, true);
   }, [duration.slow, value]);
   return useAnimatedStyle(() => ({ opacity: value.value }));
 }

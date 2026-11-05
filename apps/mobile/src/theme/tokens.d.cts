@@ -37,11 +37,14 @@ declare const tokens: {
     | 'icon-xs'
     | 'icon-lg'
     | 'progress'
-    | 'tab-bar',
+    | 'tab-bar'
+    | 'toggle-w'
+    | 'toggle-h'
+    | 'toggle-thumb',
     string
   >;
   border: Record<string, string>;
-  opacity: Record<'disabled' | 'pending' | 'busy', string>;
+  opacity: Record<'disabled' | 'pending' | 'busy' | 'pressed' | 'pulse', string>;
   scale: Record<'pressed', string>;
   duration: Record<'fast' | 'base' | 'slow', string>;
 };

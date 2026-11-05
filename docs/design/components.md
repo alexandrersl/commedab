@@ -24,7 +24,7 @@ Les quatre boutons de l'app, et rien d'autre : plein, contour, texte, alerte.
 - **Texte** (`btn-text`) : navigation et actions d'en-tête (« Modifier », « Annuler », « Fermer »). En `alert` pour « Supprimer » et « Je n'en achète plus ».
 - **Alerte** (`btn-alert`) : confirmation d'une action irréversible dans une feuille (« Supprimer mon compte »). Jamais en pleine page.
 
-États : repos, pressé (échelle 0,97 + fond assombri, `duration-fast`), désactivé (opacité 0,45, aucune interaction), chargement (spinner à la place de l'icône, libellé conservé, bouton verrouillé). Le libellé dit ce qui va se passer, à l'infinitif ou à l'impératif court. Pas de libellé « OK ».
+États : repos, pressé (échelle 0,97 + opacité 0,85, `duration-fast`), désactivé (opacité 0,45, aucune interaction), chargement (spinner à la place de l'icône, libellé conservé, bouton verrouillé). Le libellé dit ce qui va se passer, à l'infinitif ou à l'impératif court. Pas de libellé « OK ».
 
 Le consommateur fournit : le libellé, `onPress`, et au besoin `loading`, `disabled`, un badge numérique (barre du bas).
 
@@ -204,4 +204,4 @@ Formes : neutre (fond `ink`, texte `ground`, action optionnelle en `action-soft`
 
 ## Toggle
 
-L'interrupteur des Réglages (« Aider à améliorer le catalogue »). 46×28, capsule, pouce `surface`. Fond `action` quand activé, `line-strong` sinon ; désactivé à 0,45. Le libellé est à gauche, l'explication en `caption` dessous. Pas d'état intermédiaire : un toggle qui attend le réseau reste à sa nouvelle position et se remet en place si l'écriture échoue, avec un toast d'erreur.
+L'interrupteur des Réglages (« Aider à améliorer le catalogue »). 46×28 (`toggle-w`, `toggle-h`), capsule, pouce `surface` de 24 (`toggle-thumb`) qui glisse en `duration-fast`. Fond `action` quand activé, `line-strong` sinon ; désactivé à 0,45. Le libellé est à gauche, l'explication en `caption` dessous. Pas d'état intermédiaire : un toggle qui attend le réseau reste à sa nouvelle position et se remet en place si l'écriture échoue, avec un toast d'erreur.
