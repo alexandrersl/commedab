@@ -73,6 +73,11 @@ export const opacity = Object.fromEntries(
 /** La courbe unique des animations (`tokens.json`, `easing`), en CSS. */
 export const EASE_OUT = tokens.easing['ease-out'];
 
+/** La même courbe, en points de contrôle pour Reanimated (`Easing.bezier`). */
+export const EASE_OUT_POINTS = (/cubic-bezier\(([^)]+)\)/.exec(EASE_OUT)?.[1] ?? '0, 0, 1, 1')
+  .split(',')
+  .map(Number) as [number, number, number, number];
+
 /** Échelles de `tokens.json` : `scale.pressed` sous le doigt. */
 export const scale = Object.fromEntries(
   Object.entries(tokens.scale).map(([name, value]) => [name, Number(value)]),

@@ -9,7 +9,8 @@ import {
 import { Plus } from 'phosphor-react-native';
 import { useMemo, useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable as RNPressable, View } from 'react-native';
-import Animated, { SlideInDown } from 'react-native-reanimated';
+import { GestureDetector } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AddControl } from '../../components/add-control';
 import { CardList, type CardEntry } from '../../components/card-list';
@@ -18,6 +19,7 @@ import { Divider, ListRow } from '../../components/list-row';
 import { Badge, Pill } from '../../components/pill';
 import { Pressable } from '../../components/pressable';
 import { SearchField } from '../../components/search-field';
+import { SheetHandle, useSheetMotion } from '../../components/sheet-motion';
 import { OptionSheet } from '../../components/setting-field';
 import { SkeletonRows } from '../../components/states';
 import { SuggestionRow } from '../../components/suggestion-row';
@@ -27,16 +29,25 @@ import { displayUnit, packsLabel } from '../../copy/words';
 import { useEngine } from '../../data/engine';
 import { useData, usePendingIds } from '../../data/provider';
 import { useWrite } from '../../data/use-write';
-import { size, space, useTheme } from '../../theme';
+import { size, space } from '../../theme';
 
 /** Rayons proposés sous un produit créé à la volée, avant « Autre… » (EF-2.8). */
 const PROPOSED_CATEGORIES = 3;
 /** Unités proposées sous un produit créé à la volée ; les autres restent sur la fiche. */
 const PROPOSED_UNITS = ['pièce', 'g', 'kg', 'cl', 'l'] as const;
 
-function Title({ children, meta }: { children: string; meta?: string }) {
+/** Titre d'un groupe ; `apart` l'éloigne du groupe précédent (`space-8`, design-system.md). */
+function Title({
+  children,
+  meta,
+  apart = false,
+}: {
+  children: string;
+  meta?: string;
+  apart?: boolean;
+}) {
   return (
-    <View className="flex-row items-baseline justify-between pb-1 pt-4">
+    <View className={`flex-row items-baseline justify-between pb-1 ${apart ? 'pt-8' : 'pt-4'}`}>
       <Text variant="title-section">{children}</Text>
       {meta !== undefined && (
         <Text variant="caption" tone="muted">
@@ -82,8 +93,8 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
   const data = useData();
   const write = useWrite();
   const pending = usePendingIds();
-  const { duration } = useTheme();
   const insets = useSafeAreaInsets();
+  const motion = useSheetMotion({ onClose });
   const [query, setQuery] = useState('');
   const [created, setCreated] = useState<string | null>(null);
   const [choosingCategory, setChoosingCategory] = useState(false);
@@ -363,7 +374,9 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
         ? [
             title(
               'everything',
-              <Title meta={`${everything.length} · du plus acheté`}>Tous tes produits</Title>,
+              <Title meta={`${everything.length} · du plus acheté`} apart={suggestions.length > 0}>
+                Tous tes produits
+              </Title>,
             ),
             ...rowsOf(
               'product',
@@ -387,11 +400,14 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <View className="absolute bottom-0 left-0 right-0 top-0">
+      <Animated.View
+        className="absolute bottom-0 left-0 right-0 top-0 bg-scrim"
+        style={motion.scrim}
+      />
       <RNPressable
         accessibilityRole="button"
         accessibilityLabel="Fermer"
-        onPress={onClose}
-        className="bg-scrim"
+        onPress={motion.dismiss}
         style={{ height: insets.top + size.row * 2 }}
       />
       <KeyboardAvoidingView
@@ -399,9 +415,15 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <Animated.View
-          entering={SlideInDown.duration(duration.base)}
           className="flex-1 overflow-hidden rounded-t-sheet bg-ground"
+          style={motion.panel}
+          onLayout={motion.onLayout}
         >
+          <GestureDetector gesture={motion.pull}>
+            <View>
+              <SheetHandle />
+            </View>
+          </GestureDetector>
           <CardList
             // Une requête, une liste : FlashList 2.3 perd ses mesures quand des résultats sans
             // rapport remplacent les précédents à la frappe (« index out of bounds »).
@@ -424,7 +446,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
             className="border-t-thin border-line bg-surface px-4 py-2"
             style={{ paddingBottom: Math.max(insets.bottom, space['2']) }}
           >
-            <SearchField value={query} onChange={setQuery} onClose={onClose} autoFocus />
+            <SearchField value={query} onChange={setQuery} onClose={motion.dismiss} autoFocus />
           </View>
         </Animated.View>
       </KeyboardAvoidingView>
