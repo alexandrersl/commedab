@@ -1,10 +1,10 @@
 import { Check } from 'phosphor-react-native';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { opacity, size } from '../theme';
 import { CategoryIcon, Glyph } from './icons';
 import { Pressable } from './pressable';
+import { SwipeRow } from './swipe-row';
 import { Text } from './text';
 
 /**
@@ -39,7 +39,7 @@ export function ListRow({
   pending?: boolean;
   onPress?: (() => void) | undefined;
   onLongPress?: (() => void) | undefined;
-  /** Glisser à gauche découvre « Retirer ». */
+  /** Glisser à gauche découvre « Retirer » ; glisser loin retire (SwipeRow). */
   onRemove?: (() => void) | undefined;
   accessory?: ReactNode;
   checkbox?: boolean;
@@ -106,23 +106,9 @@ export function ListRow({
     );
   if (onRemove === undefined) return row;
   return (
-    <ReanimatedSwipeable
-      friction={2}
-      rightThreshold={size['control-lg']}
-      renderRightActions={() => (
-        <Pressable
-          onPress={onRemove}
-          accessibilityLabel={`Retirer ${name}`}
-          className="items-center justify-center bg-alert px-6"
-        >
-          <Text variant="button-sm" tone="on-action">
-            Retirer
-          </Text>
-        </Pressable>
-      )}
-    >
+    <SwipeRow label={`Retirer ${name}`} onRemove={onRemove} resetKey={name}>
       {row}
-    </ReanimatedSwipeable>
+    </SwipeRow>
   );
 }
 

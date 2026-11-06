@@ -1,6 +1,7 @@
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { useMemo, type ReactNode, type Ref } from 'react';
 import { View } from 'react-native';
+import { closeSwipedRow } from './swipe-row';
 
 /** Une entrée de la liste : `card` la range dans la carte qui la précède ; sinon elle la ferme. */
 export interface CardEntry<T> {
@@ -56,6 +57,8 @@ export function CardList<T>({
       keyExtractor={(entry) => entry.key}
       getItemType={(entry) => entry.type}
       keyboardShouldPersistTaps="handled"
+      // Comme sur iOS, faire défiler la liste referme la ligne ouverte par un glissement.
+      onScrollBeginDrag={closeSwipedRow}
       // Une ligne qui monte en tête (produit ajouté, ligne décochée) ne fait pas défiler la liste.
       maintainVisibleContentPosition={{ disabled: true }}
       ListHeaderComponent={
