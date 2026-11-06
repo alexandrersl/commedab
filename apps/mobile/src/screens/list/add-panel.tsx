@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AddControl } from '../../components/add-control';
 import { CardList, type CardEntry } from '../../components/card-list';
 import { Glyph } from '../../components/icons';
+import { useKeyboardInset } from '../../components/keyboard-inset';
 import { Divider, ListRow } from '../../components/list-row';
 import { Badge, Pill } from '../../components/pill';
 import { Pressable } from '../../components/pressable';
@@ -95,6 +96,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
   const pending = usePendingIds();
   const insets = useSafeAreaInsets();
   const motion = useSheetMotion({ onClose });
+  const keyboard = useKeyboardInset();
   const [query, setQuery] = useState('');
   const [created, setCreated] = useState<string | null>(null);
   const [choosingCategory, setChoosingCategory] = useState(false);
@@ -399,7 +401,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <View className="absolute bottom-0 left-0 right-0 top-0">
+    <View className="absolute bottom-0 left-0 right-0 top-0" style={{ paddingBottom: keyboard }}>
       <Animated.View
         className="absolute bottom-0 left-0 right-0 top-0 bg-scrim"
         style={motion.scrim}
@@ -444,7 +446,9 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
           />
           <View
             className="border-t-thin border-line bg-surface px-4 py-2"
-            style={{ paddingBottom: Math.max(insets.bottom, space['2']) }}
+            style={{
+              paddingBottom: keyboard > 0 ? space['2'] : Math.max(insets.bottom, space['2']),
+            }}
           >
             <SearchField value={query} onChange={setQuery} onClose={motion.dismiss} autoFocus />
           </View>

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useKeyboardInset } from './keyboard-inset';
 
 /**
  * Cadre d'un écran : fond `ground`, gouttière `space-4` des deux côtés (design-system.md),
@@ -33,11 +34,14 @@ export function Screen({
   ) : (
     <View className="flex-1 gap-3 px-4">{children}</View>
   );
+  // Un pied collé en bas (recherche d'ingrédient, lien du compte) remonte au-dessus du clavier.
+  const keyboard = useKeyboardInset();
   return (
     <SafeAreaView edges={edges} className="flex-1 bg-ground">
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={footer === undefined ? undefined : { paddingBottom: keyboard }}
       >
         {body}
         {footer !== undefined && <View className="px-4 pb-3 pt-2">{footer}</View>}
