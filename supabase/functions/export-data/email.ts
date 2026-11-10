@@ -37,8 +37,17 @@ export const html = `<!doctype html>
         <td align="center" style="padding: 32px 16px">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 448px">
             <tr>
-              <td class="ink" style="padding-bottom: 32px; ${display}; font-size: 20px; line-height: 26px; font-weight: 600; color: #241f1a">
-                Commedab
+              <td style="padding-bottom: 32px">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td style="padding-right: 12px">
+                      <img src="https://commedab.app/brand/pwa-192.png" width="36" height="36" alt="" style="display: block; border: 0; border-radius: 10px" />
+                    </td>
+                    <td class="ink" style="${display}; font-size: 20px; line-height: 26px; font-weight: 600; color: #241f1a">
+                      Commedab
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
             <tr>
