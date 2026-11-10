@@ -2,6 +2,7 @@
 // session, les données du household et les envoie en JSON à l'adresse du compte, par Resend.
 import { encodeBase64 } from 'jsr:@std/encoding@1/base64';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { html, subject, text } from './email.ts';
 
 const TABLES: readonly [table: string, key: string, order: string][] = [
   ['category', 'categories', 'position'],
@@ -67,8 +68,9 @@ Deno.serve(async (request) => {
     body: JSON.stringify({
       from: `Commedab <${env('SMTP_SENDER_EMAIL')}>`,
       to: [user.user.email],
-      subject: 'Tes données Commedab',
-      text: "Voici tes données Commedab en pièce jointe : tes produits, tes achats, tes recettes, ta liste et l'ordre de tes rayons. Le fichier se lit sans l'application.",
+      subject,
+      text,
+      html,
       attachments: [
         {
           filename: `commedab-${day}.json`,

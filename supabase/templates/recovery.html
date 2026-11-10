@@ -1,12 +1,226 @@
+<!doctype html>
 <!-- Réinitialisation du mot de passe (EF-5.10). Lien valable une heure (5.2). -->
-<h2>Commedab</h2>
-<p>Tu as demandé à changer de mot de passe. Ouvre ce lien pour en choisir un nouveau.</p>
-<p>
-  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=recovery"
-    >Choisir un nouveau mot de passe</a
-  >
-</p>
-<p>
-  Le lien est valable une heure. Si ce n'est pas toi, ignore cet e-mail : ton mot de passe ne change
-  pas.
-</p>
+<!-- Valeurs de docs/design/tokens.json, en dur : un e-mail ne lit pas de variables. -->
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
+    <title>Choisis un nouveau mot de passe</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&amp;family=Manrope:wght@500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      h1,
+      td {
+        text-wrap: pretty;
+      }
+      @media (prefers-color-scheme: dark) {
+        .ground {
+          background-color: #181410 !important;
+        }
+        .ink {
+          color: #f2eae0 !important;
+        }
+        .ink-muted {
+          color: #a89c8e !important;
+        }
+        .line {
+          border-color: #3a322b !important;
+        }
+        .action {
+          color: #5fc79c !important;
+        }
+        .button {
+          background-color: #5fc79c !important;
+        }
+        .button a {
+          color: #0f1c17 !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="ground" style="margin: 0; padding: 0; background-color: #f3ede3">
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0">
+      Le lien est valable une heure.
+    </div>
+    <table
+      role="presentation"
+      class="ground"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      bgcolor="#F3EDE3"
+      style="background-color: #f3ede3"
+    >
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="max-width: 448px"
+          >
+            <tr>
+              <td
+                class="ink"
+                style="
+                  padding-bottom: 32px;
+                  font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+                  font-size: 20px;
+                  line-height: 26px;
+                  font-weight: 600;
+                  color: #241f1a;
+                "
+              >
+                Commedab
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <h1
+                  class="ink"
+                  style="
+                    margin: 0;
+                    font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+                    font-size: 28px;
+                    line-height: 34px;
+                    font-weight: 600;
+                    letter-spacing: -0.3px;
+                    color: #241f1a;
+                  "
+                >
+                  Mot de passe oublié
+                </h1>
+              </td>
+            </tr>
+            <tr>
+              <td
+                class="ink-muted"
+                style="
+                  padding-top: 8px;
+                  padding-bottom: 24px;
+                  font-family: 'Fraunces', Georgia, 'Times New Roman', serif;
+                  font-size: 18px;
+                  line-height: 24px;
+                  font-weight: 500;
+                  color: #6e645a;
+                "
+              >
+                Tu as demandé à changer de mot de passe. Ouvre ce lien pour en choisir
+                un&nbsp;nouveau.
+              </td>
+            </tr>
+            <tr>
+              <td
+                class="button"
+                align="center"
+                bgcolor="#0E5B46"
+                style="background-color: #0e5b46; border-radius: 14px"
+              >
+                <a
+                  href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=recovery"
+                  style="
+                    display: block;
+                    padding: 14px 16px;
+                    font-family:
+                      'Manrope',
+                      system-ui,
+                      -apple-system,
+                      'Segoe UI',
+                      sans-serif;
+                    font-size: 15px;
+                    line-height: 20px;
+                    font-weight: 700;
+                    color: #ffffff;
+                    text-decoration: none;
+                  "
+                  >Choisir un nouveau mot de passe</a
+                >
+              </td>
+            </tr>
+            <tr>
+              <td
+                class="ink-muted"
+                style="
+                  padding-top: 16px;
+                  font-family:
+                    'Manrope',
+                    system-ui,
+                    -apple-system,
+                    'Segoe UI',
+                    sans-serif;
+                  font-size: 14px;
+                  line-height: 20px;
+                  font-weight: 500;
+                  color: #6e645a;
+                "
+              >
+                Le lien est valable une heure.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-top: 32px">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td
+                      class="line ink-muted"
+                      style="
+                        border-top: 1px solid #e3dacc;
+                        padding-top: 16px;
+                        font-family:
+                          'Manrope',
+                          system-ui,
+                          -apple-system,
+                          'Segoe UI',
+                          sans-serif;
+                        font-size: 14px;
+                        line-height: 20px;
+                        font-weight: 500;
+                        color: #6e645a;
+                      "
+                    >
+                      Si ce n'est pas toi, ignore cet e-mail&nbsp;:<br />ton mot de passe ne
+                      change&nbsp;pas.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="ink-muted"
+                      style="
+                        padding-top: 12px;
+                        font-family:
+                          'Manrope',
+                          system-ui,
+                          -apple-system,
+                          'Segoe UI',
+                          sans-serif;
+                        font-size: 12px;
+                        line-height: 16px;
+                        font-weight: 600;
+                        color: #6e645a;
+                      "
+                    >
+                      Le bouton ne répond pas&nbsp;?<br />Copie cette adresse dans ton
+                      navigateur&nbsp;:<br />
+                      <!-- prettier-ignore -->
+                      <a class="action" href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=recovery" style="color: #0e5b46; text-decoration: none; word-break: break-all">{{ .RedirectTo }}?token_hash={{ .TokenHash }}&amp;type=recovery</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
