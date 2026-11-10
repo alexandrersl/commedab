@@ -1,13 +1,14 @@
 // Fichiers de la PWA que Metro ne produit pas, écrits dans public/ avant le build web :
 // - les workers du SDK web de PowerSync, que Metro ne sait pas empaqueter, dans
 //   public/powersync (pas de « @ » dans le chemin : Cloudflare redirige /@… vers /%40…) ;
+// - les icônes de la PWA, copiées d'assets/brand (voir son README) dans public/brand ;
 // - le manifeste, dont les couleurs viennent de docs/design/tokens.json (specs techniques 11.1) ;
 // - theme.css, le fond `ground` de la page selon le thème du système, ou celui choisi dans les
 //   Réglages (`data-theme`, posé par index.html), avant que l'app ne se peigne : sans lui, la
 //   page reste blanche le temps du chargement, même en sombre.
 import { cpSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -19,6 +20,20 @@ rmSync(target, { recursive: true, force: true });
 cpSync(source, target, { recursive: true });
 console.log(`Workers PowerSync copiés dans ${target}`);
 
+const brand = join(here, '../../../assets/brand');
+const icons = join(here, '../public/brand');
+rmSync(icons, { recursive: true, force: true });
+for (const file of [
+  'png/pwa-192.png',
+  'png/pwa-512.png',
+  'png/pwa-maskable-512.png',
+  'png/apple-touch-icon-180.png',
+  'svg/favicon.svg',
+]) {
+  cpSync(join(brand, file), join(icons, basename(file)));
+}
+console.log(`Icônes de la PWA copiées dans ${icons}`);
+
 const tokens = createRequire(import.meta.url)('../src/theme/tokens.cjs');
 const manifest = {
   name: 'Commedab',
@@ -29,7 +44,16 @@ const manifest = {
   display: 'standalone',
   background_color: tokens.colors.light.ground,
   theme_color: tokens.colors.light.ground,
-  icons: [{ src: '/icon.png', sizes: '1024x1024', type: 'image/png', purpose: 'any' }],
+  icons: [
+    { src: '/brand/pwa-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+    { src: '/brand/pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+    {
+      src: '/brand/pwa-maskable-512.png',
+      sizes: '512x512',
+      type: 'image/png',
+      purpose: 'maskable',
+    },
+  ],
 };
 writeFileSync(
   join(here, '../public/manifest.webmanifest'),

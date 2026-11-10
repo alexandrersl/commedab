@@ -43,6 +43,9 @@ yarn-error.*
 # workers PowerSync, copiés par `pnpm web:assets`
 public/powersync/
 
+# icônes de la PWA, copiées par `pnpm web:assets` depuis assets/brand
+public/brand/
+
 # manifeste et fond de page, écrits par `pnpm web:assets` depuis docs/design/tokens.json
 public/manifest.webmanifest
 public/theme.css

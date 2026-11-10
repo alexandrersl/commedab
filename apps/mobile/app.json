@@ -4,7 +4,7 @@
     "slug": "commedab",
     "version": "0.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "../../assets/brand/png/icon-1024.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
@@ -12,21 +12,29 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "../../assets/brand/png/adaptive-foreground-1024.png",
+        "backgroundColor": "#0E5B46",
+        "monochromeImage": "../../assets/brand/png/adaptive-foreground-1024.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "app.commedab"
     },
     "web": {
-      "favicon": "./assets/favicon.png",
+      "favicon": "../../assets/brand/png/favicon-48.png",
       "output": "single"
     },
     "plugins": [
       "expo-router",
       "expo-status-bar",
       "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "../../assets/brand/png/splash-icon-1024.png",
+          "imageWidth": 200,
+          "backgroundColor": "#F3EDE3"
+        }
+      ],
       [
         "@sentry/react-native/expo",
         {
