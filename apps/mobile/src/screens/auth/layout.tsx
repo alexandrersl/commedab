@@ -3,7 +3,7 @@ import { CaretLeft, EnvelopeSimple } from 'phosphor-react-native';
 import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { PROVIDERS, signInWithProvider, type AuthFailure, type Provider } from '../../auth/actions';
-import { AppleLogo, GoogleLogo } from '../../components/brand-logos';
+import { AppleLogo, CommedabMark, GoogleLogo } from '../../components/brand-logos';
 import { Glyph } from '../../components/icons';
 import { Pressable } from '../../components/pressable';
 import { Screen } from '../../components/screen';
@@ -23,7 +23,7 @@ export function AuthLayout({
   footer,
 }: {
   title: string;
-  /** Le nom de l'app, plus grand. */
+  /** Le nom de l'app, plus grand, à côté de son signe. */
   hero?: boolean;
   lead?: ReactNode;
   onBack?: (() => void) | undefined;
@@ -43,9 +43,18 @@ export function AuthLayout({
             <Glyph icon={CaretLeft} />
           </Pressable>
         )}
-        <Text variant={hero ? 'title-hero' : 'title-screen'} accessibilityRole="header">
-          {title}
-        </Text>
+        {hero ? (
+          <View className="flex-row items-center gap-3">
+            <CommedabMark />
+            <Text variant="title-hero" accessibilityRole="header">
+              {title}
+            </Text>
+          </View>
+        ) : (
+          <Text variant="title-screen" accessibilityRole="header">
+            {title}
+          </Text>
+        )}
         {lead !== undefined && (
           <Text variant="sentence" tone="muted">
             {lead}

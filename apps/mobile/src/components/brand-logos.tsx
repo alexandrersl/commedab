@@ -41,3 +41,25 @@ export function AppleLogo() {
     </Svg>
   );
 }
+
+const MARK = { width: 94, height: 66, stroke: 11 };
+
+/** Signe de Commedab, sans fond (assets/brand/svg/mark.svg), aux couleurs du thème. */
+export function CommedabMark() {
+  const { colors } = useTheme();
+  const height = size['icon-lg'];
+  return (
+    <Svg
+      width={(height * MARK.width) / MARK.height}
+      height={height}
+      viewBox={`13 21 ${MARK.width} ${MARK.height}`}
+      fill="none"
+      strokeWidth={MARK.stroke}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <Path d="M60.9 32.7A26 26 0 1 0 37.1 78.4L88 30" stroke={colors.action} />
+      <Path d="M60 80L99.7 42.3" stroke={colors.alert} />
+    </Svg>
+  );
+}

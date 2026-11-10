@@ -91,7 +91,7 @@ En magasin on scanne des noms ; les icônes servent au repérage des groupes, pa
 
 Le signe : un C et une coche tracés d'un seul geste, doublés d'un second trait, l'« idem » (〃). Ses couleurs sont celles des tokens : `ground` sur `action` avec le second trait en corail, et les déclinaisons fond clair, sombre et monochrome. Fichiers, couleurs par contexte et proportions : `assets/brand/README.md`, la référence.
 
-Il sert à l'icône de l'app, à l'écran de lancement, au favicon et en tête des e-mails, à côté du nom. Dans l'app, il n'apparaît sur aucun écran : le nom en Fraunces 600 reste la marque écrite.
+Il sert à l'icône de l'app, à l'écran de lancement, au favicon et en tête des e-mails, à côté du nom. Dans l'app, le signe sans fond, en `action` et `alert`, n'apparaît qu'à gauche du nom sur Connexion et Inscription, à la hauteur `icon-lg` ; partout ailleurs, le nom en Fraunces 600 reste la marque écrite.
 
 ## Pour le code
 
