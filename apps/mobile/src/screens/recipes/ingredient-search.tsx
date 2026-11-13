@@ -1,4 +1,4 @@
-import { search, type CatalogEntry } from '@commedab/core';
+import { productsByPurchases, search, type CatalogEntry, type SearchResult } from '@commedab/core';
 import { Plus } from 'phosphor-react-native';
 import { useMemo } from 'react';
 import { View } from 'react-native';
@@ -16,106 +16,148 @@ export type IngredientPick =
   | { kind: 'catalog'; entry: CatalogEntry }
   | { kind: 'create'; name: string; entry: CatalogEntry | null };
 
+/** Résultats à la frappe : la recherche du panneau Ajouter, sans les recettes. */
+export function ingredientResults(engine: Engine, query: string): SearchResult[] {
+  return search({
+    query,
+    products: engine.products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      catalogEntryId: p.catalogEntryId,
+      archivedAt: p.archivedAt,
+      purchaseCount: engine.purchaseCount(p.id),
+    })),
+  });
+}
+
 /**
- * Résultats de la recherche d'ingrédients (EF-4.2) : la même recherche que le panneau Ajouter,
- * sans les recettes ; « Créer « … » » en dernier.
+ * Produits proposés comme ingrédients (EF-4.2) : avant saisie, « Tous tes produits » du plus
+ * acheté au moins acheté ; à la frappe, la même recherche que le panneau Ajouter, sans les
+ * recettes, « Créer « … » » en dernier. Un produit déjà dans la recette reste affiché, marqué
+ * « Ajouté ».
  */
 export function IngredientSearch({
   engine,
   query,
-  exclude,
+  added,
   onPick,
 }: {
   engine: Engine;
   query: string;
   /** Produits déjà dans la recette. */
-  exclude: ReadonlySet<string>;
+  added: ReadonlySet<string>;
   onPick: (pick: IngredientPick) => void;
 }) {
-  const results = useMemo(
-    () =>
-      search({
-        query,
-        products: engine.products.map((p) => ({
-          id: p.id,
-          name: p.name,
-          catalogEntryId: p.catalogEntryId,
-          archivedAt: p.archivedAt,
-          purchaseCount: engine.purchaseCount(p.id),
-        })),
-      }).filter((r) => r.kind !== 'product' || !exclude.has(r.product.id)),
-    [engine, query, exclude],
-  );
-  if (results.length === 0) return null;
+  const browsing = query.trim() === '';
+  const results = useMemo((): SearchResult[] => {
+    if (!browsing) return ingredientResults(engine, query);
+    return productsByPurchases(
+      engine.products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        catalogEntryId: p.catalogEntryId,
+        archivedAt: p.archivedAt,
+        purchaseCount: engine.purchaseCount(p.id),
+      })),
+    ).map((product) => ({ kind: 'product', product }));
+  }, [engine, query, browsing]);
+  if (results.length === 0) {
+    return (
+      <Text variant="body-sm" tone="muted" className="pt-4">
+        Cherche un produit pour le mettre dans ta recette.
+      </Text>
+    );
+  }
+  const accessory = (productId: string) =>
+    added.has(productId) ? (
+      <Text variant="label" tone="action">
+        Ajouté
+      </Text>
+    ) : (
+      <Button
+        variant="outline"
+        label="Ajouter"
+        onPress={() => onPick({ kind: 'product', productId })}
+      />
+    );
 
   return (
-    <RowGroup>
-      {results.map((result, index) => {
-        const divider = index > 0 && <Divider />;
-        switch (result.kind) {
-          case 'recipe':
-            return null;
-          case 'product': {
-            const product = engine.productById.get(result.product.id);
-            const estimate =
-              product === undefined
-                ? null
-                : shortEstimate(product, engine.states.get(product.id), engine.now);
-            return (
-              <View key={`p-${result.product.id}`}>
-                {divider}
-                <ListRow
-                  checkbox={false}
-                  name={result.product.name}
-                  subtitle={estimate?.text}
-                  subtitleTone={estimate?.tone ?? 'muted'}
-                  accessory={
-                    <Button
-                      variant="outline"
-                      label="Ajouter"
-                      onPress={() => onPick({ kind: 'product', productId: result.product.id })}
-                    />
-                  }
-                />
-              </View>
-            );
+    <>
+      {browsing && (
+        <View className="flex-row items-baseline justify-between pt-2">
+          <Text variant="title-section">Tous tes produits</Text>
+          <Text variant="caption" tone="muted">
+            {`${results.length} · du plus acheté`}
+          </Text>
+        </View>
+      )}
+      <RowGroup>
+        {results.map((result, index) => {
+          const divider = index > 0 && <Divider />;
+          switch (result.kind) {
+            case 'recipe':
+            case 'createRecipe':
+              return null;
+            case 'product': {
+              const product = engine.productById.get(result.product.id);
+              const estimate =
+                product === undefined
+                  ? null
+                  : shortEstimate(product, engine.states.get(product.id), engine.now);
+              return (
+                <View key={`p-${result.product.id}`}>
+                  {divider}
+                  <ListRow
+                    checkbox={false}
+                    highlight={result.exact === true}
+                    name={result.product.name}
+                    subtitle={estimate?.text}
+                    subtitleTone={estimate?.tone ?? 'muted'}
+                    accessory={accessory(result.product.id)}
+                  />
+                </View>
+              );
+            }
+            case 'catalog':
+              return (
+                <View key={`c-${result.entry.id}`}>
+                  {divider}
+                  <ListRow
+                    checkbox={false}
+                    highlight={result.exact === true}
+                    name={result.entry.name}
+                    subtitle="Catalogue"
+                    accessory={
+                      <Button
+                        variant="outline"
+                        label="Ajouter"
+                        onPress={() => onPick({ kind: 'catalog', entry: result.entry })}
+                      />
+                    }
+                  />
+                </View>
+              );
+            case 'create':
+              return (
+                <View key="create">
+                  {divider}
+                  <Pressable
+                    feedback="highlight"
+                    onPress={() =>
+                      onPick({ kind: 'create', name: result.name, entry: result.entry })
+                    }
+                    className="min-h-row flex-row items-center justify-between gap-3 px-4 py-2"
+                  >
+                    <Text variant="body-strong" tone="action" className="flex-1">
+                      {`Créer « ${result.name} »`}
+                    </Text>
+                    <Glyph icon={Plus} color="ink-muted" />
+                  </Pressable>
+                </View>
+              );
           }
-          case 'catalog':
-            return (
-              <View key={`c-${result.entry.id}`}>
-                {divider}
-                <ListRow
-                  checkbox={false}
-                  name={result.entry.name}
-                  subtitle="Catalogue"
-                  accessory={
-                    <Button
-                      variant="outline"
-                      label="Ajouter"
-                      onPress={() => onPick({ kind: 'catalog', entry: result.entry })}
-                    />
-                  }
-                />
-              </View>
-            );
-          case 'create':
-            return (
-              <View key="create">
-                {divider}
-                <Pressable
-                  feedback="highlight"
-                  onPress={() => onPick({ kind: 'create', name: result.name, entry: result.entry })}
-                  className="min-h-row flex-row items-center justify-between gap-3 px-4 py-2"
-                >
-                  <Text variant="body-strong" tone="action" className="flex-1">
-                    {`Créer « ${result.name} »`}
-                  </Text>
-                  <Glyph icon={Plus} color="ink-muted" />
-                </Pressable>
-              </View>
-            );
-        }
-      })}
-    </RowGroup>
+        })}
+      </RowGroup>
+    </>
   );
 }

@@ -48,9 +48,6 @@ export default function RecipeSheet() {
   const missing = engine.missingOf(recipe.id);
   const ingredients = ingredientsOf(engine, recipe, missing);
   const missingNames = ingredients.filter((i) => i.missing !== null).map((i) => i.name);
-  const onListNames = ingredients
-    .filter((i) => engine.pendingLineOf(i.productId)?.recipeId === recipe.id)
-    .map((i) => i.name);
 
   const status =
     listRecipe !== undefined
@@ -152,16 +149,9 @@ export default function RecipeSheet() {
           </Text>
         </View>
       ) : (
-        <View className="gap-2 pt-1">
-          <View className="min-h-row flex-row items-center justify-between">
-            <Text variant="body-strong">Comptée sur ta liste</Text>
-            <Stepper value={listRecipe.times} onChange={(times) => void setTimes(times)} />
-          </View>
-          <Text variant="body-sm" tone="muted">
-            {onListNames.length === 0
-              ? 'Le − à 1 retire la recette de ta liste.'
-              : `Le − à 1 retire ${namesSentence(onListNames).toLowerCase()} de la liste.`}
-          </Text>
+        <View className="min-h-row flex-row items-center justify-between pt-1">
+          <Text variant="body-strong">Comptée sur ta liste</Text>
+          <Stepper value={listRecipe.times} onChange={(times) => void setTimes(times)} />
         </View>
       )}
 

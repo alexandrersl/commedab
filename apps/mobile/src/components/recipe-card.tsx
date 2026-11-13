@@ -7,7 +7,8 @@ import type { ReactNode } from 'react';
 
 /**
  * Une recette sur l'onglet Recettes (components.md, RecipeCard ; EF-4.1) : nom, sous-titre,
- * composant d'ajout en haut à droite, pastilles manquantes d'abord.
+ * composant d'ajout en haut à droite, pastilles manquantes d'abord. Toute la carte ouvre la
+ * fiche, sauf le composant d'ajout, qui garde ses taps, entre ses boutons compris.
  */
 export function RecipeCard({
   name,
@@ -26,15 +27,20 @@ export function RecipeCard({
   onPress: () => void;
 }) {
   return (
-    <View className="gap-3 rounded-card border-thin border-line bg-surface p-4">
+    <Pressable
+      feedback="highlight"
+      onPress={onPress}
+      accessibilityLabel={name}
+      className="gap-3 rounded-card border-thin border-line bg-surface p-4"
+    >
       <View className="flex-row items-start gap-3">
-        <Pressable onPress={onPress} className="flex-1 gap-1" accessibilityLabel={name}>
+        <View className="flex-1 gap-1">
           <Text variant="title-card">{name}</Text>
           <Text variant="body-sm" tone={complete ? 'action' : 'muted'}>
             {subtitle}
           </Text>
-        </Pressable>
-        {control}
+        </View>
+        <View onStartShouldSetResponder={() => true}>{control}</View>
       </View>
       {!complete && ingredients.length > 0 && (
         <View className="flex-row flex-wrap gap-2">
@@ -49,7 +55,7 @@ export function RecipeCard({
             ))}
         </View>
       )}
-    </View>
+    </Pressable>
   );
 }
 
