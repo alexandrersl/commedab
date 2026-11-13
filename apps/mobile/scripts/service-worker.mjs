@@ -8,6 +8,14 @@
 // OPFSCoopSyncVFS). Un fichier du site absent du cache y entre à sa première lecture. Une
 // navigation reçoit toujours la page de l'app en cache ; une nouvelle version s'installe à la
 // navigation suivante, prend la main aussitôt et la page se recharge.
+//
+// Pendant un déploiement, le serveur peut rendre un instant le nouveau service worker avec la
+// page d'accueil du build précédent, dont il ne sert plus les scripts : l'app resterait blanche
+// jusqu'au déploiement suivant. L'installation relit donc chaque fichier sur le réseau
+// (`cache: 'reload'`) et échoue si la page ne désigne pas les scripts de ce build ; elle
+// reprendra à la navigation suivante, l'ancienne version servant d'ici là. Pour la même
+// raison, la page que le serveur rend à la place d'un fichier absent n'entre jamais dans le
+// cache.
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
@@ -42,7 +50,15 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(PRECACHE))
+      .then(async (cache) => {
+        await cache.addAll(PRECACHE.map((url) => new Request(url, { cache: 'reload' })));
+        const page = await cache.match('/');
+        const scripts = (await page.text()).match(new RegExp('/_expo/static/[^"]+[.]js', 'g')) || [];
+        if (!scripts.every((script) => PRECACHE.includes(script))) {
+          await caches.delete(CACHE);
+          throw new Error("Page d'accueil d'un autre build");
+        }
+      })
       .then(() => self.skipWaiting()),
   );
 });
@@ -76,7 +92,8 @@ self.addEventListener('fetch', (event) => {
       const cached = await cache.match(request);
       if (cached) return cached;
       const response = await fetch(request);
-      if (response.ok) await cache.put(request, response.clone());
+      const type = response.headers.get('Content-Type') || '';
+      if (response.ok && !type.includes('text/html')) await cache.put(request, response.clone());
       return response;
     }),
   );
