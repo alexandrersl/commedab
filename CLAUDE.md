@@ -42,8 +42,9 @@ dans `data` derrière une interface.
 - Toute table métier porte `household_id` (jamais `user_id` hors
   `household_member`).
 - UUID v7 générés côté client. Jamais de `DELETE` (`deleted_at`, ou
-  `archived_at` pour un produit), sauf pour un achat (`stock_event`), supprimé
-  pour de bon (specs techniques 3.2).
+  `archived_at` pour un produit, `deleted_at` s'il n'a jamais été acheté ou s'il
+  est archivé), sauf
+  pour un achat (`stock_event`), supprimé pour de bon (specs techniques 3.2).
 - Le stock n'est jamais stocké : il est calculé par `core` depuis `stock_event`.
 - Le catalogue est un JSON dans `core`, copié dans `product` à la création,
   jamais resynchronisé.
@@ -68,10 +69,10 @@ dans `data` derrière une interface.
 - La Liste, le panneau Ajouter et l'onglet Produits ne montrent jamais les
   mots « rythme » ni « stock ». On dit « il t'en reste environ 2 », « proposé
   parce que tu en prends chaque semaine ».
-- Un seul champ obligatoire par formulaire : le nom. Un produit sans rayon va
-  dans « À classer ».
-- Un geste = une action, sans confirmation (sauf la suppression d'une recette
-  ou du compte). Sur la Liste, on annule par le geste inverse (décocher), sans
+- Un seul champ obligatoire par formulaire : le nom ; une recette demande aussi
+  un ingrédient (EF-4.2). Un produit sans rayon va dans « À classer ».
+- Un geste = une action, sans confirmation (sauf la suppression d'une recette,
+  du compte, ou d'un produit pris dans des recettes). Sur la Liste, on annule par le geste inverse (décocher), sans
   message éphémère ; la suppression d'un achat s'annule par message éphémère.
 - Une suggestion ne se refuse pas ; ignorée, elle revient.
 - Tout fonctionne hors ligne ; aucune action n'attend le réseau.

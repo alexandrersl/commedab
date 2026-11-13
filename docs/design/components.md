@@ -90,7 +90,7 @@ Anatomie : case ronde `checkbox` (bordure `line-strong`), nom en `body-strong`, 
 Gestes et états :
 - **Tap** = coché (fond de case `action`, nom barré en `ink-muted`). Re-tap = décoché. Aucune confirmation.
 - **Appui long** = `is-highlight` : fond `surface-2` + filet `action` à gauche, et la feuille LineSheet s'ouvre.
-- **Glisser à gauche** = un seul bouton « Retirer » de 96px sur fond `alert`, la ligne reste lisible.
+- **Glisser à gauche** = un seul bouton « Retirer » de 96px sur fond `alert`, la ligne reste lisible. Même geste dans l'annuaire (« Je n'en achète plus » ou « Supprimer », un seul des deux selon le produit) et sur une carte de recette (« Supprimer ») ; quand l'action demande une confirmation, la ligne se referme au lieu de partir.
 - **En attente** (`is-pending`) : ligne qui vient d'être créée ou synchronisée, opacité 0,55, interactions permises.
 - **Chargement** : squelette de 3 lignes (voir States).
 
@@ -137,7 +137,7 @@ L'en-tête d'un écran. Deux formes :
 - **Racine** (onglet) : titre `title-screen` à gauche, une méta ou une action à droite (« 2 sur 12 », « + Nouvelle »). Marge haute `space-6`.
 - **Fiche** : flèche retour Phosphor `CaretLeft` à gauche, actions texte à droite (« Modifier », « Supprimer » en `alert`, « Je n'en achète plus »), puis le nom en `title-hero` sur la ligne suivante avec sa méta en `label`.
 
-- **Modal** (création, ordre des rayons, produits archivés) : « Annuler » à gauche, titre centré en `title-section`, action à droite (« Enregistrer »), ou retour à gauche et titre centré sans action.
+- **Modal** (création, ordre des rayons) : « Annuler » à gauche, titre centré en `title-section`, action à droite (« Enregistrer », désactivée tant que rien n'a changé, partout dans l'app), ou retour à gauche et titre centré sans action.
 
 Jamais plus de deux actions à droite, pas d'icône dans le titre. Le titre centré n'existe que sur les écrans modaux.
 

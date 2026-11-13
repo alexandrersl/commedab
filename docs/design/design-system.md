@@ -78,7 +78,7 @@ Pas de toast pour un geste dont le résultat est visible sous le doigt. Un toast
 Où il y a des icônes, et où il n'y en a pas :
 - **Onglets** : `ListChecks`, `Basket`, `ChefHat`, `Sliders`.
 - **Utilitaires** : `MagnifyingGlass` (recherche), `Check` en *bold* (coche), `CaretLeft` / `CaretRight` (navigation), `Plus`, `X`, `WifiSlash`.
-- **Rayons** : un jeu fermé, une icône par rayon par défaut des specs techniques (7.4) plus « À classer », devant chaque en-tête de section de la liste et de l'annuaire (voir le composant Icons). On n'en ajoute pas sans ajouter un rayon.
+- **Rayons** : un jeu fermé, une icône par rayon par défaut des specs techniques (7.4) plus « À classer », devant chaque en-tête de section de la liste et de l'annuaire (voir le composant Icons). On n'en ajoute pas sans ajouter un rayon. Seule autre icône d'en-tête : la boîte d'archive devant « Tu n'achètes plus », en pied de l'annuaire.
 - **Recette** : `ChefHat` est le seul signe récurrent de la marque ; il marque une recette partout (onglet, pastille, résultat de recherche).
 - **États vides** : une icône du jeu ci-dessus à 40 px en `ink-muted` au-dessus du titre, facultative.
 - **Jamais** : sur une ligne de produit, dans un titre, sur une carte recette, en décoration. Pas d'emoji, pas d'illustration.
