@@ -4,6 +4,7 @@ import { emailFailure, passwordFailure, signUp, type AuthFailure } from '../auth
 import { Button } from '../components/button';
 import { TextInput } from '../components/text-input';
 import { AuthLayout, FooterLink, ProviderButtons, param } from '../screens/auth/layout';
+import { LegalLinks } from '../screens/legal/page';
 
 /**
  * Inscription (EF-5.9) : une adresse et un mot de passe de 8 caractères, rien d'autre. Par
@@ -37,7 +38,12 @@ export default function SignUp() {
       hero
       title="Commedab"
       lead="La liste qui sait déjà ce que tu vas oublier."
-      footer={<FooterLink question="Déjà un compte ?" label="Se connecter" href="/sign-in" />}
+      footer={
+        <>
+          <FooterLink question="Déjà un compte ?" label="Se connecter" href="/sign-in" />
+          <LegalLinks />
+        </>
+      }
     >
       <TextInput
         label="E-mail"

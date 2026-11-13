@@ -92,6 +92,8 @@ function Routes() {
       </Stack.Protected>
       <Stack.Screen name="auth/confirm" />
       <Stack.Screen name="gallery" />
+      <Stack.Screen name="privacy" />
+      <Stack.Screen name="legal" />
     </Stack>
   );
   if (!signedIn) return stack;

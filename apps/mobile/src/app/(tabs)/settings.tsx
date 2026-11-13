@@ -17,6 +17,7 @@ import { Text } from '../../components/text';
 import { useToast } from '../../components/toast';
 import { Toggle } from '../../components/toggle';
 import { useData, useSyncStatus } from '../../data/provider';
+import { LegalLinks } from '../../screens/legal/page';
 import { useWatch } from '../../data/use-watch';
 import { useWrite } from '../../data/use-write';
 import { useTheme, opacity, type ThemePreference } from '../../theme';
@@ -98,7 +99,7 @@ function Row({
 }
 
 /**
- * Réglages (EF-5.1 à EF-5.7) : rayons, affichage, compte, données, version. Hors ligne, le
+ * Réglages (EF-5.1 à EF-5.7) : rayons, affichage, compte, données, version, pages légales. Hors ligne, le
  * compte et les données attendent le réseau (EF-6.3).
  */
 export default function Settings() {
@@ -217,6 +218,7 @@ export default function Settings() {
       <Text variant="caption" tone="muted" className="pt-4 text-center">
         {`Commedab ${Constants.expoConfig?.version ?? ''} · AGPL-3.0`}
       </Text>
+      <LegalLinks />
       {__DEV__ && (
         <Pressable
           onPress={() => router.push('/gallery')}

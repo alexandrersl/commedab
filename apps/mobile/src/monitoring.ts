@@ -3,8 +3,9 @@ import { config } from './config';
 
 /**
  * Erreurs de l'app envoyées à Sentry (specs techniques 9.5), sans donnée personnelle : ni
- * adresse IP, ni e-mail, ni contenu des lignes. Aucun suivi de performance ni rejeu de session :
- * seules les erreurs partent.
+ * adresse IP, ni e-mail, ni contenu des lignes. Aucun suivi de performance, de session ni rejeu :
+ * seules les erreurs partent. Les adresses de page perdent leurs paramètres, qui portent
+ * l'e-mail (« Vérifie ta boîte mail ») ou un jeton (lien de confirmation).
  */
 export function startMonitoring(): void {
   if (config.sentryDsn === '') return;
@@ -13,7 +14,25 @@ export function startMonitoring(): void {
     environment: config.appEnv,
     sendDefaultPii: false,
     tracesSampleRate: 0,
+    enableAutoSessionTracking: false,
+    beforeSend(event) {
+      if (event.request?.url !== undefined) event.request.url = barePath(event.request.url);
+      return event;
+    },
+    beforeBreadcrumb(breadcrumb) {
+      for (const key of ['url', 'from', 'to']) {
+        const value: unknown = breadcrumb.data?.[key];
+        if (breadcrumb.data !== undefined && typeof value === 'string') {
+          breadcrumb.data[key] = barePath(value);
+        }
+      }
+      return breadcrumb;
+    },
   });
+}
+
+function barePath(url: string): string {
+  return url.split(/[?#]/)[0] ?? url;
 }
 
 /**
