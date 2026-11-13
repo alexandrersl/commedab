@@ -73,7 +73,6 @@ function Routes() {
         redirectTo={signedIn ? '/new-password' : '/sign-in'}
       >
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="products-archived" />
         <Stack.Screen name="recipe-edit" />
         <Stack.Screen name="categories" />
       </Stack.Protected>

@@ -30,7 +30,7 @@ function ActionButton({ action }: { action: HeaderAction }) {
 /**
  * En-tête d'un écran (components.md, ScreenHeader). Racine : titre à gauche, méta ou action à
  * droite. Fiche : retour, au plus deux actions, puis le nom et sa méta. Modal (création, ordre
- * des rayons, « Tu n'achètes plus ») : « Annuler » ou retour, titre centré, une action ou rien ;
+ * des rayons) : « Annuler » ou retour, titre centré, une action ou rien ;
  * seule forme à titre centré.
  */
 export function ScreenHeader({

@@ -29,6 +29,7 @@ import { useData, usePendingIds, useSyncStatus } from '../../../data/provider';
 import { categoryName, productMeta, purchaseLabel } from '../../../screens/products/labels';
 import { PurchaseSheet } from '../../../screens/products/purchase-sheet';
 import { RateSheet } from '../../../screens/products/rate-sheet';
+import { useProductRemoval } from '../../../screens/products/removal';
 import { useWrite } from '../../../data/use-write';
 import { opacity } from '../../../theme';
 
@@ -49,7 +50,8 @@ function parseAmount(text: string): number | null {
 
 /**
  * Fiche produit (EF-3.2 à EF-3.5) : ce qu'il en reste, le composant d'ajout, les réglages en
- * vrais champs qui s'enregistrent d'eux-mêmes, l'historique des achats.
+ * vrais champs qui s'enregistrent d'eux-mêmes, l'historique des achats. Tant qu'il n'a aucun
+ * achat, le produit se supprime (EF-3.9) au lieu de s'archiver ; archivé, il se supprime aussi.
  */
 export default function ProductSheet() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -69,6 +71,7 @@ export default function ProductSheet() {
   const [purchase, setPurchase] = useState<PurchaseRecord | null>(null);
 
   const back = () => (router.canGoBack() ? router.back() : router.navigate('/products'));
+  const removal = useProductRemoval(back);
 
   if (product === undefined) {
     return (
@@ -172,16 +175,31 @@ export default function ProductSheet() {
         meta={productMeta(product, engine.categoryById)}
         onBack={back}
         actions={[
-          archived
-            ? {
-                label: 'Reprendre',
-                onPress: () => void write(() => data.products.resumeBuying(product.id)),
-              }
-            : {
-                label: "Je n'en achète plus",
-                tone: 'alert',
-                onPress: () => void write(() => data.products.stopBuying(product.id)),
-              },
+          ...(history.length === 0 || archived
+            ? [
+                {
+                  label: 'Supprimer',
+                  tone: 'alert' as const,
+                  onPress: () => removal.remove(product),
+                },
+              ]
+            : []),
+          ...(archived
+            ? [
+                {
+                  label: 'Reprendre',
+                  onPress: () => void write(() => data.products.resumeBuying(product.id)),
+                },
+              ]
+            : history.length === 0
+              ? []
+              : [
+                  {
+                    label: "Je n'en achète plus",
+                    tone: 'alert' as const,
+                    onPress: () => void write(() => data.products.stopBuying(product.id)),
+                  },
+                ]),
         ]}
       />
       {!online && <OfflineBanner text="Hors ligne · tes modifications seront envoyées plus tard" />}
@@ -337,6 +355,7 @@ export default function ProductSheet() {
         onSave={saveRate}
         onClose={() => setSheet(null)}
       />
+      {removal.sheet}
       <PurchaseSheet
         product={product}
         purchase={archived ? null : purchase}
