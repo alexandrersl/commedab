@@ -1,0 +1,41 @@
+# Sauvegarde hebdomadaire de la production : le plan gratuit Supabase n'en fait aucune
+# (specs techniques 9.5). Restauration : supabase/README.md. À supprimer au passage en Pro.
+name: backup
+on:
+  schedule:
+    - cron: '43 3 * * 0'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Dump
+        run: |
+          mkdir backup
+          npx --yes supabase@3.1.0 db dump --remote="$SUPABASE_DB_URL" -f backup/roles.sql --role-only
+          npx --yes supabase@3.1.0 db dump --remote="$SUPABASE_DB_URL" -f backup/schema.sql
+          npx --yes supabase@3.1.0 db dump --remote="$SUPABASE_DB_URL" -f backup/data.sql --data-only --use-copy
+          # Une sauvegarde sans les données de l'app ou sans les comptes ne vaut rien : mieux vaut échouer.
+          grep -q '^COPY "public"."household" ' backup/data.sql
+          grep -q '^COPY "auth"."users" ' backup/data.sql
+          tar -czf "commedab-prod-$(date -u +%F).tar.gz" -C backup .
+      - name: Archive
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          # R2 ne connaît pas les sommes de contrôle que la CLI AWS ajoute par défaut.
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+        run: |
+          aws s3 cp commedab-prod-*.tar.gz "s3://${{ vars.R2_BUCKET }}/" \
+            --endpoint-url "https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com"

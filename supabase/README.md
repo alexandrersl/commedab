@@ -18,3 +18,29 @@ Pas d'instance locale : le développement utilise le projet cloud `commedab-dev`
   (`crflkgpbfapygnsgpvgm`). `config.toml` décrit la production ; `[remotes.development]` ne
   change que les adresses du développement : `dev.commedab.app` et `localhost:8081`
   (specs techniques 9.3).
+
+## Sauvegarde et maintien en éveil (specs techniques 9.5)
+
+Deux flux GitHub Actions planifiés, à supprimer au passage en Pro. Leurs réglages vivent dans
+les environnements GitHub `development` et `production` (Settings > Environments).
+
+- `keep-alive` (chaque jour, les deux environnements). Variables : `SUPABASE_URL`,
+  `SUPABASE_ANON_KEY`, `POWERSYNC_URL` (les valeurs publiques de `apps/mobile/.env` et
+  `.env.production`). Secrets : `KEEPALIVE_EMAIL`, `KEEPALIVE_PASSWORD`, ceux d'un compte de
+  veille créé dans chaque projet (Authentication > Users > Add user, e-mail confirmé d'office).
+- `backup` (chaque dimanche, production seule). Secret `SUPABASE_DB_URL` : la chaîne de
+  connexion « Session pooler » du projet (Connect > Session pooler, en IPv4), mot de passe de la
+  base compris. Variables `R2_ACCOUNT_ID` et `R2_BUCKET`, secrets `R2_ACCESS_KEY_ID` et
+  `R2_SECRET_ACCESS_KEY` : un jeton R2 limité à ce bucket, en lecture et écriture d'objets.
+
+Restaurer une archive dans un projet neuf, après l'avoir décompressée :
+
+```sh
+psql --single-transaction --variable ON_ERROR_STOP=1 \
+  --file roles.sql --file schema.sql \
+  --command 'SET session_replication_role = replica' \
+  --file data.sql --dbname "<chaîne de connexion du nouveau projet>"
+```
+
+Puis `supabase/deploy.sh <référence>` pour la configuration Auth et la fonction d'export, et le
+déploiement des règles de synchro sur l'instance PowerSync branchée au nouveau projet.
