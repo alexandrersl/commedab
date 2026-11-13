@@ -19,6 +19,23 @@ Pas d'instance locale : le développement utilise le projet cloud `commedab-dev`
   change que les adresses du développement : `dev.commedab.app` et `localhost:8081`
   (specs techniques 9.3).
 
+## Déploiement par la CI (specs techniques 9.4)
+
+Le flux `check` déploie après ses vérifications : la branche `main` sur l'environnement GitHub
+`development`, un tag `v*` sur `production`. Dans chacun des deux environnements :
+
+- Variables : `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `POWERSYNC_URL` (déjà là pour `keep-alive`),
+  `SENTRY_DSN` (les valeurs publiques de `apps/mobile/.env` et `.env.production`),
+  `CLOUDFLARE_ACCOUNT_ID`, et `POWERSYNC_INSTANCE_ID` : sans elle, les règles de synchro ne
+  sont pas déployées.
+- Secrets : `SUPABASE_DB_URL` (la chaîne « Session pooler » du projet, comme pour `backup`),
+  `CLOUDFLARE_API_TOKEN` (modèle « Edit Cloudflare Workers »), `POWERSYNC_TOKEN` (jeton
+  d'accès personnel PowerSync), `SENTRY_AUTH_TOKEN` (facultatif : sans lui, pas de source maps).
+
+Mettre en production : `git tag v0.1.0 && git push origin v0.1.0`. Le flux n'applique que les
+migrations et les règles de synchro ; `deploy.sh` reste à lancer à la main quand la
+configuration Auth, les e-mails ou la fonction d'export changent.
+
 ## Sauvegarde et maintien en éveil (specs techniques 9.5)
 
 Deux flux GitHub Actions planifiés, à supprimer au passage en Pro. Leurs réglages vivent dans

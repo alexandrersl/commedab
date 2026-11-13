@@ -866,13 +866,15 @@ Projets Supabase : `commedab-dev` (`crflkgpbfapygnsgpvgm`) et `commedab-prod` (`
 
 ### 9.4 Intégration et livraison continues
 
-GitHub Actions, un seul flux :
+GitHub Actions, un seul flux (`.github/workflows/check.yml`) :
 
 1. Sur chaque poussée : `pnpm check`, audit des dépendances.
-2. Sur la branche principale : application des migrations sur l'environnement de développement, build web, déploiement sur l'hébergeur statique de développement.
-3. Sur un tag de version : migrations en production, build web en production (phase A) ; en phase B, build iOS par EAS ou en local sur le Mac, envoi sur TestFlight ; en phase C, soumission au store.
+2. Sur la branche principale, une fois ces vérifications passées : application des migrations sur l'environnement de développement, build web, déploiement sur `dev.commedab.app`.
+3. Sur un tag de version (`v*`) : migrations en production, build web et déploiement sur `commedab.app` (phase A) ; en phase B, build iOS par EAS ou en local sur le Mac, envoi sur TestFlight ; en phase C, soumission au store.
 
 Les règles de synchro PowerSync sont déployées par le CLI PowerSync dans la même étape que les migrations, pour que schéma et règles avancent ensemble.
+
+Le flux n'applique que les migrations (`supabase db push`) : la configuration Auth, la fonction d'export et ses secrets restent à `supabase/deploy.sh`, lancé à la main quand ils changent, parce qu'ils demandent les secrets des fournisseurs (Resend, Google). Les fichiers `.env` n'étant pas dans le dépôt, le build reçoit ses valeurs publiques des variables de l'environnement GitHub (`development` ou `production`), qui porte aussi les secrets du déploiement ; la liste est dans `supabase/README.md`. Deux déploiements du même environnement ne se chevauchent pas. Les commandes `pnpm deploy:web` et `deploy:web:dev` restent utilisables depuis le poste.
 
 ### 9.5 Exploitation
 
