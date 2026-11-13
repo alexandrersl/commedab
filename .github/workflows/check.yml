@@ -51,6 +51,7 @@ jobs:
         run: >-
           npx --yes powersync@0.10.3 deploy sync-config
           --instance-id="${{ vars.POWERSYNC_INSTANCE_ID }}"
+          --directory=supabase/sync-streams
           --sync-config-file-path=supabase/sync-streams/sync-streams.yaml
       - name: Build web
         working-directory: apps/mobile
