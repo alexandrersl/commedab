@@ -665,20 +665,23 @@ export function createData(
     },
 
     /**
-     * Déplace le rayon au rang `toIndex` de son groupe : rayons ordinaires, ou rayons système
-     * toujours en fin de parcours (EF-5.1, RG-9).
+     * Enregistre l'ordre des rayons choisi à l'écran. Les rayons système restent en fin de
+     * parcours, ordonnés entre eux (EF-5.1, RG-9) ; un rayon absent de `categoryIds` garde sa
+     * place relative, après ceux de son groupe qui sont cités.
      */
-    moveCategory(categoryId: string, toIndex: number): Promise<void> {
+    setCategoryOrder(categoryIds: readonly string[]): Promise<void> {
       return db.writeTransaction(async (tx) => {
         const all = await readCategories(tx);
-        const moved = all.find((c) => c.id === categoryId);
-        if (moved === undefined) throw new Error(`Rayon inconnu : ${categoryId}`);
-        const isSystem = (c: (typeof all)[number]) => c.systemKey !== null;
-        const group = all.filter((c) => isSystem(c) === isSystem(moved) && c.id !== categoryId);
-        group.splice(Math.max(0, Math.min(toIndex, group.length)), 0, moved);
-        const ordered = isSystem(moved)
-          ? [...all.filter((c) => !isSystem(c)), ...group]
-          : [...group, ...all.filter(isSystem)];
+        const rank = (id: string) => {
+          const index = categoryIds.indexOf(id);
+          return index === -1 ? categoryIds.length : index;
+        };
+        const ordered = [...all].sort(
+          (a, b) =>
+            Number(a.systemKey !== null) - Number(b.systemKey !== null) ||
+            rank(a.id) - rank(b.id) ||
+            a.position - b.position,
+        );
         const at = stored(now());
         for (const [index, category] of ordered.entries()) {
           if (category.position !== index + 1) {

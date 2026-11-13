@@ -273,23 +273,21 @@ describe('historique des achats (EF-3.4)', () => {
 });
 
 describe('rayons (EF-5.1, RG-9)', () => {
-  it('déplace un rayon dans son groupe, les rayons système restant en fin de parcours', async () => {
+  it("enregistre l'ordre choisi, les rayons système restant en fin de parcours", async () => {
     const keys = async () =>
       (await db.getAll<{ key: string }>('SELECT key FROM category ORDER BY position')).map(
         (c) => c.key,
       );
-    await data.categories.moveCategory('c-boissons', 0);
-    await data.categories.moveCategory('c-hygiene-beaute', 99);
-    await data.categories.moveCategory('c-surgeles', 0);
+    await data.categories.setCategoryOrder(['c-surgeles', 'c-boissons', 'c-hygiene-beaute']);
     expect(await keys()).toEqual([
       'boissons',
+      'hygiene-beaute',
       'bebe-animaux',
       'entretien-maison',
       'fruits-legumes',
       'boulangerie',
       'epicerie-salee',
       'epicerie-sucree',
-      'hygiene-beaute',
       'surgeles',
       'cremerie',
       'viande-poisson-traiteur',
