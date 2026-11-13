@@ -8,6 +8,7 @@ export {
   createData,
   type AccountServer,
   type Data,
+  type DeletedProduct,
   type DeletedPurchase,
   type ProductChanges,
   type RecipeInput,

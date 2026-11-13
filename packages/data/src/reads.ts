@@ -21,18 +21,21 @@ export function readCategories(db: SqlContext): Promise<CategoryRecord[]> {
     .then((rows) => rows.map(toCategory));
 }
 
-/** Tous les produits, archivés compris. */
+/** Tous les produits, archivés compris ; pas les supprimés. */
 export function readProducts(db: SqlContext): Promise<ProductRecord[]> {
   return db
-    .getAll<AppTables['product']>('SELECT * FROM product ORDER BY name_normalized')
+    .getAll<AppTables['product']>(
+      'SELECT * FROM product WHERE deleted_at IS NULL ORDER BY name_normalized',
+    )
     .then((rows) => rows.map(toProduct));
 }
 
 export function readPurchases(db: SqlContext, productId?: string): Promise<PurchaseRecord[]> {
-  const where = productId === undefined ? '' : 'WHERE e.product_id = ?';
+  const where = productId === undefined ? '' : 'AND e.product_id = ?';
   return db
     .getAll<AppTables['stock_event'] & { origin: string | null }>(
       `SELECT e.*, l.origin FROM stock_event e LEFT JOIN list_line l ON l.id = e.list_line_id
+       WHERE e.product_id NOT IN (SELECT id FROM product WHERE deleted_at IS NOT NULL)
        ${where} ORDER BY e.occurred_at`,
       productId === undefined ? [] : [productId],
     )

@@ -42,6 +42,7 @@ const product = new Table(
     catalog_qty: column.real,
     catalog_per_days: column.integer,
     archived_at: column.text,
+    deleted_at: column.text,
     created_at: column.text,
     updated_at: column.text,
   },

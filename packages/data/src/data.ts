@@ -49,6 +49,14 @@ export interface RecipeInput {
 /** Achat supprimé, gardé par l'écran le temps du message éphémère qui l'annule (ENF-8). */
 export type DeletedPurchase = AppTables['stock_event'];
 
+/** Ce que `deleteProduct` a retiré avec le produit, par identifiant : les dates relues après
+ * synchronisation n'ont plus la forme écrite, et ne se comparent pas. */
+export interface DeletedProduct {
+  productId: string;
+  lineIds: string[];
+  ingredientIds: string[];
+}
+
 const PRODUCT_COLUMNS: Record<keyof ProductChanges, string> = {
   name: 'name',
   categoryId: 'category_id',
@@ -95,9 +103,10 @@ function pendingLineOf(tx: SqlContext, productId: string) {
 }
 
 async function productOf(tx: SqlContext, productId: string) {
-  const row = await tx.getOptional<AppTables['product']>('SELECT * FROM product WHERE id = ?', [
-    productId,
-  ]);
+  const row = await tx.getOptional<AppTables['product']>(
+    'SELECT * FROM product WHERE id = ? AND deleted_at IS NULL',
+    [productId],
+  );
   if (row === null) throw new Error(`Produit inconnu : ${productId}`);
   return toProduct(row);
 }
@@ -117,7 +126,7 @@ const OFFLINE_SERVER: AccountServer = {
 
 async function checkNotArchived(tx: SqlContext, productId: string): Promise<void> {
   const row = await tx.getOptional<{ archived_at: string | null }>(
-    'SELECT archived_at FROM product WHERE id = ?',
+    'SELECT archived_at FROM product WHERE id = ? AND deleted_at IS NULL',
     [productId],
   );
   if (row === null) throw new Error(`Produit inconnu : ${productId}`);
@@ -147,6 +156,7 @@ export function createData(
     at: string,
   ): Promise<string> {
     checkPacks(packs);
+    await productOf(tx, productId);
     await tx.execute(
       'UPDATE product SET archived_at = NULL, updated_at = ? WHERE id = ? AND archived_at IS NOT NULL',
       [at, productId],
@@ -493,6 +503,76 @@ export function createData(
           at,
           productId,
         ]);
+      });
+    },
+
+    /**
+     * Supprime un produit jamais acheté, ou archivé (EF-3.9), avec ses lignes de liste et sa
+     * place dans les recettes ; ses achats restent en base, sans plus être lus. Rend ce qui a
+     * été retiré, de quoi l'annuler par `restoreProduct`.
+     */
+    deleteProduct(productId: string): Promise<DeletedProduct> {
+      const at = stored(now());
+      return db.writeTransaction(async (tx) => {
+        const product = await productOf(tx, productId);
+        const bought = await tx.getOptional('SELECT id FROM stock_event WHERE product_id = ?', [
+          productId,
+        ]);
+        if (bought !== null && product.archivedAt === null) {
+          throw new Error(`Produit acheté et non archivé : ${productId}`);
+        }
+        const idsOf = (table: string) =>
+          tx
+            .getAll<{ id: string }>(
+              `SELECT id FROM ${table} WHERE product_id = ? AND deleted_at IS NULL`,
+              [productId],
+            )
+            .then((rows) => rows.map((row) => row.id));
+        const deleted = {
+          productId,
+          lineIds: await idsOf('list_line'),
+          ingredientIds: await idsOf('recipe_ingredient'),
+        };
+        await tx.execute('UPDATE product SET deleted_at = ?, updated_at = ? WHERE id = ?', [
+          at,
+          at,
+          productId,
+        ]);
+        for (const [table, ids] of [
+          ['list_line', deleted.lineIds],
+          ['recipe_ingredient', deleted.ingredientIds],
+        ] as const) {
+          for (const id of ids) {
+            await tx.execute(`UPDATE ${table} SET deleted_at = ?, updated_at = ? WHERE id = ?`, [
+              at,
+              at,
+              id,
+            ]);
+          }
+        }
+        return deleted;
+      });
+    },
+
+    /** Annule `deleteProduct` : le produit revient, avec ce que sa suppression avait retiré. */
+    restoreProduct(deleted: DeletedProduct): Promise<void> {
+      const at = stored(now());
+      return db.writeTransaction(async (tx) => {
+        await tx.execute('UPDATE product SET deleted_at = NULL, updated_at = ? WHERE id = ?', [
+          at,
+          deleted.productId,
+        ]);
+        for (const [table, ids] of [
+          ['list_line', deleted.lineIds],
+          ['recipe_ingredient', deleted.ingredientIds],
+        ] as const) {
+          for (const id of ids) {
+            await tx.execute(`UPDATE ${table} SET deleted_at = NULL, updated_at = ? WHERE id = ?`, [
+              at,
+              id,
+            ]);
+          }
+        }
       });
     },
 

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createData, type Data } from '../src/data';
 import type { Database } from '../src/database';
 import { purchaseIdOf } from '../src/ids';
-import { readListLines, readPurchases } from '../src/reads';
+import { readListLines, readProducts, readPurchases } from '../src/reads';
 import { localOfStored } from '../src/time';
 import { memoryDatabase } from './memory-database';
 
@@ -128,6 +128,46 @@ describe('liste (EF-1.3 à EF-1.5, EF-2.9 à EF-2.11)', () => {
     expect(await db.getOptional('SELECT archived_at FROM product')).toEqual({ archived_at: null });
     expect(await lines()).toEqual([]);
     await data.products.updateProduct(milk, { packSize: 2 });
+  });
+
+  it('supprime un produit jamais acheté avec sa ligne et ses ingrédients, puis l’annule (EF-3.9)', async () => {
+    const typo = await data.products.createProduct({ name: 'Pome', entry: null, addToList: true });
+    const recipe = await data.recipes.saveRecipe({
+      name: 'Compote',
+      notes: null,
+      ingredients: [{ productId: typo, quantity: null, unit: null }],
+    });
+    const ingredients = () =>
+      db.getAll('SELECT id FROM recipe_ingredient WHERE recipe_id = ? AND deleted_at IS NULL', [
+        recipe,
+      ]);
+
+    at('2026-10-29T10:00:00Z');
+    const deleted = await data.products.deleteProduct(typo);
+    expect((await readProducts(db)).map((p) => p.name)).not.toContain('Pome');
+    expect((await lines()).filter((l) => l.productId === typo)).toEqual([]);
+    expect(await ingredients()).toEqual([]);
+    await expect(data.list.addProduct(typo)).rejects.toThrow('inconnu');
+
+    await data.products.restoreProduct(deleted);
+    expect((await readProducts(db)).map((p) => p.name)).toContain('Pome');
+    expect((await lines()).filter((l) => l.productId === typo)).toHaveLength(1);
+    expect(await ingredients()).toHaveLength(1);
+  });
+
+  it('ne supprime un produit déjà acheté qu’une fois archivé, et cache alors ses achats', async () => {
+    const line = await data.list.addProduct(milk);
+    await data.list.checkLine(line);
+    await expect(data.products.deleteProduct(milk)).rejects.toThrow('non archivé');
+
+    await data.products.stopBuying(milk);
+    const deleted = await data.products.deleteProduct(milk);
+    expect(await purchases()).toEqual([]);
+    expect(await lines()).toEqual([]);
+
+    await data.products.restoreProduct(deleted);
+    expect(await purchases()).toHaveLength(1);
+    expect(await lines()).toHaveLength(1);
   });
 
   it('crée l’achat de la coche, le corrige, le supprime au décochage et le recrée', async () => {
