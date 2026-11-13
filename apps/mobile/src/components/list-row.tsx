@@ -1,4 +1,4 @@
-import { Check } from 'phosphor-react-native';
+import { Check, type Icon } from 'phosphor-react-native';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { opacity, size } from '../theme';
@@ -18,11 +18,14 @@ export function ListRow({
   subtitleTone = 'muted',
   quantityLabel,
   checked = false,
+  dim = false,
   highlight = false,
   pending = false,
   onPress,
   onLongPress,
   onRemove,
+  removeLabel = 'Retirer',
+  removeStays = false,
   accessory,
   checkbox = true,
   card = true,
@@ -34,6 +37,8 @@ export function ListRow({
   subtitleTone?: 'muted' | 'alert' | 'action';
   quantityLabel?: string | undefined;
   checked?: boolean;
+  /** Nom en `ink-muted`, sans rien désactiver : un produit qu'on n'achète plus. */
+  dim?: boolean;
   highlight?: boolean;
   /** Écrite sur l'appareil, pas encore envoyée : utilisable. */
   pending?: boolean;
@@ -41,6 +46,10 @@ export function ListRow({
   onLongPress?: (() => void) | undefined;
   /** Glisser à gauche découvre « Retirer » ; glisser loin retire (SwipeRow). */
   onRemove?: (() => void) | undefined;
+  /** Le mot du bouton découvert : « Supprimer », « Je n'en achète plus ». */
+  removeLabel?: string;
+  /** L'action demande encore une confirmation : la ligne reste en place. */
+  removeStays?: boolean;
   accessory?: ReactNode;
   checkbox?: boolean;
   /** Faux : posée à même le fond du panneau Ajouter, comme sur sa planche. */
@@ -68,7 +77,7 @@ export function ListRow({
       <View className="flex-1">
         <Text
           variant="body-strong"
-          tone={checked ? 'muted' : 'ink'}
+          tone={checked || dim ? 'muted' : 'ink'}
           className={checked ? 'line-through' : ''}
         >
           {name}
@@ -106,20 +115,47 @@ export function ListRow({
     );
   if (onRemove === undefined) return row;
   return (
-    <SwipeRow label={`Retirer ${name}`} onRemove={onRemove} resetKey={name}>
+    <SwipeRow
+      label={`${removeLabel} ${name}`}
+      action={removeLabel}
+      stays={removeStays}
+      onRemove={onRemove}
+      resetKey={name}
+    >
       {row}
     </SwipeRow>
   );
 }
 
-/** En-tête d'un rayon : son icône, son nom en petites capitales (components.md, ListRow). */
-export function SectionHeader({ name, categoryKey }: { name: string; categoryKey: string | null }) {
+/**
+ * En-tête d'une carte de l'annuaire ou de la liste : l'icône du rayon (ou `icon`), le nom en
+ * petites capitales, puis `trailing` à droite (components.md, ListRow).
+ */
+export function SectionHeader({
+  name,
+  categoryKey,
+  icon,
+  trailing,
+  clear = false,
+}: {
+  name: string;
+  categoryKey: string | null;
+  icon?: Icon;
+  trailing?: ReactNode;
+  /** Sans fond : l'en-tête est dans une surface tapable, dont l'état pressé doit se voir. */
+  clear?: boolean;
+}) {
   return (
-    <View className="flex-row items-center gap-2 bg-surface px-4 pb-1 pt-3">
-      <CategoryIcon categoryKey={categoryKey} />
-      <Text variant="tab" tone="muted" className="uppercase">
+    <View className={`flex-row items-center gap-2 px-4 pb-1 pt-3 ${clear ? '' : 'bg-surface'}`}>
+      {icon === undefined ? (
+        <CategoryIcon categoryKey={categoryKey} />
+      ) : (
+        <Glyph icon={icon} color="ink-muted" size={size['icon-xs']} />
+      )}
+      <Text variant="tab" tone="muted" className="flex-1 uppercase">
         {name}
       </Text>
+      {trailing}
     </View>
   );
 }

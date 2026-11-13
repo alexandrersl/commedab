@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/button';
 import { CardList, type CardEntry, type CardListRef } from '../../components/card-list';
 import { LineSheet } from '../../components/line-sheet';
-import { Divider, ListRow, SectionHeader } from '../../components/list-row';
+import { ListRow, SectionHeader } from '../../components/list-row';
 import { ProgressBar } from '../../components/progress-bar';
 import { RecipeChip } from '../../components/recipe-chip';
 import { ScreenHeader } from '../../components/screen-header';
@@ -17,14 +17,16 @@ import { useEngine } from '../../data/engine';
 import { useData, usePendingIds, useSyncStatus } from '../../data/provider';
 import { InstallHint } from '../../pwa/install-hint';
 import { useWrite } from '../../data/use-write';
+import { tokens } from '../../theme';
 import { AddPanel } from '../../screens/list/add-panel';
 import { groupLines, type LineGroup, type ShownLine } from '../../screens/list/groups';
 
-type Entry =
-  { kind: 'section'; group: LineGroup } | { kind: 'line'; line: ShownLine; divider: boolean };
+const SETTLE_MS = Number.parseFloat(tokens.duration.slow) * 8;
+
+type Entry = { kind: 'section'; group: LineGroup } | { kind: 'line'; line: ShownLine };
 
 /**
- * La Liste, écran d'accueil (EF-1.1 à EF-1.12) : groupée par rayon, toujours cochable, sans
+ * La Liste, écran d'accueil (EF-1.1 à EF-1.12) : une carte par rayon, toujours cochable, sans
  * confirmation ni message après un geste. En bas, le champ qui ouvre le panneau Ajouter.
  */
 export default function ListScreen() {
@@ -35,6 +37,7 @@ export default function ListScreen() {
   const { online, synced, failure } = useSyncStatus();
   const [panel, setPanel] = useState(false);
   const [held, setHeld] = useState<ShownLine | null>(null);
+  const [toggled, setToggled] = useState<ReadonlyMap<string, boolean>>(new Map());
   const scroll = useRef<CardListRef<Entry>>(null);
   const headerHeight = useRef(0);
 
@@ -44,28 +47,41 @@ export default function ListScreen() {
   const loading = engine.loading || (!synced && engine.products.length === 0);
   const entries = useMemo(
     () =>
-      groups.flatMap((group): CardEntry<Entry>[] => [
+      groups.flatMap((group, index): CardEntry<Entry>[] => [
         {
           key: `section-${group.category?.id ?? 'none'}`,
           type: 'section',
           card: true,
+          opens: index > 0,
           item: { kind: 'section', group },
         },
         ...group.lines.map((line, i): CardEntry<Entry> => ({
           key: line.line.id,
           type: 'line',
           card: true,
-          item: { kind: 'line', line, divider: i > 0 },
+          item: { kind: 'line', line },
         })),
       ]),
     [groups],
   );
 
+  // La coche répond au tap sans attendre l'écriture : `toggled` porte l'état tapé jusqu'à ce
+  // que la base le rende, ou y renonce après `SETTLE_MS` (écriture refusée).
+  const isChecked = (item: ShownLine) => toggled.get(item.line.id) ?? item.checked;
   const toggle = (item: ShownLine) => {
     stepHaptic();
-    write(() =>
-      item.checked ? data.list.uncheckLine(item.line.id) : data.list.checkLine(item.line.id),
-    );
+    const id = item.line.id;
+    const next = !isChecked(item);
+    setToggled((map) => new Map(map).set(id, next));
+    setTimeout(() => {
+      setToggled((map) => {
+        if (!map.has(id)) return map;
+        const rest = new Map(map);
+        rest.delete(id);
+        return rest;
+      });
+    }, SETTLE_MS);
+    write(() => (next ? data.list.checkLine(id) : data.list.uncheckLine(id)));
   };
   const openPanel = () => {
     // Le haut de la liste sort de l'écran, ses premières lignes restent sous le voile (EF-2.1).
@@ -89,8 +105,10 @@ export default function ListScreen() {
               headerHeight.current = event.nativeEvent.layout.height;
             }}
           >
-            <ScreenHeader title="Ma liste" meta={loading ? '…' : `${checked} sur ${total}`} />
-            <ProgressBar value={total === 0 ? 0 : checked / total} indeterminate={loading} />
+            <View>
+              <ScreenHeader title="Ma liste" meta={loading ? '…' : `${checked} sur ${total}`} />
+              <ProgressBar value={total === 0 ? 0 : checked / total} indeterminate={loading} />
+            </View>
             {loading ? (
               <View className="flex-row gap-2">
                 <Skeleton width="third" tall />
@@ -164,12 +182,11 @@ export default function ListScreen() {
             />
           ) : (
             <>
-              {entry.divider && <Divider />}
               <ListRow
                 name={entry.line.product.name}
                 subtitle={entry.line.subtitle}
                 quantityLabel={packsLabel(entry.line.product, entry.line.line.quantity)}
-                checked={entry.line.checked}
+                checked={isChecked(entry.line)}
                 highlight={held?.line.id === entry.line.line.id}
                 pending={pending.has(entry.line.line.id)}
                 onPress={() => toggle(entry.line)}

@@ -4,6 +4,7 @@ import { useSession } from '../auth/session';
 import { supabase } from '../auth/supabase';
 import { config } from '../config';
 import { captureError, reportIncident } from '../monitoring';
+import { tokens } from '../theme';
 
 function openForSession(): AppDatabase {
   return openAppDatabase({
@@ -95,11 +96,43 @@ export function useSyncStatus(): SyncStatus {
 
 const NONE: ReadonlySet<string> = new Set();
 
-/** Lignes écrites sur l'appareil, pas encore acceptées par le serveur (EF-6.3). */
+/** En ligne, une écriture est acceptée bien avant ce délai : elle n'est jamais montrée en attente. */
+const PENDING_AFTER_MS = Number.parseFloat(tokens.duration.slow) * 4;
+
+/**
+ * Lignes écrites sur l'appareil, pas encore acceptées par le serveur (EF-6.3), une fois
+ * qu'elles attendent depuis `PENDING_AFTER_MS` : sans ce délai, chaque geste atténuerait sa
+ * ligne le temps de l'envoi.
+ */
 export function usePendingIds(): ReadonlySet<string> {
   const db = useAppDatabase();
   const [ids, setIds] = useState(NONE);
-  useEffect(() => db.onPending(setIds), [db]);
+  useEffect(() => {
+    const since = new Map<string, number>();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const publish = () => {
+      if (timer !== null) clearTimeout(timer);
+      timer = null;
+      const now = Date.now();
+      const ripe = [...since].filter(([, at]) => now - at >= PENDING_AFTER_MS);
+      setIds((previous) =>
+        previous.size === ripe.length && ripe.every(([id]) => previous.has(id))
+          ? previous
+          : new Set(ripe.map(([id]) => id)),
+      );
+      const next = Math.min(...[...since.values()].filter((at) => now - at < PENDING_AFTER_MS));
+      if (Number.isFinite(next)) timer = setTimeout(publish, next + PENDING_AFTER_MS - now);
+    };
+    const stop = db.onPending((pending) => {
+      for (const id of since.keys()) if (!pending.has(id)) since.delete(id);
+      for (const id of pending) if (!since.has(id)) since.set(id, Date.now());
+      publish();
+    });
+    return () => {
+      stop();
+      if (timer !== null) clearTimeout(timer);
+    };
+  }, [db]);
   return ids;
 }
 

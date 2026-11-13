@@ -45,20 +45,26 @@ function cran() {
 
 /**
  * Ligne qu'on glisse vers la gauche pour la retirer, comme sur iOS (components.md, ListRow) :
- * un glissement court découvre « Retirer » et la laisse ouverte ; au-delà de la moitié, le
- * rouge prend la ligne, le libellé passe contre son bord avec un cran, et relâcher retire la
- * ligne, qui part à gauche puis se referme. Revenir en deçà avant de relâcher annule. Une
- * seule ligne ouverte à la fois ; un tap sur la ligne ouverte la referme.
+ * un glissement court découvre « Retirer » (ou `action`) et la laisse ouverte ; au-delà de la
+ * moitié, le rouge prend la ligne, le libellé passe contre son bord avec un cran, et relâcher
+ * retire la ligne, qui part à gauche puis se referme. Revenir en deçà avant de relâcher
+ * annule. Une seule ligne ouverte à la fois ; un tap sur la ligne ouverte la referme. Avec
+ * `stays`, l'action demande encore une confirmation : la ligne se referme au lieu de partir.
  */
 export function SwipeRow({
   children,
   label,
+  action = 'Retirer',
+  stays = false,
   onRemove,
   resetKey,
 }: {
   children: ReactNode;
   /** Ce que lit un lecteur d'écran sur le bouton : « Retirer Lait ». */
   label: string;
+  /** Le mot du bouton découvert. */
+  action?: string;
+  stays?: boolean;
   onRemove: () => void;
   /** Change avec la ligne affichée : une liste recycle ses vues d'une ligne à l'autre. */
   resetKey: string;
@@ -113,9 +119,21 @@ export function SwipeRow({
     }, duration.slow * 4);
   };
 
+  const asked = () => {
+    releaseRow(close);
+    setOpen(false);
+    onRemove();
+  };
+
   /** La ligne part à gauche, puis sa hauteur se referme ; la liste la retire ensuite. */
   const leave = () => {
     'worklet';
+    if (stays) {
+      armed.set(false);
+      offset.set(withTiming(0, { duration: duration.base }));
+      scheduleOnRN(asked);
+      return;
+    }
     removing.set(true);
     offset.set(
       withTiming(-width.get(), { duration: duration.base }, (done) => {
@@ -198,8 +216,8 @@ export function SwipeRow({
           }}
         >
           <Animated.View style={labelStyle}>
-            <Text variant="button-sm" tone="on-action">
-              Retirer
+            <Text variant="button-sm" tone="on-action" numberOfLines={1}>
+              {action}
             </Text>
           </Animated.View>
         </Pressable>

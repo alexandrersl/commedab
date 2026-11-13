@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { Minus, Plus } from 'phosphor-react-native';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { opacity, size, tokens } from '../theme';
 import { Button } from './button';
@@ -124,9 +124,66 @@ export function Stepper({
   );
 }
 
+/** Sans retour de la base après ce délai (écriture refusée), l'affichage revient à sa valeur. */
+const SETTLE_MS = Number.parseFloat(tokens.duration.slow) * 8;
+
+/**
+ * Quantité affichée sans attendre l'écriture : le tap change l'affichage aussitôt. `onChange`
+ * n'est rappelé qu'une fois la valeur précédente revenue de la base, avec la dernière valeur
+ * tapée : une écriture part toujours d'un état à jour, et des taps rapprochés n'en font qu'une.
+ * 0 : pas sur la liste.
+ */
+function useOptimisticQuantity(
+  quantity: number,
+  onChange: (next: number) => void,
+): [number, (next: number) => void] {
+  const [shown, setShown] = useState<number | null>(null);
+  const [sent, setSent] = useState<number | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const send = useRef(onChange);
+  useEffect(() => {
+    send.current = onChange;
+  });
+  useEffect(
+    () => () => {
+      if (timer.current !== null) clearTimeout(timer.current);
+    },
+    [],
+  );
+  const landed = sent === null || sent === quantity;
+  if (shown !== null && shown === quantity && landed) {
+    setShown(null);
+    setSent(null);
+  }
+  useEffect(() => {
+    if (shown === null || shown === quantity || sent !== quantity) return undefined;
+    const next = setTimeout(() => {
+      setSent(shown);
+      send.current(shown);
+    }, 0);
+    return () => clearTimeout(next);
+  }, [quantity, shown, sent]);
+
+  const change = (next: number) => {
+    setShown(next);
+    if (sent === null) {
+      setSent(next);
+      onChange(next);
+    }
+    if (timer.current !== null) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      setSent(null);
+      setShown(null);
+    }, SETTLE_MS);
+  };
+  return [shown ?? quantity, change];
+}
+
 /**
  * Le composant d'ajout commun (components.md, AddControl ; EF-2.9) : un bouton tant que le
  * produit ou la recette n'est pas sur la liste, un stepper ensuite, dont le `−` à 1 retire.
+ * Il répond au tap sans attendre l'écriture (useOptimisticQuantity) ; dans une liste recyclée,
+ * lui donner une `key` par produit pour que cet état ne passe pas d'une ligne à l'autre.
  */
 export function AddControl({
   quantity,
@@ -148,23 +205,24 @@ export function AddControl({
   pending?: boolean;
   disabled?: boolean;
 }) {
+  const [shown, change] = useOptimisticQuantity(quantity ?? 0, onChange);
   return (
     <View style={pending ? { opacity: opacity.busy } : undefined}>
-      {quantity === null ? (
+      {shown === 0 ? (
         <Button
           variant="outline"
           label={addLabel}
           disabled={disabled}
           onPress={() => {
             tick();
-            onChange(suggested);
+            change(suggested);
           }}
         />
       ) : (
         <Stepper
-          value={quantity}
-          onChange={onChange}
-          label={quantityLabel?.(quantity)}
+          value={shown}
+          onChange={change}
+          label={quantityLabel?.(shown)}
           disabled={disabled}
         />
       )}
