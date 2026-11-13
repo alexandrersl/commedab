@@ -67,7 +67,8 @@ function initial(state: ProductState | undefined): { quantity: number; period: R
 
 /**
  * Feuille « Tu en prends » (components.md, SettingField) : quantité, période, « Enregistrer »,
- * et « Revenir à ce que j'ai appris » quand le rythme est déclaré. Seule la durée par unité
+ * actif dès que la valeur diffère de celle affichée à l'ouverture (ou tant qu'aucun rythme
+ * n'est connu), et « Revenir à ce que j'ai appris » quand le rythme est déclaré. Seule la durée par unité
  * est enregistrée (specs techniques 4.3).
  */
 export function RateSheet({
@@ -87,6 +88,11 @@ export function RateSheet({
     setShown(visible);
     if (visible) setValue(initial(state));
   }
+  const start = initial(state);
+  const unchanged =
+    (state?.rate.perDay ?? 0) > 0 &&
+    value.quantity === start.quantity &&
+    value.period === start.period;
   return (
     <Sheet visible={visible} onClose={onClose} title="Tu en prends">
       <Intro state={state} />
@@ -106,6 +112,7 @@ export function RateSheet({
       />
       <Button
         label="Enregistrer"
+        disabled={unchanged}
         onPress={() => {
           onSave(toDaysPerUnit(value));
           onClose();

@@ -1,26 +1,27 @@
 import {
   productsByPurchases,
   search,
+  submitResult,
   type CatalogEntry,
   type SearchableProduct,
   type SearchResult,
   type Suggestion,
 } from '@commedab/core';
+import { router } from 'expo-router';
 import { Plus } from 'phosphor-react-native';
-import { useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable as RNPressable, View } from 'react-native';
-import { GestureDetector } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AddControl } from '../../components/add-control';
 import { CardList, type CardEntry } from '../../components/card-list';
 import { Glyph } from '../../components/icons';
-import { useKeyboardInset } from '../../components/keyboard-inset';
+import { NO_PAN, useKeyboardInset } from '../../components/keyboard-inset';
 import { Divider, ListRow } from '../../components/list-row';
 import { Badge, Pill } from '../../components/pill';
 import { Pressable } from '../../components/pressable';
 import { SearchField } from '../../components/search-field';
-import { SheetHandle, useSheetMotion } from '../../components/sheet-motion';
+import { SheetHandle, SheetPullZone, useSheetMotion } from '../../components/sheet-motion';
 import { OptionSheet } from '../../components/setting-field';
 import { SkeletonRows } from '../../components/states';
 import { SuggestionRow } from '../../components/suggestion-row';
@@ -69,6 +70,8 @@ function resultKey(result: SearchResult): string {
       return `catalog-${result.entry.id}`;
     case 'create':
       return 'create';
+    case 'createRecipe':
+      return 'create-recipe';
   }
 }
 
@@ -81,7 +84,9 @@ function rowsOf(prefix: string, rows: { key: string; node: ReactNode }[]) {
     key: `${prefix}-${key}`,
     type: 'row',
     card: false,
-    item: { kind: 'row', node, divider: i > 0 },
+    // La clé remonte la ligne quand FlashList recycle sa cellule pour un autre produit : l'état
+    // de son AddControl ne suit pas.
+    item: { kind: 'row', node: <Fragment key={key}>{node}</Fragment>, divider: i > 0 },
   }));
 }
 
@@ -96,9 +101,14 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
   const pending = usePendingIds();
   const insets = useSafeAreaInsets();
   const motion = useSheetMotion({ onClose });
-  const keyboard = useKeyboardInset();
+  const frame = useRef<ComponentRef<typeof View>>(null);
+  const keyboard = useKeyboardInset(frame, true);
   const [query, setQuery] = useState('');
-  const [created, setCreated] = useState<string | null>(null);
+  // Le dernier produit ajouté sans tap sur sa ligne (« Créer », touche Entrée) : il reste en
+  // tête du panneau, avec son stepper, tant que le champ est vide.
+  const [last, setLast] = useState<{ id: string; how: 'created' | 'added' | 'already' } | null>(
+    null,
+  );
   const [choosingCategory, setChoosingCategory] = useState(false);
   // Les suggestions restent à leur place jusqu'à la fermeture, même ajoutées (SuggestionRow).
   const [suggestions] = useState<Suggestion[]>(() => engine.suggestions);
@@ -149,14 +159,34 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
     return shortEstimate(product, engine.states.get(productId), engine.now).text;
   };
 
-  const create = (name: string, entry: CatalogEntry | null, fromCreate: boolean) =>
+  const create = (name: string, entry: CatalogEntry | null, show: 'created' | 'added' | null) =>
     write(async () => {
       const id = await data.products.createProduct({ name, entry, addToList: true });
-      if (fromCreate) {
-        setCreated(id);
+      if (show !== null) {
+        setLast({ id, how: show });
         setQuery('');
       }
     });
+
+  /**
+   * Touche Entrée (EF-2.7) : ajoute le produit que la saisie nomme et rend vrai. Sinon rien
+   * n'est ajouté et le champ est quitté : on choisit parmi les propositions, clavier fermé.
+   */
+  const submit = (): boolean => {
+    const target = submitResult(results);
+    if (target?.kind === 'catalog') {
+      void create(target.entry.name, target.entry, 'added');
+    } else if (target?.kind === 'product') {
+      const { id } = target.product;
+      const listed = lineOf(id) !== undefined;
+      if (!listed) void write(() => data.list.addProduct(id, 1));
+      setLast({ id, how: listed ? 'already' : 'added' });
+      setQuery('');
+    } else {
+      return false;
+    }
+    return true;
+  };
 
   const renderResult = (result: SearchResult) => {
     switch (result.kind) {
@@ -197,6 +227,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
           <ListRow
             card={false}
             checkbox={false}
+            highlight={result.exact === true}
             name={result.product.name}
             subtitle={productSubtitle(result.product.id)}
             accessory={productControl(result.product.id)}
@@ -207,12 +238,13 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
           <ListRow
             card={false}
             checkbox={false}
+            highlight={result.exact === true}
             name={result.entry.name}
             subtitle="Catalogue"
             accessory={
               <AddControl
                 quantity={null}
-                onChange={() => create(result.entry.name, result.entry, false)}
+                onChange={() => create(result.entry.name, result.entry, null)}
               />
             }
           />
@@ -221,7 +253,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
         return (
           <Pressable
             feedback="highlight"
-            onPress={() => create(result.name, result.entry, true)}
+            onPress={() => create(result.name, result.entry, 'created')}
             accessibilityLabel={`Créer « ${result.name} »`}
             className="min-h-row flex-row items-center gap-3 px-4 py-2"
           >
@@ -236,10 +268,33 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
             <Glyph icon={Plus} color="ink-muted" />
           </Pressable>
         );
+      case 'createRecipe':
+        return (
+          <Pressable
+            feedback="highlight"
+            onPress={() => {
+              setQuery('');
+              router.push({ pathname: '/recipe-edit', params: { name: result.name, toList: '1' } });
+            }}
+            accessibilityLabel={`Créer la recette « ${result.name} »`}
+            className="min-h-row flex-row items-center gap-3 px-4 py-2"
+          >
+            <View className="flex-1">
+              <Text variant="body-strong" tone="action">
+                {`Créer la recette « ${result.name} »`}
+              </Text>
+              <Text variant="caption" tone="muted">
+                Tu choisis ses ingrédients, ce qui manque part sur la liste
+              </Text>
+            </View>
+            <Glyph icon={Plus} color="ink-muted" />
+          </Pressable>
+        );
     }
   };
 
-  const createdProduct = created === null ? undefined : engine.productById.get(created);
+  const lastProduct = last === null ? undefined : engine.productById.get(last.id);
+  const createdProduct = last?.how === 'created' ? lastProduct : undefined;
   const proposedCategories = useMemo(() => {
     const used = new Map<string, number>();
     for (const p of engine.products) {
@@ -327,6 +382,19 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
       </View>
     );
   } else {
+    if (lastProduct !== undefined) {
+      header = (
+        <View className="flex-row items-center gap-3 px-4 pt-4">
+          <View className="flex-1">
+            <Text variant="body-strong">{lastProduct.name}</Text>
+            <Text variant="caption" tone="action">
+              {last?.how === 'already' ? 'Déjà sur la liste' : 'Ajouté à la liste'}
+            </Text>
+          </View>
+          {productControl(lastProduct.id)}
+        </View>
+      );
+    }
     const title = (key: string, node: ReactNode): CardEntry<Entry> => ({
       key,
       type: key,
@@ -401,7 +469,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <View className="absolute bottom-0 left-0 right-0 top-0" style={{ paddingBottom: keyboard }}>
+    <View ref={frame} className="absolute bottom-0 left-0 right-0 top-0">
       <Animated.View
         className="absolute bottom-0 left-0 right-0 top-0 bg-scrim"
         style={motion.scrim}
@@ -410,7 +478,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
         accessibilityRole="button"
         accessibilityLabel="Fermer"
         onPress={motion.dismiss}
-        style={{ height: insets.top + size.row * 2 }}
+        style={{ ...NO_PAN, height: insets.top + size.row * 2 }}
       />
       <KeyboardAvoidingView
         className="flex-1"
@@ -421,11 +489,7 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
           style={motion.panel}
           onLayout={motion.onLayout}
         >
-          <GestureDetector gesture={motion.pull}>
-            <View>
-              <SheetHandle />
-            </View>
-          </GestureDetector>
+          <SheetHandle />
           <CardList
             // Une requête, une liste : FlashList 2.3 perd ses mesures quand des résultats sans
             // rapport remplacent les précédents à la frappe (« index out of bounds »).
@@ -446,12 +510,24 @@ export function AddPanel({ onClose }: { onClose: () => void }) {
           />
           <View
             className="border-t-thin border-line bg-surface px-4 py-2"
+            // Le fond du champ descend sous le clavier : translucide sur iOS, il laisserait voir
+            // l'écran de derrière. Sur le web, un doigt qui glisse sur le champ ne fait pas
+            // défiler la page (`touchAction`).
             style={{
-              paddingBottom: keyboard > 0 ? space['2'] : Math.max(insets.bottom, space['2']),
+              ...NO_PAN,
+              paddingBottom:
+                keyboard > 0 ? keyboard + space['2'] : Math.max(insets.bottom, space['2']),
             }}
           >
-            <SearchField value={query} onChange={setQuery} onClose={motion.dismiss} autoFocus />
+            <SearchField
+              value={query}
+              onChange={setQuery}
+              onClose={motion.dismiss}
+              onSubmit={submit}
+              autoFocus
+            />
           </View>
+          <SheetPullZone pull={motion.pull} />
         </Animated.View>
       </KeyboardAvoidingView>
     </View>

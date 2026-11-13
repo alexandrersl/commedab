@@ -8,7 +8,9 @@ import { Text } from './text';
 
 /**
  * Le champ unique du panneau Ajouter et de la création de recette (components.md,
- * SearchField) : capsule, loupe, recherche à la frappe, « Fermer » quand `onClose`.
+ * SearchField) : capsule, loupe, recherche à la frappe, « Fermer » quand `onClose`. Avec
+ * `onSubmit`, la touche Entrée le déclenche : s'il rend vrai, le champ garde le focus pour
+ * enchaîner ; sinon il le quitte, et le clavier laisse voir toute la liste.
  */
 export function SearchField({
   value,
@@ -16,6 +18,7 @@ export function SearchField({
   placeholder = 'Un produit, une recette…',
   loading = false,
   onClose,
+  onSubmit,
   autoFocus = false,
 }: {
   value: string;
@@ -23,6 +26,7 @@ export function SearchField({
   placeholder?: string;
   loading?: boolean;
   onClose?: (() => void) | undefined;
+  onSubmit?: (() => boolean) | undefined;
   autoFocus?: boolean;
 }) {
   const { colors } = useTheme();
@@ -52,7 +56,12 @@ export function SearchField({
           selectionColor={colors.action}
           autoFocus={autoFocus}
           autoCorrect={false}
-          returnKeyType="search"
+          returnKeyType={onSubmit === undefined ? 'search' : 'done'}
+          onSubmitEditing={() => {
+            if (onSubmit?.() === false) input.current?.blur();
+          }}
+          submitBehavior={onSubmit === undefined ? 'blurAndSubmit' : 'submit'}
+          blurOnSubmit={onSubmit === undefined}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           accessibilityLabel={placeholder}

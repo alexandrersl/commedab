@@ -50,6 +50,7 @@ export {
 export {
   productsByPurchases,
   search,
+  submitResult,
   type SearchableProduct,
   type SearchableRecipe,
   type SearchResult,

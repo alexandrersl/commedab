@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, type LayoutChangeEvent } from 'react-native';
-import { Gesture } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import {
   Easing,
   useAnimatedStyle,
@@ -20,6 +20,19 @@ export function SheetHandle() {
     <View className="items-center pb-1 pt-2">
       <View className="h-1 w-8 rounded-pill bg-line-strong" />
     </View>
+  );
+}
+
+/**
+ * Zone de traction d'un panneau dont seul le haut se tire (son contenu défile) : haute de
+ * `control`, bien plus que la poignée, et posée par-dessus le haut du contenu sans le décaler.
+ * À rendre en dernier dans le panneau, pour passer devant ce contenu.
+ */
+export function SheetPullZone({ pull }: { pull: ReturnType<typeof Gesture.Pan> }) {
+  return (
+    <GestureDetector gesture={pull}>
+      <View className="absolute left-0 right-0 top-0 h-control" />
+    </GestureDetector>
   );
 }
 

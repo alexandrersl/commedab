@@ -3,6 +3,7 @@ import {
   parseCatalog,
   productsByPurchases,
   search,
+  submitResult,
   type SearchableProduct,
   type SearchResult,
 } from '../src/index';
@@ -64,6 +65,8 @@ function labels(results: SearchResult[]): string[] {
         return `catalogue:${r.entry.name}`;
       case 'create':
         return `créer:${r.name}${r.entry === null ? '' : `<${r.entry.id}`}`;
+      case 'createRecipe':
+        return `créer la recette:${r.name}`;
     }
   });
 }
@@ -77,12 +80,13 @@ describe('recherche du panneau Ajouter (specs techniques 7.5)', () => {
       catalog,
     });
     expect(labels(results)).toEqual([
+      'catalogue:Lait demi-écrémé',
       'recette:Riz au lait',
       'produit:Lait d’amande',
       'catalogue:Chocolat au lait',
       'catalogue:Lait de coco',
-      'catalogue:Lait demi-écrémé',
       'créer:Lait demi-écrémé<lait-demi-ecreme',
+      'créer la recette:lait',
     ]);
   });
 
@@ -92,10 +96,11 @@ describe('recherche du panneau Ajouter (specs techniques 7.5)', () => {
       product('b', 'Ail', { purchaseCount: 2 }),
       product('c', 'Gousses d’ail', { purchaseCount: 5 }),
     ];
-    expect(labels(search({ query: 'ail', products, catalog: [] }))).toEqual([
+    expect(labels(search({ query: 'ai', products, catalog: [] }))).toEqual([
       'produit:Gousses d’ail',
       'produit:Ail',
       'produit:Volaille',
+      'créer:ai',
     ]);
   });
 
@@ -135,6 +140,49 @@ describe('recherche du panneau Ajouter (specs techniques 7.5)', () => {
     expect(labels(search({ query: ' graines  DE chia', products, catalog }))).toEqual([
       'produit:Graines de chia',
     ]);
+  });
+
+  it('place en tête le produit que la requête nomme, au pluriel près, devant les recettes', () => {
+    const products = [
+      product('a', 'Pommes dauphines', { purchaseCount: 9 }),
+      product('b', 'Pommes', { purchaseCount: 1 }),
+    ];
+    const results = search({
+      query: 'pomme',
+      recipes: [{ id: 'r', name: 'Tarte aux pommes' }],
+      products,
+      catalog: [],
+    });
+    expect(labels(results)).toEqual([
+      'produit:Pommes',
+      'recette:Tarte aux pommes',
+      'produit:Pommes dauphines',
+      'créer:pomme',
+      'créer la recette:pomme',
+    ]);
+    expect(submitResult(results)).toMatchObject({ kind: 'product', product: { id: 'b' } });
+  });
+
+  it('n’ajoute rien à la touche Entrée sans nom exact, même quand « Créer » est seul', () => {
+    const products = [product('a', 'Pommes'), product('b', 'Pommes dauphines')];
+    expect(submitResult(search({ query: 'pom', products, catalog: [] }))).toBeNull();
+    expect(submitResult(search({ query: 'kakis', products, catalog: [] }))).toBeNull();
+    expect(submitResult(search({ query: 'coca', products, catalog }))).toMatchObject({
+      kind: 'catalog',
+      entry: { id: 'soda-cola' },
+    });
+  });
+
+  it('propose de créer la recette quand on cherche des recettes et qu’aucune ne porte ce nom', () => {
+    const recipes = [{ id: 'r', name: 'Tarte aux pommes' }];
+    expect(labels(search({ query: 'tarte', recipes, products: [], catalog: [] }))).toEqual([
+      'recette:Tarte aux pommes',
+      'créer:tarte',
+      'créer la recette:tarte',
+    ]);
+    expect(
+      labels(search({ query: 'Tarte aux  pommes', recipes, products: [], catalog: [] })),
+    ).toEqual(['recette:Tarte aux pommes', 'créer:Tarte aux pommes']);
   });
 
   it('nettoie le nom à créer et ne renvoie rien pour une requête vide', () => {

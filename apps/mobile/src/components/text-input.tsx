@@ -45,13 +45,19 @@ export function TextInput({
         multiline={multiline}
         placeholderTextColor={colors['ink-muted']}
         selectionColor={colors.action}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
         textAlignVertical={multiline ? 'top' : 'center'}
         className={`type-body rounded-field bg-surface px-3 py-2 text-ink ${border} ${
           multiline ? 'min-h-control-lg' : 'min-h-control'
         }`}
         {...input}
+        onFocus={(event) => {
+          setFocused(true);
+          input.onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          input.onBlur?.(event);
+        }}
       />
       {error ? (
         <Text variant="caption" tone="alert">
