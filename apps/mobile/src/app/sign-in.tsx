@@ -1,13 +1,15 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { signIn, type AuthFailure } from '../auth/actions';
+import { holdPassword } from '../auth/pending';
 import { Button } from '../components/button';
 import { TextInput } from '../components/text-input';
-import { AuthLayout, FooterLink, ProviderButtons } from '../screens/auth/layout';
+import { AuthLayout, FooterLink, ProviderButtons, param } from '../screens/auth/layout';
 
 /** Connexion (EF-5.8) : e-mail et mot de passe, puis Google et Apple. Session sans « se souvenir de moi ». */
 export default function SignIn() {
-  const [email, setEmail] = useState('');
+  const params = useLocalSearchParams<{ email?: string }>();
+  const [email, setEmail] = useState(() => param(params.email));
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [providerBusy, setProviderBusy] = useState(false);
@@ -19,6 +21,7 @@ export default function SignIn() {
     const { failure, unconfirmed } = await signIn(email, password);
     setSubmitting(false);
     if (unconfirmed) {
+      holdPassword(email, password);
       router.push({ pathname: '/check-email', params: { email: email.trim() } });
       return;
     }

@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { emailFailure, passwordFailure, signUp, type AuthFailure } from '../auth/actions';
+import { holdPassword } from '../auth/pending';
 import { Button } from '../components/button';
 import { TextInput } from '../components/text-input';
 import { AuthLayout, FooterLink, ProviderButtons, param } from '../screens/auth/layout';
@@ -30,6 +31,7 @@ export default function SignUp() {
     setSubmitting(false);
     if (failure !== null && failure.includes('e-mail')) setEmailError(failure);
     else setError(failure);
+    if (confirm) holdPassword(email, password);
     if (confirm) router.replace({ pathname: '/check-email', params: { email: email.trim() } });
   };
 
