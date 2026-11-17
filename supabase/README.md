@@ -50,14 +50,28 @@ les environnements GitHub `development` et `production` (Settings > Environments
   base compris. Variables `R2_ACCOUNT_ID` et `R2_BUCKET`, secrets `R2_ACCESS_KEY_ID` et
   `R2_SECRET_ACCESS_KEY` : un jeton R2 limité à ce bucket, en lecture et écriture d'objets.
 
-Restaurer une archive dans un projet neuf, après l'avoir décompressée :
+Restaurer une archive dans un projet neuf, après l'avoir décompressée : le schéma vient des
+migrations du dépôt, les comptes et les données de l'archive.
 
 ```sh
+npx supabase db push --remote="<chaîne de connexion du nouveau projet>"
 psql --single-transaction --variable ON_ERROR_STOP=1 \
-  --file roles.sql --file schema.sql \
+  --file roles.sql \
   --command 'SET session_replication_role = replica' \
   --file data.sql --dbname "<chaîne de connexion du nouveau projet>"
 ```
 
-Puis `supabase/deploy.sh <référence>` pour la configuration Auth et la fonction d'export, et le
+`schema.sql` n'est pas rechargé : `supabase db dump` n'y écrit ni le déclencheur
+d'inscription posé sur `auth.users`, ni l'historique des migrations, et un projet restauré avec
+lui ne créerait plus de household aux nouveaux comptes. Il reste dans l'archive comme photo du
+schéma de production, à comparer aux migrations en cas de doute.
+
+`roles.sql` recrée le rôle de réplication de PowerSync sans son mot de passe : lui en donner un
+(`alter role … password …`) et le reporter dans la connexion de l'instance PowerSync. Puis
+`supabase/deploy.sh <référence>` pour la configuration Auth et la fonction d'export, et le
 déploiement des règles de synchro sur l'instance PowerSync branchée au nouveau projet.
+
+Essayé le 17/11/2026 sur une pile Supabase locale (`supabase start`) : le compte restauré est
+relié à son household, les règles RLS sont en place, une inscription crée son household et ses
+rayons. Un service de comptes plus ancien que celui de la production refuse les données
+(colonne inconnue) : restaurer vers un projet au moins aussi récent.

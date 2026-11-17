@@ -23,7 +23,9 @@ jobs:
           mkdir backup
           npx --yes supabase@3.1.0 db dump --remote="$SUPABASE_DB_URL" -f backup/roles.sql --role-only
           npx --yes supabase@3.1.0 db dump --remote="$SUPABASE_DB_URL" -f backup/schema.sql
-          npx --yes supabase@3.1.0 db dump --remote="$SUPABASE_DB_URL" -f backup/data.sql --data-only --use-copy
+          # Comptes et données de l'app seulement : les tables de `storage`, vides ici, ne se
+          # rechargent pas avec le rôle `postgres` et feraient échouer la restauration.
+          npx --yes supabase@3.1.0 db dump --remote="$SUPABASE_DB_URL" -f backup/data.sql --data-only --use-copy --schema auth,public
           # Une sauvegarde sans les données de l'app ou sans les comptes ne vaut rien : mieux vaut échouer.
           grep -q '^COPY "public"."household" ' backup/data.sql
           grep -q '^COPY "auth"."users" ' backup/data.sql
